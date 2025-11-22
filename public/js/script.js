@@ -67,7 +67,7 @@
       });         
 
       var swiper = new Swiper(".product-swiper", {
-        slidesPerView: 4,
+        slidesPerView: 5,
         spaceBetween: 10,
         pagination: {
           el: "#mobile-products .swiper-pagination",
@@ -78,15 +78,15 @@
             slidesPerView: 2,
             spaceBetween: 20,
           },
-          980: {
-            slidesPerView: 4,
+          1200: {
+            slidesPerView: 5,
             spaceBetween: 20,
           }
         },
       });      
 
       var swiper = new Swiper(".product-watch-swiper", {
-        slidesPerView: 4,
+        slidesPerView: 5,
         spaceBetween: 10,
         pagination: {
           el: "#smart-watches .swiper-pagination",
@@ -97,8 +97,8 @@
             slidesPerView: 2,
             spaceBetween: 20,
           },
-          980: {
-            slidesPerView: 4,
+          1200: {
+            slidesPerView: 5,
             spaceBetween: 20,
           }
         },
