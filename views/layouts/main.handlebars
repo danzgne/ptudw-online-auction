@@ -73,94 +73,18 @@
                 <li class="nav-item dropdown">
                   <a class="nav-link me-4 link-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">Categories</a>
                   <ul class="dropdown-menu dropdown-menu-lg">
-                    <!-- Cat1 -->
+                    {{#each lcCategories1}}
                     <li class="dropdown-submenu">
-                      <a href="#" class="dropdown-item dropdown-toggle" data-bs-toggle="dropdown">Electronics</a>
+                      <a href="#" class="dropdown-item dropdown-toggle" data-bs-toggle="dropdown">{{this.name}}</a>
                       <ul class="dropdown-menu">
-                        <li><a href="/category/1" class="dropdown-item">Phones & Accessories</a></li>
-                        <li><a href="/category/1" class="dropdown-item">Laptops & Computers</a></li>
-                        <li><a href="/category/1" class="dropdown-item">Audio & Headphones</a></li>
-                        <li><a href="/category/1" class="dropdown-item">Smart Home Devices</a></li>
-                        <li><a href="/category/1" class="dropdown-item">Cameras & Photography</a></li>
+                      {{#each ../lcCategories2}}
+                        {{#if (eq this.parent_id ../id)}}
+                          <li><a href="#" class="dropdown-item">{{this.name}}</a></li>
+                        {{/if}}
+                      {{/each}}
                       </ul>
                     </li>
-                    <!-- Cat2 -->
-                    <li class="dropdown-submenu">
-                      <a href="#" class="dropdown-item dropdown-toggle" data-bs-toggle="dropdown">Fashion</a>
-                      <ul class="dropdown-menu">
-                        <li><a href="/category/2" class="dropdown-item">Men's Clothing</a></li>
-                        <li><a href="/category/2" class="dropdown-item">Women's Clothing</a></li>
-                        <li><a href="/category/2" class="dropdown-item">Shoes</a></li>
-                        <li><a href="/category/2" class="dropdown-item">Accessories</a></li>
-                        <li><a href="/category/2" class="dropdown-item">Watches & Jewelry</a></li>
-                      </ul>
-                    </li>
-                    <!-- Cat3 -->
-                    <li class="dropdown-submenu">
-                      <a href="#" class="dropdown-item dropdown-toggle" data-bs-toggle="dropdown">Home & Garden</a>
-                      <ul class="dropdown-menu">
-                        <li><a href="/category/3" class="dropdown-item">Furniture</a></li>
-                        <li><a href="/category/3" class="dropdown-item">Kitchen & Dining</a></li>
-                        <li><a href="/category/3" class="dropdown-item">Bedding & Bath</a></li>
-                        <li><a href="/category/3" class="dropdown-item">Decor</a></li>
-                        <li><a href="/category/3" class="dropdown-item">Garden Tools</a></li>
-                      </ul>
-                    </li>
-                    <!-- Cat4 -->
-                    <li class="dropdown-submenu">
-                      <a href="#" class="dropdown-item dropdown-toggle" data-bs-toggle="dropdown">Sports & Outdoors</a>
-                      <ul class="dropdown-menu">
-                        <li><a href="/category/4" class="dropdown-item">Fitness Equipment</a></li>
-                        <li><a href="/category/4" class="dropdown-item">Outdoor Gear</a></li>
-                        <li><a href="/category/4" class="dropdown-item">Team Sports</a></li>
-                        <li><a href="/category/4" class="dropdown-item">Cycling</a></li>
-                        <li><a href="/category/4" class="dropdown-item">Water Sports</a></li>
-                      </ul>
-                    </li>
-                    <!-- Cat5 -->
-                    <li class="dropdown-submenu">
-                      <a href="#" class="dropdown-item dropdown-toggle" data-bs-toggle="dropdown">Books & Media</a>
-                      <ul class="dropdown-menu">
-                        <li><a href="/category/5" class="dropdown-item">Books</a></li>
-                        <li><a href="/category/5" class="dropdown-item">E-Books</a></li>
-                        <li><a href="/category/5" class="dropdown-item">Movies & TV</a></li>
-                        <li><a href="/category/5" class="dropdown-item">Music</a></li>
-                        <li><a href="/category/5" class="dropdown-item">Magazines & Comics</a></li>
-                      </ul>
-                    </li>
-                    <!-- Cat6 -->
-                    <li class="dropdown-submenu">
-                      <a href="#" class="dropdown-item dropdown-toggle" data-bs-toggle="dropdown">Toys & Games</a>
-                      <ul class="dropdown-menu">
-                        <li><a href="/category/6" class="dropdown-item">Toys</a></li>
-                        <li><a href="/category/6" class="dropdown-item">Board Games</a></li>
-                        <li><a href="/category/6" class="dropdown-item">Video Games</a></li>
-                        <li><a href="/category/6" class="dropdown-item">Collectibles</a></li>
-                        <li><a href="/category/6" class="dropdown-item">Building Sets</a></li>
-                      </ul>
-                    </li>
-                    <!-- Cat7 -->
-                    <li class="dropdown-submenu">
-                      <a href="#" class="dropdown-item dropdown-toggle" data-bs-toggle="dropdown">Beauty & Personal Care</a>
-                      <ul class="dropdown-menu">
-                        <li><a href="/category/7" class="dropdown-item">Skincare</a></li>
-                        <li><a href="/category/7" class="dropdown-item">Makeup</a></li>
-                        <li><a href="/category/7" class="dropdown-item">Hair Care</a></li>
-                        <li><a href="/category/7" class="dropdown-item">Fragrances</a></li>
-                        <li><a href="/category/7" class="dropdown-item">Personal Wellness</a></li>
-                      </ul>
-                    </li>
-                    <!-- Cat8 -->
-                    <li class="dropdown-submenu">
-                      <a href="#" class="dropdown-item dropdown-toggle" data-bs-toggle="dropdown">Automotive</a>
-                      <ul class="dropdown-menu">
-                        <li><a href="/category/8" class="dropdown-item">Car Accessories</a></li>
-                        <li><a href="/category/8" class="dropdown-item">Maintenance & Care</a></li>
-                        <li><a href="/category/8" class="dropdown-item">Electronics & GPS</a></li>
-                        <li><a href="/category/8" class="dropdown-item">Tools & Equipment</a></li>
-                        <li><a href="/category/8" class="dropdown-item">Interior Accessories</a></li>
-                      </ul>
-                    </li>
+                    {{/each}}
                   </ul>
                 </li>
                 <li class="nav-item">
