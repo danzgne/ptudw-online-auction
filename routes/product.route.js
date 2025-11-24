@@ -12,7 +12,9 @@ router.get('/search', async (req, res) => {
   // const q = req.query.q || '';
   // const products = await productModel.findBySearch(q);
   // res.render('vwProduct/bySearch', { products, searchQuery: q });
-  res.render('vwProduct/list');  
+  const products = await productModel.findAll();
+  res.render('vwProduct/new_list', {products: products});  
 });
+
 
 export default router;

@@ -18,7 +18,7 @@ app.engine('handlebars', engine({
     section: expressHandlebarsSections(),
     eq(a, b) {
       return a === b;
-    }
+    },
   }
 }));
 
