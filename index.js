@@ -4,6 +4,7 @@ import expressHandlebarsSections from 'express-handlebars-sections';
 import session from 'express-session';
 import productRouter from './routes/product.route.js';
 import categoryRouter from './routes/category.route.js';
+import indexRouter from './routes/index.route.js';
 import * as categoryModel from './models/category.model.js';
 
 import accountRouter from './routes/account.route.js';
@@ -19,6 +20,26 @@ app.engine('handlebars', engine({
     eq(a, b) {
       return a === b;
     },
+    format_number(price){
+      return new Intl.NumberFormat('en-US').format(price);
+    },
+    format_date(date){
+      const d = new Date(date);
+      const day = String(d.getDate()).padStart(2, '0');
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const year = d.getFullYear();
+      return `${day}/${month}/${year}`;
+    },
+    time_remaining(date){
+      const now = new Date();
+      const end = new Date(date);
+      const diff = end - now;
+      if (diff <= 0) return '00:00:00';
+      const hours = String(Math.floor(diff / (1000 * 60 * 60))).padStart(2, '0');
+      const minutes = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
+      const seconds = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
+      return `${hours}:${minutes}:${seconds}`;
+    }
   }
 }));
 
@@ -41,8 +62,6 @@ app.use('/category', categoryRouter);
 
 // 🔴 PHẢI ĐỂ TRƯỚC ROUTES
 app.use(express.urlencoded({ extended: true }));
-// Nếu sau này dùng JSON:
- // app.use(express.json());
 
 // Session cũng nên để trước routes
 app.use(session({
@@ -57,10 +76,8 @@ app.use('/products', productRouter);
 app.use('/account', accountRouter);
 
 
-app.get('/', (req, res) => {
-  res.render('home');
-});
-
+// Route trang chủ
+app.use('/', indexRouter);
 app.listen(PORT, function () {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
