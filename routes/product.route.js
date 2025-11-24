@@ -8,5 +8,11 @@ router.get('/category/:id', async (req, res) => {
   const products = await productModel.findByCategoryId(categoryId);
   res.render('vwProduct/list', { products });
 });
+router.get('/search', async (req, res) => {
+  // const q = req.query.q || '';
+  // const products = await productModel.findBySearch(q);
+  // res.render('vwProduct/bySearch', { products, searchQuery: q });
+  res.render('vwProduct/list');  
+});
 
 export default router;

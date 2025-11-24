@@ -1,0 +1,110 @@
+{{#section 'js'}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+  document.getElementById("formSignin").addEventListener("submit", function (event) {
+    event.preventDefault();
+
+    const email = document.getElementById("email").value.trim();
+    if (email === "") {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Email is required.'
+      });
+      return;
+    }
+
+    const password = document.getElementById("password").value;
+    if (password === "") {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Password is required.'
+      });
+      return;
+    }
+
+    event.target.submit();
+  });
+</script>
+{{/section}}
+
+<section class="py-5">
+  <div class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+
+        <!-- Title -->
+        <div class="mb-4 text-center">
+          <h2 class="text-uppercase">Sign in</h2>
+          <p class="text-muted mb-0">
+            Log in to continue to the online auction.
+          </p>
+        </div>
+
+        {{!-- Global messages from controller --}}
+        {{#if error_message}}
+        <div class="alert alert-danger">
+          {{error_message}}
+        </div>
+        {{/if}}
+
+        {{#if success_message}}
+        <div class="alert alert-success">
+          {{success_message}}
+        </div>
+        {{/if}}
+
+        <form method="post" action="/account/signin" id="formSignin">
+          <!-- Email -->
+          <div class="mb-3">
+            <label for="email" class="form-label text-uppercase small">Email</label>
+            <input
+              type="email"
+              class="form-control {{#if errors.email}}is-invalid{{/if}}"
+              id="email"
+              name="email"
+              placeholder="you@example.com"
+              value="{{old.email}}">
+            {{#if errors.email}}
+            <div class="invalid-feedback">
+              {{errors.email}}
+            </div>
+            {{/if}}
+          </div>
+
+          <!-- Password -->
+          <div class="mb-3">
+            <label for="password" class="form-label text-uppercase small">Password</label>
+            <input
+              type="password"
+              class="form-control {{#if errors.password}}is-invalid{{/if}}"
+              id="password"
+              name="password"
+              placeholder="Enter your password">
+            {{#if errors.password}}
+            <div class="invalid-feedback">
+              {{errors.password}}
+            </div>
+            {{/if}}
+          </div>
+
+          <!-- Submit -->
+          <div class="d-grid">
+            <button type="submit" class="btn btn-dark text-uppercase">
+              Sign in
+            </button>
+          </div>
+
+          <div class="mt-3 text-center">
+            <span class="text-muted small">
+              Don't have an account yet?
+              <a href="/account/signup" class="text-decoration-none">Sign up</a>
+            </span>
+          </div>
+        </form>
+
+      </div>
+    </div>
+  </div>
+</section>
