@@ -23,10 +23,12 @@ export function findAll() {
     );
 }
 
-export function findByCategoryId(categoryId) {
+export function findByCategoryId(categoryId, limit, offset) {
   return db('products')
     .leftJoin('users', 'products.highest_bidder_id', 'users.id')
     .where('products.category_id', categoryId) 
+    .limit(limit)
+    .offset(offset)
     .select(
       'products.*',
       db.raw(`
@@ -45,6 +47,14 @@ export function findByCategoryId(categoryId) {
       `)
     );
 }
+
+export function countByCategoryId(categoryId) {
+  return db('products')
+    .where('category_id', categoryId)
+    .count('id as amount')
+    .first();
+}
+
 // Helper chung để select cột và che tên bidder
 const BASE_QUERY = db('products')
   .leftJoin('users', 'products.highest_bidder_id', 'users.id')

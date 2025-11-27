@@ -39,6 +39,62 @@ app.engine('handlebars', engine({
       const minutes = String(Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))).padStart(2, '0');
       const seconds = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
       return `${hours}:${minutes}:${seconds}`;
+    },
+    getPaginationRange(currentPage, totalPages) {
+      const range = [];
+      const maxVisible = 4;
+      
+      if (totalPages <= maxVisible) {
+        // Nếu trang ít, hiển thị tất cả
+        for (let i = 1; i <= totalPages; i++) {
+          range.push({ number: i, type: 'number' });
+        }
+      } else {
+        // Luôn hiển thị trang đầu
+        range.push({ number: 1, type: 'number' });
+        
+        // Tính khoảng quanh trang hiện tại
+        let start = Math.max(2, currentPage - 1);
+        let end = Math.min(totalPages - 1, currentPage + 1);
+        
+        // Nếu có khoảng cách từ 1 đến start
+        if (start > 2) {
+          range.push({ type: 'ellipsis' });
+        }
+        
+        // Thêm các trang quanh trang hiện tại
+        for (let i = start; i <= end; i++) {
+          range.push({ number: i, type: 'number' });
+        }
+        
+        // Nếu có khoảng cách từ end đến totalPages
+        if (end < totalPages - 1) {
+          range.push({ type: 'ellipsis' });
+        }
+        
+        // Luôn hiển thị trang cuối
+        range.push({ number: totalPages, type: 'number' });
+      }
+      
+      return range;
+    },
+    and(...args) {
+      return args.slice(0, -1).every(Boolean);
+    },
+    or(...args) {
+      return args.slice(0, -1).some(Boolean);
+    },
+    gt(a, b) {
+      return a > b;
+    },
+    lt(a, b) {
+      return a < b;
+    },
+    add(a, b) {
+      return a + b;
+    },
+    subtract(a, b) {
+      return a - b;
     }
   }
 }));
