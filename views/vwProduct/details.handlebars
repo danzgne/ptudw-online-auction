@@ -1,0 +1,911 @@
+<div class="container mb-5">
+  <!-- Breadcrumb Navigation -->
+  <nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item">
+        <a href="javascript:history.back()" class="text-decoration-none d-flex align-items-center gap-2">
+          <i class="bi bi-arrow-left"></i> Back
+        </a>
+      </li>
+      <li class="breadcrumb-item"><a href="/" class="text-decoration-none">Home</a></li>
+      <li class="breadcrumb-item"><a href="#" class="text-decoration-none">Category</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Product Detail</li>
+    </ol>
+  </nav>
+
+  <div class="row">
+    <!-- Product Image Section -->
+    <div class="col-lg-5 mb-4 mb-lg-0">
+      <div class="product-image-wrapper">
+        <div class="main-image-container position-relative cursor-pointer" onclick="openLightbox(0)">
+          {{#if product.thumbnail}}
+            <img id="mainImage" src="/static/{{product.thumbnail}}" alt="{{product.name}}" class="img-fluid main-product-image">
+          {{else}}
+            <img id="mainImage" src="https://placehold.co/500x500?text=No+Image" class="img-fluid main-product-image">
+          {{/if}}
+          
+          {{#if product.is_new}}
+          <div class="position-absolute top-0 start-0 m-3">
+            <span class="badge bg-success fs-6 px-3 py-2">
+              <i class="bi bi-lightning-fill"></i> New
+            </span>
+          </div>
+          {{/if}}
+
+          {{#if product.buy_now_price}}
+          <div class="position-absolute top-0 end-0 m-3">
+            <span class="badge bg-danger fs-6 px-3 py-2">
+              <i class="bi bi-tag-fill"></i> Buy Now
+            </span>
+          </div>
+          {{/if}}
+
+          <!-- Fullscreen Icon -->
+          <div class="position-absolute bottom-0 end-0 m-3">
+            <span class="badge bg-dark" style="opacity: 0.7;">
+              <i class="bi bi-arrows-fullscreen"></i>
+            </span>
+          </div>
+        </div>
+
+        <!-- Image Gallery -->
+        <div class="image-gallery mt-3">
+          <div class="row g-2">
+            <div class="col-3">
+              <div class="gallery-thumb active" onclick="changeMainImage(this, 0)">
+                {{#if product.thumbnail}}
+                  <img src="/static/{{product.thumbnail}}" alt="Thumb 1" class="w-100 h-100 rounded-2" style="object-fit: cover;">
+                {{else}}
+                  <img src="https://placehold.co/150x150?text=Image+1" alt="Thumb 1" class="w-100 h-100 rounded-2" style="object-fit: cover;">
+                {{/if}}
+              </div>
+            </div>
+            <div class="col-3">
+              <div class="gallery-thumb" onclick="changeMainImage(this, 1)">
+                <img src="https://placehold.co/150x150?text=Image+2" alt="Thumb 2" class="w-100 h-100 rounded-2" style="object-fit: cover;">
+              </div>
+            </div>
+            <div class="col-3">
+              <div class="gallery-thumb" onclick="changeMainImage(this, 2)">
+                <img src="https://placehold.co/150x150?text=Image+3" alt="Thumb 3" class="w-100 h-100 rounded-2" style="object-fit: cover;">
+              </div>
+            </div>
+            <div class="col-3">
+              <div class="gallery-thumb" onclick="changeMainImage(this, 3)">
+                <img src="https://placehold.co/150x150?text=Image+4" alt="Thumb 4" class="w-100 h-100 rounded-2" style="object-fit: cover;">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Product Details Section -->
+    <div class="col-lg-7">
+      <!-- Product Title & Category -->
+      <div class="mb-4">
+        <span class="badge bg-primary mb-3" style="background-color: #72AEC8 !important;">Featured Auction</span>
+        <h1 class="display-6 fw-bold text-dark mb-3">{{product.name}}</h1>
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+          <div class="d-flex align-items-center">
+            <span class="text-warning">
+              <i class="bi bi-star-fill"></i>
+              <i class="bi bi-star-fill"></i>
+              <i class="bi bi-star-fill"></i>
+              <i class="bi bi-star-fill"></i>
+              <i class="bi bi-star-half"></i>
+            </span>
+            <span class="ms-2 text-muted small">(12 reviews)</span>
+          </div>
+          <span class="text-muted">|</span>
+          <span class="text-muted small">
+            <i class="bi bi-calendar3"></i> {{format_date product.created_at}}
+          </span>
+        </div>
+      </div>
+
+      <hr class="my-4" style="border-top: 2px solid #e9ecef;">
+
+      <!-- Price Section -->
+      <div class="price-section mb-5">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="price-card p-4 rounded-4 bg-gradient-light border-0">
+              <small class="text-muted d-block mb-2 fw-500">Current Bid</small>
+              <div class="d-flex align-items-baseline gap-2">
+                <span class="text-muted">$</span>
+                <h2 class="fw-bold text-primary mb-0" style="color: #72AEC8 !important;">{{format_number product.current_price}}</h2>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="price-card p-4 rounded-4 bg-gradient-light border-0">
+              <small class="text-muted d-block mb-2 fw-500">Buy Now Price</small>
+              {{#if product.buy_now_price}}
+                <div class="d-flex align-items-baseline gap-2">
+                  <span class="text-muted">$</span>
+                  <h2 class="fw-bold text-success mb-0">{{format_number product.buy_now_price}}</h2>
+                </div>
+              {{else}}
+                <div class="d-flex align-items-baseline gap-2">
+                  <h2 class="fw-bold text-muted mb-0">N/A</h2>
+                </div>
+              {{/if}}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Auction Info -->
+      <div class="auction-info mb-5">
+        <div class="row g-3">
+          <div class="col-md-4">
+            <div class="info-box p-4 rounded-3 border bg-white text-center h-100 d-flex flex-column justify-content-center">
+              <div class="mb-3">
+                <i class="bi bi-hourglass-split" style="font-size: 1.8rem; color: #dc3545;"></i>
+              </div>
+              <small class="text-muted d-block mb-2">Time Left</small>
+              <h5 class="fw-bold text-danger countdown-timer" data-end-date="{{product.end_at}}">
+                {{time_remaining product.end_at}}
+              </h5>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="info-box p-4 rounded-3 border bg-white text-center h-100 d-flex flex-column justify-content-center">
+              <div class="mb-3">
+                <i class="bi bi-fire" style="font-size: 1.8rem; color: #ffc107;"></i>
+              </div>
+              <small class="text-muted d-block mb-2">Total Bids</small>
+              <h5 class="fw-bold text-warning">{{product.bid_count}}</h5>
+            </div>
+          </div>
+          <div class="col-md-4">
+            <div class="info-box p-4 rounded-3 border bg-white text-center h-100 d-flex flex-column justify-content-center">
+              <div class="mb-3">
+                <i class="bi bi-person-check" style="font-size: 1.8rem; color: #198754;"></i>
+              </div>
+              <small class="text-muted d-block mb-2">Highest Bidder</small>
+              {{#if product.bidder_name}}
+                <h5 class="fw-bold text-success" style="font-size: 0.9rem;">{{product.bidder_name}}</h5>
+              {{else}}
+                <h5 class="fw-bold text-muted">No bids yet</h5>
+              {{/if}}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="action-buttons mb-4">
+        <div class="d-grid gap-2 d-md-flex">
+          <button class="btn btn-lg flex-fill fw-bold" style="background-color: #72AEC8; border-color: #72AEC8; color: white; border-radius: 8px; padding: 0.75rem;">
+            <i class="bi bi-hammer"></i> Place Bid
+          </button>
+          <button class="btn btn-outline-secondary btn-lg flex-fill fw-bold" style="border-radius: 8px;">
+            <i class="bi bi-heart"></i> Watch
+          </button>
+        </div>
+      </div>
+
+      {{#if product.buy_now_price}}
+      <div class="d-grid mb-4">
+        <button class="btn btn-success btn-lg fw-bold" style="background-color: #28a745; border-color: #28a745; border-radius: 8px; padding: 0.75rem;">
+          <i class="bi bi-check-circle"></i> Buy Now
+        </button>
+      </div>
+      {{/if}}
+
+      <hr class="my-4" style="border-top: 2px solid #e9ecef;">
+
+      <!-- Seller Info -->
+      <div class="seller-info p-4 rounded-4 border bg-white">
+        <div class="d-flex justify-content-between align-items-start mb-3">
+          <div>
+            <h6 class="fw-bold mb-2">
+              <i class="bi bi-shop" style="color: #72AEC8;"></i> Seller Information
+            </h6>
+            <h5 class="fw-bold mb-1">Seller Name</h5>
+            <small class="text-success d-flex align-items-center gap-1">
+              <i class="bi bi-check-circle-fill"></i> Verified Seller
+            </small>
+          </div>
+          <button class="btn btn-outline-primary btn-sm" style="border-color: #72AEC8; color: #72AEC8;">
+            Contact
+          </button>
+        </div>
+        <small class="text-muted d-block">
+          <i class="bi bi-star-fill text-warning"></i> 4.8/5 (245 reviews) • Member since 2022
+        </small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Product Description Section -->
+  <div class="row mt-5">
+    <div class="col-lg-8">
+      <div class="description-section bg-white p-5 rounded-4 border mb-5">
+        <h3 class="fw-bold mb-4">
+          <i class="bi bi-file-text" style="color: #72AEC8;"></i> Product Description
+        </h3>
+        <p class="text-muted" style="line-height: 1.8; font-size: 1.05rem;">
+          {{#if product.description}}
+            {{product.description}}
+          {{else}}
+            <em>No description provided for this product.</em>
+          {{/if}}
+        </p>
+      </div>
+
+      <!-- Product Details Tab -->
+      <div class="details-section bg-white p-5 rounded-4 border">
+        <h3 class="fw-bold mb-4">
+          <i class="bi bi-info-circle" style="color: #72AEC8;"></i> Product Details
+        </h3>
+        <div class="table-responsive">
+          <table class="table table-borderless">
+            <tbody>
+              <tr class="border-bottom">
+                <td class="fw-bold text-muted" style="width: 30%;">Product ID</td>
+                <td class="fw-500">{{product.id}}</td>
+              </tr>
+              <tr class="border-bottom">
+                <td class="fw-bold text-muted">Category</td>
+                <td class="fw-500">{{product.category_name}}</td>
+              </tr>
+              <tr class="border-bottom">
+                <td class="fw-bold text-muted">Condition</td>
+                <td><span class="badge bg-info" style="background-color: #72AEC8 !important;">Like New</span></td>
+              </tr>
+              <tr class="border-bottom">
+                <td class="fw-bold text-muted">Auction Start</td>
+                <td class="fw-500">{{format_date product.created_at}}</td>
+              </tr>
+              <tr class="border-bottom">
+                <td class="fw-bold text-muted">Auction End</td>
+                <td class="fw-500">{{format_date product.end_at}}</td>
+              </tr>
+              <tr>
+                <td class="fw-bold text-muted">Starting Price</td>
+                <td class="fw-bold" style="color: #72AEC8;">$ {{format_number product.starting_price}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="col-lg-4">
+      <div class="sidebar-widget bg-white p-4 rounded-4 border sticky-top" style="top: 90px;">
+        <h5 class="fw-bold mb-4" style="color: #72AEC8;">
+          <i class="bi bi-graph-up"></i> Quick Stats
+        </h5>
+        
+        <div class="stat-item mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="text-muted small">Views</span>
+            <strong class="text-dark">1,234</strong>
+          </div>
+          <div class="progress" style="height: 6px; background-color: #e9ecef;">
+            <div class="progress-bar" style="width: 85%; background-color: #72AEC8; border-radius: 3px;"></div>
+          </div>
+        </div>
+
+        <div class="stat-item mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="text-muted small">Watchers</span>
+            <strong class="text-dark">89</strong>
+          </div>
+          <div class="progress" style="height: 6px; background-color: #e9ecef;">
+            <div class="progress-bar" style="width: 45%; background-color: #72AEC8; border-radius: 3px;"></div>
+          </div>
+        </div>
+
+        <div class="stat-item mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="text-muted small">Bids</span>
+            <strong class="text-dark">{{product.bid_count}}</strong>
+          </div>
+          <div class="progress" style="height: 6px; background-color: #e9ecef;">
+            <div class="progress-bar" style="width: 65%; background-color: #72AEC8; border-radius: 3px;"></div>
+          </div>
+        </div>
+
+        <hr class="my-4">
+
+        <div class="share-section">
+          <h6 class="fw-bold mb-3">Share This Item</h6>
+          <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary btn-sm flex-fill rounded-3" title="Share on Facebook">
+              <i class="bi bi-facebook"></i>
+            </button>
+            <button class="btn btn-outline-secondary btn-sm flex-fill rounded-3" title="Share on Twitter">
+              <i class="bi bi-twitter"></i>
+            </button>
+            <button class="btn btn-outline-secondary btn-sm flex-fill rounded-3" title="Share on Pinterest">
+              <i class="bi bi-pinterest"></i>
+            </button>
+            <button class="btn btn-outline-secondary btn-sm flex-fill rounded-3" title="Copy Link">
+              <i class="bi bi-link-45deg"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Related Products Section -->
+  <div class="row mt-5">
+    <div class="col-12">
+      <div class="related-section">
+        <h3 class="fw-bold mb-5">
+          <i class="bi bi-box-seam" style="color: #72AEC8;"></i> Related Products
+        </h3>
+        <div class="row g-4">
+          <!-- Related Product Card -->
+          <div class="col-md-3">
+            <div class="related-product-card h-100 rounded-4 overflow-hidden shadow-sm border-0">
+              <div class="image-wrapper position-relative" style="height: 220px; overflow: hidden; background-color: #f8f9fa;">
+                <img src="https://placehold.co/300x220" alt="Related Product" class="w-100 h-100" style="object-fit: cover;">
+                <div class="overlay"></div>
+              </div>
+              <div class="p-3">
+                <h6 class="fw-bold text-truncate mb-2">Related Product Title</h6>
+                <div class="d-flex justify-content-between align-items-center">
+                  <p class="text-primary fw-bold mb-0" style="color: #72AEC8 !important;">$ 250.00</p>
+                  <small class="text-muted">(5 bids)</small>
+                </div>
+              </div>
+            </div>
+          </div>
+          <!-- Repeat for more related products -->
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox Gallery Modal -->
+<div id="lightbox" class="lightbox" style="display: none;">
+  <button class="lightbox-close" onclick="closeLightbox()" title="Close (Esc)">
+    <i class="bi bi-x-lg"></i>
+  </button>
+  
+  <button class="lightbox-nav lightbox-prev" onclick="prevImage()" title="Previous">
+    <i class="bi bi-chevron-left"></i>
+  </button>
+  
+  <div class="lightbox-content">
+    <img id="lightboxImage" src="" alt="Gallery Image" class="lightbox-img">
+    <div class="lightbox-counter">
+      <span id="currentImageNum">1</span> / <span id="totalImageNum">4</span>
+    </div>
+  </div>
+  
+  <button class="lightbox-nav lightbox-next" onclick="nextImage()" title="Next">
+    <i class="bi bi-chevron-right"></i>
+  </button>
+</div>
+
+<style>
+  /* General Styles */
+  :root {
+    --primary-color: #72AEC8;
+    --success-color: #28a745;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --light-bg: #f8f9fa;
+    --border-color: #e9ecef;
+  }
+
+  /* Breadcrumb */
+  .breadcrumb {
+    background-color: transparent;
+    padding: 0;
+  }
+
+  .breadcrumb-item a {
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: all 0.3s ease;
+  }
+
+  .breadcrumb-item a:hover {
+    color: #5a8ba8;
+    text-decoration: underline;
+  }
+
+  /* Product Image Styles */
+  .product-image-wrapper {
+    position: sticky;
+    top: 100px;
+  }
+
+  .main-image-container {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    padding: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 500px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+  }
+
+  .main-image-container:hover {
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  }
+
+  .main-product-image {
+    max-width: 100%;
+    max-height: 450px;
+    object-fit: contain;
+    transition: transform 0.3s ease;
+  }
+
+  .main-image-container:hover .main-product-image {
+    transform: scale(1.05);
+  }
+
+  /* Price Card Styles */
+  .price-card {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    border: 1px solid var(--border-color) !important;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%) !important;
+  }
+
+  .price-card:hover {
+    box-shadow: 0 8px 20px rgba(114, 174, 200, 0.15);
+    transform: translateY(-3px);
+  }
+
+  /* Info Box Styles */
+  .info-box {
+    background-color: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    border-color: var(--border-color) !important;
+  }
+
+  .info-box:hover {
+    box-shadow: 0 6px 20px rgba(114, 174, 200, 0.2);
+    border-color: var(--primary-color) !important;
+  }
+
+  /* Action Buttons */
+  .btn-lg {
+    padding: 0.75rem 1.5rem;
+    font-size: 1.1rem;
+    letter-spacing: 0.5px;
+  }
+
+  .btn {
+    transition: all 0.3s ease;
+  }
+
+  /* Seller Info */
+  .seller-info {
+    border: 1px solid var(--border-color) !important;
+    background: white;
+    transition: all 0.3s ease;
+  }
+
+  .seller-info:hover {
+    border-color: var(--primary-color) !important;
+    box-shadow: 0 4px 15px rgba(114, 174, 200, 0.1);
+  }
+
+  /* Description Section */
+  .description-section {
+    background: white;
+    transition: all 0.3s ease;
+  }
+
+  .description-section p {
+    line-height: 1.9;
+    color: #495057;
+  }
+
+  /* Details Table */
+  .table {
+    margin-bottom: 0;
+  }
+
+  .table tbody tr {
+    transition: all 0.2s ease;
+  }
+
+  .table tbody tr:hover {
+    background-color: #f8f9fa;
+  }
+
+  .table tbody td {
+    padding: 1rem;
+    vertical-align: middle;
+  }
+
+  /* Sidebar Sticky */
+  .sidebar-widget {
+    border: 1px solid var(--border-color) !important;
+    background: white;
+    transition: all 0.3s ease;
+  }
+
+  .sidebar-widget:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Stat Item */
+  .stat-item {
+    padding-bottom: 1.5rem;
+  }
+
+  .stat-item strong {
+    color: #212529;
+    font-size: 1.1rem;
+  }
+
+  /* Related Products */
+  .related-product-card {
+    transition: all 0.3s ease;
+    cursor: pointer;
+    border: 1px solid var(--border-color) !important;
+    background: white;
+  }
+
+  .related-product-card:hover {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15) !important;
+    transform: translateY(-5px);
+    border-color: var(--primary-color) !important;
+  }
+
+  .image-wrapper {
+    position: relative;
+  }
+
+  .image-wrapper .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(114, 174, 200, 0.1);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+
+  .related-product-card:hover .overlay {
+    opacity: 1;
+  }
+
+  /* Countdown Timer */
+  .countdown-timer {
+    font-size: 1.3rem;
+    font-family: 'Courier New', 'Monaco', monospace;
+    letter-spacing: 1px;
+  }
+
+  /* Section Headers */
+  h3 {
+    position: relative;
+    padding-bottom: 1rem;
+  }
+
+  h3::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 50px;
+    height: 3px;
+    background: var(--primary-color);
+    border-radius: 2px;
+  }
+
+  /* Image Gallery */
+  .image-gallery {
+    display: flex;
+    gap: 10px;
+  }
+
+  .gallery-thumb {
+    cursor: pointer;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    padding: 0;
+    height: 120px;
+    background: white;
+  }
+
+  .gallery-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+
+  .gallery-thumb:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(114, 174, 200, 0.2);
+  }
+
+  .gallery-thumb:hover img {
+    transform: scale(1.05);
+  }
+
+  .gallery-thumb.active {
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 12px rgba(114, 174, 200, 0.3);
+  }
+
+  /* Lightbox Gallery */
+  .lightbox {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(3px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    animation: fadeIn 0.3s ease-out;
+  }
+
+  .lightbox-content {
+    position: relative;
+    max-width: 90vw;
+    max-height: 90vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .lightbox-img {
+    max-width: 100%;
+    max-height: 85vh;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3);
+  }
+
+  .lightbox-close {
+    position: absolute;
+    top: 30px;
+    right: 30px;
+    background: rgba(114, 174, 200, 0.95);
+    border: none;
+    color: white;
+    font-size: 1.5rem;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 10000;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  }
+
+  .lightbox-close i {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .lightbox-close:hover {
+    background: rgba(114, 174, 200, 1);
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(114, 174, 200, 0.4);
+  }
+
+  .lightbox-nav {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(114, 174, 200, 0.9);
+    border: none;
+    color: white;
+    font-size: 2rem;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 10000;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    padding: 0;
+  }
+
+  .lightbox-nav i {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .lightbox-nav:hover {
+    background: rgba(114, 174, 200, 1);
+    transform: translateY(-50%) scale(1.15);
+    box-shadow: 0 6px 25px rgba(114, 174, 200, 0.4);
+  }
+
+  .lightbox-nav:active {
+    transform: translateY(-50%) scale(0.95);
+  }
+
+  .lightbox-prev {
+    left: 20px;
+  }
+
+  .lightbox-next {
+    right: 20px;
+  }
+
+  .lightbox-counter {
+    position: absolute;
+    bottom: 25px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-weight: 600;
+    font-size: 1rem;
+    backdrop-filter: blur(10px);
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  .cursor-pointer {
+    cursor: pointer;
+  }
+
+  .main-image-container:hover {
+    opacity: 0.9;
+  }
+
+  /* Responsive */
+  @media (max-width: 768px) {
+    .product-image-wrapper {
+      position: static;
+    }
+
+    .main-image-container {
+      min-height: 300px;
+      padding: 20px;
+    }
+
+    .sidebar-widget {
+      position: static !important;
+      margin-top: 2rem;
+    }
+
+    .breadcrumb {
+      font-size: 0.9rem;
+    }
+
+    h1 {
+      font-size: 1.8rem !important;
+    }
+
+    h3 {
+      font-size: 1.3rem;
+    }
+  }
+
+  /* Animations */
+  @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .description-section,
+  .details-section {
+    animation: slideInUp 0.6s ease-out;
+  }
+
+  /* Smooth Scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+</style>
+
+<script>
+  // Gallery images data
+  const galleryImages = [
+    {{#if product.thumbnail}}'/static/{{product.thumbnail}}'{{else}}'https://placehold.co/800x800?text=Image+1'{{/if}},
+    'https://placehold.co/800x800?text=Image+2',
+    'https://placehold.co/800x800?text=Image+3',
+    'https://placehold.co/800x800?text=Image+4'
+  ];
+  
+  let currentImageIndex = 0;
+
+  function changeMainImage(element, index) {
+    // Lấy ảnh từ thumbnail
+    const imgSrc = element.querySelector('img').src;
+    
+    // Update ảnh chính
+    document.getElementById('mainImage').src = imgSrc;
+    currentImageIndex = index;
+    
+    // Update class active
+    document.querySelectorAll('.gallery-thumb').forEach(thumb => {
+      thumb.classList.remove('active');
+    });
+    element.classList.add('active');
+  }
+
+  function openLightbox(index) {
+    currentImageIndex = index;
+    const lightbox = document.getElementById('lightbox');
+    const lightboxImage = document.getElementById('lightboxImage');
+    
+    lightboxImage.src = galleryImages[index];
+    document.getElementById('currentImageNum').textContent = index + 1;
+    lightbox.style.display = 'flex';
+    
+    // Disable body scroll
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeLightbox() {
+    const lightbox = document.getElementById('lightbox');
+    lightbox.style.display = 'none';
+    document.body.style.overflow = 'auto';
+  }
+
+  function nextImage() {
+    currentImageIndex = (currentImageIndex + 1) % galleryImages.length;
+    document.getElementById('lightboxImage').src = galleryImages[currentImageIndex];
+    document.getElementById('currentImageNum').textContent = currentImageIndex + 1;
+  }
+
+  function prevImage() {
+    currentImageIndex = (currentImageIndex - 1 + galleryImages.length) % galleryImages.length;
+    document.getElementById('lightboxImage').src = galleryImages[currentImageIndex];
+    document.getElementById('currentImageNum').textContent = currentImageIndex + 1;
+  }
+
+  // Keyboard navigation
+  document.addEventListener('keydown', function(event) {
+    const lightbox = document.getElementById('lightbox');
+    if (lightbox.style.display === 'flex') {
+      if (event.key === 'ArrowLeft') prevImage();
+      if (event.key === 'ArrowRight') nextImage();
+      if (event.key === 'Escape') closeLightbox();
+    }
+  });
+
+  // Click on main image to open lightbox
+  document.getElementById('mainImage').addEventListener('click', function() {
+    openLightbox(currentImageIndex);
+  });
+</script>

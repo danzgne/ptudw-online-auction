@@ -38,4 +38,8 @@ router.get('/search', async (req, res) => {
   res.render('vwProduct/new_list', {products: products});  
 });
 
+router.get('/detail', async (req, res) => {
+  res.render('vwProduct/details');
+});
+
 export default router;
