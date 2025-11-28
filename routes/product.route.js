@@ -39,7 +39,9 @@ router.get('/search', async (req, res) => {
 });
 
 router.get('/detail', async (req, res) => {
-  res.render('vwProduct/details');
+  const productId = req.query.id;
+  const product = await productModel.findByProductId(productId);
+  res.render('vwProduct/details', { product });
 });
 
 export default router;

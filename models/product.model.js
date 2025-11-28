@@ -101,3 +101,27 @@ export function findTopBids() {
     .orderBy('bid_count', 'desc') // Order by cột alias bid_count
     .limit(5);
 }
+
+export function findByProductId(productId) {
+  return db('products')
+    .leftJoin('users', 'products.highest_bidder_id', 'users.id')
+    .where('products.id', productId)
+    .select(
+      'products.*',
+      db.raw(`
+        CASE 
+          WHEN users.fullname IS NOT NULL THEN 
+            OVERLAY(users.fullname PLACING '****' FROM 1 FOR (LENGTH(users.fullname)/2)::INTEGER)
+          ELSE NULL 
+        END AS bidder_name
+      `),
+      db.raw(`
+        (
+          SELECT COUNT(*) 
+          FROM bidding_history 
+          WHERE bidding_history.product_id = products.id
+        ) AS bid_count
+      `)
+    )
+    .first();
+}
