@@ -40,7 +40,28 @@ router.get('/search', async (req, res) => {
 
 router.get('/detail', async (req, res) => {
   const productId = req.query.id;
-  const product = await productModel.findByProductId(productId);
+  const result = await productModel.findByProductId(productId);
+  const product = {
+    thumbnail: result[0].thumbnail,
+    sub_images: result.reduce((acc, curr) => {
+      if (curr.img_link) {
+        acc.push(curr.img_link);
+      }
+      return acc;
+    }, []),
+    id: result[0].id,
+    name: result[0].name,
+    starting_price: result[0].starting_price,
+    current_price: result[0].current_price,
+    buy_now_price: result[0].buy_now_price,
+    seller_id: result[0].seller_id,
+    hightest_bidder_id: result[0].highest_bidder_id,
+    bidder_name: result[0].bidder_name,
+    created_at: result[0].created_at,
+    end_at: result[0].end_at,
+    description: result[0].description
+  }
+  console.log(product);
   res.render('vwProduct/details', { product });
 });
 

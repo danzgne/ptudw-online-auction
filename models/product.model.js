@@ -105,9 +105,11 @@ export function findTopBids() {
 export function findByProductId(productId) {
   return db('products')
     .leftJoin('users', 'products.highest_bidder_id', 'users.id')
+    .leftJoin('product_images', 'products.id', 'product_images.product_id')
     .where('products.id', productId)
     .select(
       'products.*',
+      'product_images.img_link',
       db.raw(`
         CASE 
           WHEN users.fullname IS NOT NULL THEN 
@@ -123,5 +125,4 @@ export function findByProductId(productId) {
         ) AS bid_count
       `)
     )
-    .first();
 }
