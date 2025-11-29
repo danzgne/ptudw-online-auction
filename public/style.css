@@ -588,8 +588,21 @@ h3.cart-title {
 .site-header {
     position: fixed;
     width: 100%;
-    z-index: 10;
+    z-index: 100;
     transition: background 0.3s ease-out;
+    isolation: isolate;
+}
+
+.site-header .navbar {
+    min-height: 70px;
+}
+
+.site-header .d-flex.align-items-center {
+    align-items: center !important;
+}
+
+.site-header .container-fluid {
+    isolation: isolate;
 }
 .navbar-toggler svg.navbar-icon {
     width: 50px;
@@ -748,6 +761,164 @@ h3.cart-title {
   .dropdown-submenu.show > .dropdown-menu {
     display: block;
   }
+}
+
+/*------------ Join Us Button Animation ----------- */
+/* Inspired by Uiverse.io design, customized for Ministore theme */
+.btn-join-us,
+.btn-join-us *,
+.btn-join-us :after,
+.btn-join-us :before,
+.btn-join-us:after,
+.btn-join-us:before {
+  border: 0 solid;
+  box-sizing: border-box;
+}
+
+.btn-join-us {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-appearance: button;
+  background-color: var(--primary-color);
+  background-image: none;
+  color: #fff;
+  cursor: pointer;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    Segoe UI, Roboto, Helvetica Neue, Arial, Noto Sans, sans-serif,
+    Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+  font-size: 100%;
+  font-weight: 900;
+  line-height: 1.5;
+  margin: 0;
+  -webkit-mask-image: -webkit-radial-gradient(#000, #fff);
+  padding: 0;
+  text-transform: uppercase;
+  border-radius: 99rem;
+  border: 2px solid var(--primary-color);
+  padding: 0.8rem 3rem;
+  z-index: 1;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  isolation: isolate;
+  display: inline-block;
+  vertical-align: middle;
+  flex-shrink: 0;
+}
+
+.btn-join-us:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+.btn-join-us:-moz-focusring {
+  outline: auto;
+}
+
+.btn-join-us svg {
+  display: block;
+  vertical-align: middle;
+}
+
+.btn-join-us [hidden] {
+  display: none;
+}
+
+.btn-join-us {
+  overflow: hidden;
+  position: relative;
+}
+
+.btn-join-us .text-container {
+  display: block;
+  position: relative;
+  z-index: 3;
+}
+
+.btn-join-us .text {
+  display: block;
+  position: relative;
+  color: #fff;
+  z-index: 3;
+  transition: color 0.3s ease;
+}
+
+.btn-join-us:hover {
+  border-color: var(--primary-color);
+  box-shadow: 0 8px 20px rgba(114, 174, 200, 0.4);
+}
+
+.btn-join-us:hover .text {
+  -webkit-animation: move-up-alternate 0.3s forwards;
+  animation: move-up-alternate 0.3s forwards;
+  color: var(--dark-color);
+}
+
+@-webkit-keyframes move-up-alternate {
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(80%);
+  }
+
+  51% {
+    transform: translateY(-80%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes move-up-alternate {
+  0% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(80%);
+  }
+
+  51% {
+    transform: translateY(-80%);
+  }
+
+  to {
+    transform: translateY(0);
+  }
+}
+
+.btn-join-us:after,
+.btn-join-us:before {
+  --skew: 0.2;
+  background: #fff;
+  content: "";
+  display: block;
+  height: 105%;
+  left: calc(-50% - 50% * var(--skew));
+  pointer-events: none;
+  position: absolute;
+  top: -106%;
+  transform: skew(calc(150deg * var(--skew))) translateY(var(--progress, 0));
+  transition: transform 0.2s ease;
+  width: 100%;
+  will-change: transform;
+  z-index: 1;
+}
+
+.btn-join-us:after {
+  --progress: 0%;
+  left: calc(50% + 50% * var(--skew));
+  top: 103%;
+  z-index: 1;
+}
+
+.btn-join-us:hover:before {
+  --progress: 100%;
+}
+
+.btn-join-us:hover:after {
+  --progress: -102%;
+}
   
   .dropdown-menu .dropdown-item {
     padding-left: 2rem;
@@ -766,11 +937,16 @@ h3.cart-title {
 /* 2. Billboard
 /*----------------------------------------------*/
 /*------------Swiper Arrow -----------*/
+#billboard {
+    position: relative;
+    isolation: isolate;
+}
+
 #billboard .swiper-arrow {
     position: absolute;
     top: 0;
     bottom: 0;
-    z-index: 2;
+    z-index: 10;
     display: flex;
     align-items: center;
 }
@@ -876,7 +1052,8 @@ h3.cart-title {
 .review-content .swiper-arrow {
     top: 0;
     bottom: 0;
-    z-index: 2;
+    z-index: 20;
+    isolation: isolate;
 }
 .review-content .swiper-arrow.swiper-arrow-next {
     right: 0;
