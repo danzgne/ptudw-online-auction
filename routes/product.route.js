@@ -2,6 +2,23 @@ import express from 'express';
 import * as productModel from '../models/product.model.js';
 
 const router = express.Router();
+const N_MINUTES = 20
+
+const prepareProductList = (products) => {
+  const now = new Date();
+  
+  if (!products) return [];
+
+  return products.map(product => {
+    const created = new Date(product.created_at);
+    const isNew = (now - created) < (N_MINUTES * 60 * 1000);
+
+    return {
+      ...product,
+      is_new: isNew
+    };
+  });
+};
 
 router.get('/category', async (req, res) => {
   const categoryId = req.query.id;
@@ -21,7 +38,7 @@ router.get('/category', async (req, res) => {
     })  
   };
 
-  res.render('vwProduct/new_list', { 
+  res.render('vwProduct/list', { 
     products: products,
     pageNumbers: pageNumbers,
     currentPage: page,
@@ -31,11 +48,46 @@ router.get('/category', async (req, res) => {
 });
 
 router.get('/search', async (req, res) => {
-  // const q = req.query.q || '';
-  // const products = await productModel.findBySearch(q);
-  // res.render('vwProduct/bySearch', { products, searchQuery: q });
-  const products = await productModel.findAll();
-  res.render('vwProduct/new_list', {products: products});  
+  const q = req.query.q || '';
+  if (q.length === 0) {
+    return res.render('vwProduct/list', {
+        q: q,
+        products: []
+    });
+  }
+  const keywords = q.replace(/ /g, ' & ');
+
+  const limit = 6;
+  const page = parseInt(req.query.page) || 1;
+  const offset = (page - 1) * limit;
+  const list = await productModel.searchPageByKeywords(keywords, limit, offset);
+  const products = prepareProductList(list);
+  const total = await productModel.countByKeywords(keywords); 
+  const totalCount = total.count;
+  const nPages = Math.ceil(totalCount / limit);
+  let from = (page - 1) * limit + 1;
+  let to = page * limit;
+  if (to > totalCount) to = totalCount;
+  if (totalCount === 0) { from = 0; to = 0; }
+  const page_numbers = [];
+  for (let i = 1; i <= nPages; i++) {
+    page_numbers.push({
+      value: i, 
+      isCurrent: i === page
+    });
+  }
+  
+  res.render('vwProduct/list', { 
+    products: products, 
+    page_numbers,
+    totalCount,
+    from,
+    to,
+    hasPrev: page > 1,
+    prevPage: page - 1,
+    hasNext: page < nPages,
+    nextPage: page + 1, 
+  });  
 });
 
 router.get('/detail', async (req, res) => {

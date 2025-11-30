@@ -22,8 +22,62 @@ export function findAll() {
       `)
     );
 }
-
-export function findByCategoryId(categoryId, limit, offset) {
+export function findPage(limit, offset) {
+  return db('products')
+    .leftJoin('users', 'products.highest_bidder_id', 'users.id')
+    .select(
+      'products.*', 
+    
+      db.raw(`
+        CASE 
+          WHEN users.fullname IS NOT NULL THEN 
+            OVERLAY(users.fullname PLACING '****' FROM 1 FOR (LENGTH(users.fullname)/2)::INTEGER)
+          ELSE NULL 
+        END AS bidder_name
+      `),
+      db.raw(`
+        (
+          SELECT COUNT(*) 
+          FROM bidding_history 
+          WHERE bidding_history.product_id = products.id
+        ) AS bid_count
+      `)
+    ).limit(limit).offset(offset);
+}
+export function searchPageByKeywords(keywords, limit, offset) {
+  return db('products')
+    .leftJoin('users', 'products.highest_bidder_id', 'users.id')
+    .whereRaw(`fts @@ to_tsquery(remove_accents('${keywords}'))`)
+    .select(
+      'products.*',
+      db.raw(`
+        CASE
+          WHEN users.fullname IS NOT NULL THEN
+            OVERLAY(users.fullname PLACING '****' FROM 1 FOR (LENGTH(users.fullname)/2)::INTEGER)
+          ELSE NULL
+        END AS bidder_name
+      `),
+      db.raw(`
+        ( 
+          SELECT COUNT(*)
+          FROM bidding_history
+          WHERE bidding_history.product_id = products.id
+        ) AS bid_count
+      `)
+    )
+    .limit(limit)
+    .offset(offset);
+}
+export function countByKeywords(keywords) {
+  return db('products')
+    .whereRaw(`fts @@ to_tsquery(remove_accents('${keywords}'))`)
+    .count('id as count')
+    .first();
+}
+export function countAll() {
+  return db('products').count('id as count').first();
+}
+export function findByCategoryId(categoryId) {
   return db('products')
     .leftJoin('users', 'products.highest_bidder_id', 'users.id')
     .where('products.category_id', categoryId) 

@@ -10,7 +10,7 @@ import * as categoryModel from './models/category.model.js';
 import accountRouter from './routes/account.route.js';
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3005;
 
 // Helper
 
@@ -23,12 +23,22 @@ app.engine('handlebars', engine({
     format_number(price){
       return new Intl.NumberFormat('en-US').format(price);
     },
-    format_date(date){
-      const d = new Date(date);
-      const day = String(d.getDate()).padStart(2, '0');
-      const month = String(d.getMonth() + 1).padStart(2, '0');
-      const year = d.getFullYear();
-      return `${day}/${month}/${year}`;
+    format_date(date) {
+        if (!date) return '';
+        const d = new Date(date);
+        if (isNaN(d.getTime())) return '';
+
+        // 'vi-VN' để ra định dạng ngày/tháng/năm
+        return new Intl.DateTimeFormat('vi-VN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            timeZone: 'Asia/Ho_Chi_Minh', // Ép buộc múi giờ VN
+            hour12: false // Dùng định dạng 24h
+        }).format(d);
     },
     time_remaining(date){
       const now = new Date();

@@ -165,11 +165,11 @@
 
               <!-- RIGHT: search + sign in -->
               <div class="d-flex align-items-center justify-content-lg-end gap-3 mt-3 mt-lg-0">
-                <a href="/products/search" class="btn btn-link p-0 search-button text-decoration-none">
+                <button type="button" class="btn btn-link p-0 search-button text-decoration-none" data-bs-toggle="modal" data-bs-target="#searchModal">
                   <svg class="search" width="20" height="20">
                     <use xlink:href="#search"></use>
                   </svg>
-                </a>
+                </button>
 
                 <a href="/account/signin" class="btn-join-us">
                   <span class="text-container">
@@ -187,13 +187,45 @@
     <main id="main-content" style="padding-top: 100px;">
       {{{body}}}
     </main>
-
+    <div class="modal fade" id="searchModal" tabindex="-1" aria-labelledby="searchModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header border-0">
+            <h5 class="modal-title" id="searchModalLabel">Search Products</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form action="/products/search" method="GET" class="d-flex">
+              <input 
+                class="form-control me-2" 
+                type="search" 
+                name="q" 
+                placeholder="Type keywords (e.g. Iphone, Laptop)..." 
+                aria-label="Search"
+                id="searchInput"
+                required
+              >
+              <button class="btn btn-primary text-uppercase" type="submit">Search</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
     <!-- SCRIPTS -->
     <script src="/static/js/jquery-1.11.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/swiper/swiper-bundle.min.js"></script>
     <script type="text/javascript" src="/static/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript" src="/static/js/plugins.js"></script>
     <script type="text/javascript" src="/static/js/script.js"></script>
+    <script>
+      // Tự động focus vào ô input khi modal mở ra
+      const searchModal = document.getElementById('searchModal')
+      const searchInput = document.getElementById('searchInput')
+
+      searchModal.addEventListener('shown.bs.modal', () => {
+        searchInput.focus()
+      })
+    </script>
     {{{_sections.js}}}
   </body>
 </html>
