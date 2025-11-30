@@ -44,12 +44,35 @@ export function findPage(limit, offset) {
       `)
     ).limit(limit).offset(offset);
 }
+
+// 1. Hàm tìm kiếm phân trang (Full FTS - Hỗ trợ Parent Category)
 export function searchPageByKeywords(keywords, limit, offset) {
   return db('products')
+    // JOIN 1: Lấy thông tin danh mục trực tiếp (Danh mục con - Child)
+    .join('categories as c', 'products.category_id', 'c.id')
+    
+    // JOIN 2: Self-Join để lấy thông tin danh mục cha (Parent)
+    // Dùng LEFT JOIN vì có thể danh mục đó không có cha (parent_id là NULL)
+    .leftJoin('categories as p', 'c.parent_id', 'p.id')
+    
     .leftJoin('users', 'products.highest_bidder_id', 'users.id')
-    .whereRaw(`fts @@ to_tsquery(remove_accents('${keywords}'))`)
+    .where((builder) => {
+        builder
+          // 1. Tìm trong tên sản phẩm (Product Name)
+          .whereRaw(`products.fts @@ to_tsquery('simple', remove_accents(?))`, [keywords])
+          
+          // 2. Tìm trong tên danh mục con HOẶC tên danh mục cha
+          // Logic: Nối chuỗi tên con và tên cha lại rồi tạo vector để tìm
+          // COALESCE(p.name, '') để xử lý trường hợp không có cha (null) thì thay bằng rỗng
+          .orWhereRaw(`
+            to_tsvector('simple', remove_accents(c.name) || ' ' || remove_accents(COALESCE(p.name, ''))) 
+            @@ to_tsquery('simple', remove_accents(?))
+          `, [keywords]);
+    })
     .select(
       'products.*',
+      // 'c.name as category_name', // Tên danh mục con
+      // 'p.name as parent_category_name', // Tên danh mục cha
       db.raw(`
         CASE
           WHEN users.fullname IS NOT NULL THEN
@@ -68,16 +91,27 @@ export function searchPageByKeywords(keywords, limit, offset) {
     .limit(limit)
     .offset(offset);
 }
+
+// 2. Hàm đếm tổng số lượng (Full FTS - Hỗ trợ Parent Category)
 export function countByKeywords(keywords) {
   return db('products')
-    .whereRaw(`fts @@ to_tsquery(remove_accents('${keywords}'))`)
-    .count('id as count')
+    .join('categories as c', 'products.category_id', 'c.id')
+    .leftJoin('categories as p', 'c.parent_id', 'p.id') // Cũng phải Join bảng cha ở đây
+    .where((builder) => {
+        builder
+          .whereRaw(`products.fts @@ to_tsquery('simple', remove_accents(?))`, [keywords])
+          .orWhereRaw(`
+            to_tsvector('simple', remove_accents(c.name) || ' ' || remove_accents(COALESCE(p.name, ''))) 
+            @@ to_tsquery('simple', remove_accents(?))
+          `, [keywords]);
+    })
+    .count('products.id as count')
     .first();
 }
 export function countAll() {
   return db('products').count('id as count').first();
 }
-export function findByCategoryId(categoryId) {
+export function findByCategoryId(categoryId, limit, offset) {
   return db('products')
     .leftJoin('users', 'products.highest_bidder_id', 'users.id')
     .where('products.category_id', categoryId) 
@@ -105,7 +139,7 @@ export function findByCategoryId(categoryId) {
 export function countByCategoryId(categoryId) {
   return db('products')
     .where('category_id', categoryId)
-    .count('id as amount')
+    .count('id as count')
     .first();
 }
 

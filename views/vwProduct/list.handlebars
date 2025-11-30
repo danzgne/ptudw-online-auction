@@ -49,7 +49,7 @@
       {{else}}
       
       <div class="row g-4">
-        {{#each products}}
+      {{#each products}}
         <div class="col-md-6 col-xl-4">
           <div class="product-card h-100 position-relative shadow-sm rounded overflow-hidden {{#if this.is_new}}card-new{{/if}}">
             
@@ -130,50 +130,13 @@
             </div>
           </div>
         </div>
-        {{/each}}
+      {{/each}}
       </div>
-      <div class="row">
-        <nav aria-label="...">
-          <ul class="pagination">
-            {{#if hasPrev}}
-              <li class="page-item">
-                <a class="page-link" href="?page={{prevPage}}">Previous</a>
-              </li>
-            {{else}}
-              <li class="page-item disabled">
-                <span class="page-link">Previous</span>
-              </li>
-            {{/if}}
+      
 
-            {{#each this.page_numbers}}
-              {{#if isCurrent}}
-                <li class="page-item active">
-                  <span class="page-link">{{this.value}}</span>
-                </li>
-              {{else}}
-                <li class="page-item">
-                  <a class="page-link" href="?page={{this.value}}">{{this.value}}</a>
-                </li>
-              {{/if}}
-
-            {{#if hasNext}}
-              <li class="page-item">
-                <a class="page-link" href="?page={{nextPage}}">Next</a>
-              </li>
-            {{else}}
-              <li class="page-item disabled">
-                <span class="page-link">Next</span>
-              </li>
-            {{/if}}
-          </ul>
-        </nav>
-      </div>
-      {{/if}}
-
-      <!-- Pagination -->
       <div class="pagination-wrapper mt-5 mb-4 d-flex justify-content-center align-items-center gap-2">
         {{#if (gt currentPage 1)}}
-          <a href="?id={{categoryId}}&page={{subtract currentPage 1}}" class="pagination-btn pagination-prev">
+          <a href="?q={{q}}&catid={{categoryId}}&page={{subtract currentPage 1}}" class="pagination-btn pagination-prev">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left-square" viewBox="0 0 16 16">
               <path fill-rule="evenodd" d="M15 2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1zM0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm11.5 5.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5z"/>
             </svg>
@@ -192,9 +155,9 @@
           {{#each (getPaginationRange currentPage totalPages)}}
             {{#if (eq this.type "number")}}
               {{#if (eq this.number ../currentPage)}}
-                <a href="?id={{../categoryId}}&page={{this.number}}" class="pagination-page active">{{this.number}}</a>
+                <a href="?q={{../q}}&catid={{../categoryId}}&page={{this.number}}" class="pagination-page active">{{this.number}}</a>
               {{else}}
-                <a href="?id={{../categoryId}}&page={{this.number}}" class="pagination-page">{{this.number}}</a>
+                <a href="?q={{../q}}&catid={{../categoryId}}&page={{this.number}}" class="pagination-page">{{this.number}}</a>
               {{/if}}
             {{else}}
               <span class="pagination-ellipsis">...</span>
@@ -203,7 +166,7 @@
         </div>
         
         {{#if (lt currentPage totalPages)}}
-          <a href="?id={{categoryId}}&page={{add currentPage 1}}" class="pagination-btn pagination-next">
+          <a href="?q={{q}}&catid={{categoryId}}&page={{add currentPage 1}}" class="pagination-btn pagination-next">
             Next
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right-square" viewBox="0 0 16 16">
               <path fill-rule="evenodd" d="M15 2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1zM0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm4.5 5.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5z"/>
@@ -218,7 +181,6 @@
           </span>
         {{/if}}
       </div>
-      <!-- End Pagination -->
-    </div>
+      {{/if}} </div>
   </div>
 </div>

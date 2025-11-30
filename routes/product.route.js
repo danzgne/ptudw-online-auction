@@ -21,26 +21,25 @@ const prepareProductList = (products) => {
 };
 
 router.get('/category', async (req, res) => {
-  const categoryId = req.query.id;
+  const categoryId = req.query.catid;
   const page = parseInt(req.query.page) || 1;
   const limit = 3;
   const offset = (page - 1) * limit;
-  
   const products = await productModel.findByCategoryId(categoryId, limit, offset);
   const total = await productModel.countByCategoryId(categoryId);
   
-  const nPages = Math.ceil(total.amount / limit);
-  const pageNumbers = [];
-  for (let i = 1; i <= nPages; i++) {
-    pageNumbers.push({
-      value: i,
-      catid: categoryId
-    })  
-  };
-
+  const totalCount = total.count;
+  const nPages = Math.ceil(totalCount / limit);
+  let from = (page - 1) * limit + 1;
+  let to = page * limit;
+  if (to > totalCount) to = totalCount;
+  if (totalCount === 0) { from = 0; to = 0; }
+  console.log(`Total pages: ${nPages}`);
   res.render('vwProduct/list', { 
     products: products,
-    pageNumbers: pageNumbers,
+    totalCount,
+    from,
+    to,
     currentPage: page,
     totalPages: nPages,
     categoryId: categoryId
@@ -55,9 +54,9 @@ router.get('/search', async (req, res) => {
         products: []
     });
   }
-  const keywords = q.replace(/ /g, ' & ');
+  const keywords = q.replace(/ /g, ' | ');
 
-  const limit = 6;
+  const limit = 3;
   const page = parseInt(req.query.page) || 1;
   const offset = (page - 1) * limit;
   const list = await productModel.searchPageByKeywords(keywords, limit, offset);
@@ -69,25 +68,15 @@ router.get('/search', async (req, res) => {
   let to = page * limit;
   if (to > totalCount) to = totalCount;
   if (totalCount === 0) { from = 0; to = 0; }
-  const page_numbers = [];
-  for (let i = 1; i <= nPages; i++) {
-    page_numbers.push({
-      value: i, 
-      isCurrent: i === page
-    });
-  }
-  
   res.render('vwProduct/list', { 
-    products: products, 
-    page_numbers,
+    products: products,
     totalCount,
     from,
     to,
-    hasPrev: page > 1,
-    prevPage: page - 1,
-    hasNext: page < nPages,
-    nextPage: page + 1, 
-  });  
+    currentPage: page,
+    totalPages: nPages,
+    q: q,
+  });
 });
 
 router.get('/detail', async (req, res) => {

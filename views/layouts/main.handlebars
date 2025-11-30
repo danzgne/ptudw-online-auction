@@ -143,7 +143,7 @@
                       <ul class="dropdown-menu">
                         {{#each ../lcCategories2}}
                           {{#if (eq this.parent_id ../id)}}
-                            <li><a href="/products/category/?id={{this.id}}" class="dropdown-item">{{this.name}}</a></li>
+                            <li><a href="/products/category/?catid={{this.id}}" class="dropdown-item">{{this.name}}</a></li>
                           {{/if}}
                         {{/each}}
                       </ul>
