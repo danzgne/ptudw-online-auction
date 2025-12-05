@@ -2,45 +2,70 @@ import express from 'express';
 import { engine } from 'express-handlebars';
 import expressHandlebarsSections from 'express-handlebars-sections';
 import session from 'express-session';
+import methodOverride from 'method-override';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Import Routes
+import indexRouter from './routes/index.route.js';
 import productRouter from './routes/product.route.js';
 import categoryRouter from './routes/category.route.js';
-import indexRouter from './routes/index.route.js';
+import accountRouter from './routes/account.route.js';
+import adminCategoryRouter from './routes/admin/category.route.js';
+import adminUserRouter from './routes/admin/user.route.js';
+import adminAccountRouter from './routes/admin/account.route.js';
+// Import Middlewares
+import { isAdmin } from './middlewares/auth.mdw.js';
 import * as categoryModel from './models/category.model.js';
 
-import accountRouter from './routes/account.route.js';
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3005;
 
-// Helper
+// ============================================================
+// 1. CẤU HÌNH CỐT LÕI
+// ============================================================
+app.use('/static', express.static('public'));
+app.use(express.urlencoded({ extended: true }));
+app.use(methodOverride('_method'));
+app.use(session({
+  secret: 'x8w3v9p2q1r7s6t5u4z0a8b7c6d5e4f3g2h1j9k8l7m6n5o4p3q2r1s0t9u8v7w6x5y4z3',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false } // false chạy localhost
+}));
 
+// ============================================================
+// 2. CẤU HÌNH VIEW ENGINE (Handlebars)
+// ============================================================
 app.engine('handlebars', engine({
+  defaultLayout: 'main',
   helpers: {
     section: expressHandlebarsSections(),
-    eq(a, b) {
-      return a === b;
-    },
-    format_number(price){
-      return new Intl.NumberFormat('en-US').format(price);
-    },
+    eq(a, b) { return a === b; },
+    format_number(price) { return new Intl.NumberFormat('en-US').format(price); },
     format_date(date) {
+      if (!date) return '';
+      const d = new Date(date);
+      if (isNaN(d.getTime())) return '';
+      return new Intl.DateTimeFormat('vi-VN', {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        timeZone: 'Asia/Ho_Chi_Minh', hour12: false
+      }).format(d);
+    },
+    format_date_input: function (date) {
         if (!date) return '';
         const d = new Date(date);
         if (isNaN(d.getTime())) return '';
-
-        // 'vi-VN' để ra định dạng ngày/tháng/năm
-        return new Intl.DateTimeFormat('vi-VN', {
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            timeZone: 'Asia/Ho_Chi_Minh', // Ép buộc múi giờ VN
-            hour12: false // Dùng định dạng 24h
-        }).format(d);
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
     },
-    time_remaining(date){
+    time_remaining(date) {
       const now = new Date();
       const end = new Date(date);
       const diff = end - now;
@@ -53,97 +78,102 @@ app.engine('handlebars', engine({
     getPaginationRange(currentPage, totalPages) {
       const range = [];
       const maxVisible = 4;
-      
       if (totalPages <= maxVisible) {
-        // Nếu trang ít, hiển thị tất cả
-        for (let i = 1; i <= totalPages; i++) {
-          range.push({ number: i, type: 'number' });
-        }
+        for (let i = 1; i <= totalPages; i++) range.push({ number: i, type: 'number' });
       } else {
-        // Luôn hiển thị trang đầu
         range.push({ number: 1, type: 'number' });
-        
-        // Tính khoảng quanh trang hiện tại
         let start = Math.max(2, currentPage - 1);
         let end = Math.min(totalPages - 1, currentPage + 1);
-        
-        // Nếu có khoảng cách từ 1 đến start
-        if (start > 2) {
-          range.push({ type: 'ellipsis' });
-        }
-        
-        // Thêm các trang quanh trang hiện tại
-        for (let i = start; i <= end; i++) {
-          range.push({ number: i, type: 'number' });
-        }
-        
-        // Nếu có khoảng cách từ end đến totalPages
-        if (end < totalPages - 1) {
-          range.push({ type: 'ellipsis' });
-        }
-        
-        // Luôn hiển thị trang cuối
+        if (start > 2) range.push({ type: 'ellipsis' });
+        for (let i = start; i <= end; i++) range.push({ number: i, type: 'number' });
+        if (end < totalPages - 1) range.push({ type: 'ellipsis' });
         range.push({ number: totalPages, type: 'number' });
       }
-      
       return range;
     },
-    and(...args) {
-      return args.slice(0, -1).every(Boolean);
-    },
-    or(...args) {
-      return args.slice(0, -1).some(Boolean);
-    },
-    gt(a, b) {
-      return a > b;
-    },
-    lt(a, b) {
-      return a < b;
-    },
-    add(a, b) {
-      return a + b;
-    },
-    subtract(a, b) {
-      return a - b;
-    }
-  }
+    and(...args) { return args.slice(0, -1).every(Boolean); },
+    or(...args) { return args.slice(0, -1).some(Boolean); },
+    gt(a, b) { return a > b; },
+    lt(a, b) { return a < b; },
+    add(a, b) { return a + b; },
+    subtract(a, b) { return a - b; }
+  },
+  partialsDir: [
+        path.join(__dirname, 'views/partials'), 
+        path.join(__dirname, 'views/vwAccount') 
+  ]
 }));
-
-// Middleware to load categories for all views
-app.use(async function (req, res, next) {
-    const plist = await categoryModel.findLevel1Categories();
-    const clist = await categoryModel.findLevel2Categories();
-    res.locals.lcCategories1 = plist;
-    res.locals.lcCategories2 = clist;
-    next();
-});
-
 app.set('view engine', 'handlebars');
 app.set('views', './views');
 
+// ============================================================
+// 3. MIDDLEWARE TOÀN CỤC (Chạy cho mọi request)
+// ============================================================
 
-// Static files
-app.use('/static', express.static('public'));
+// 3.1. Middleware User Info
+app.use(function (req, res, next) {
+  if (typeof req.session.isAuthenticated === 'undefined') {
+    req.session.isAuthenticated = false;
+  }
+  res.locals.isAuthenticated = req.session.isAuthenticated;
+  res.locals.authUser = req.session.authUser;
+  res.locals.isAdmin = req.session.authUser?.role === 'admin';
+  next();
+});
+
+// 3.2. Middleware Category (Chỉ load cho Client)
+app.use(async function (req, res, next) {
+  // Nếu là admin route HOẶC là admin đang ở trang chủ (theo logic redirect dưới) thì không cần load
+  if (req.path.startsWith('/admin')) {
+      return next();
+  }
+  const plist = await categoryModel.findLevel1Categories();
+  const clist = await categoryModel.findLevel2Categories();
+  res.locals.lcCategories1 = plist;
+  res.locals.lcCategories2 = clist;
+  next();
+});
+
+// ============================================================
+// 4. CẤU HÌNH LOGIC ADMIN (Design Pattern)
+// ============================================================
+
+// A. Bảo mật trước tiên: Mọi route /admin/* phải qua cửa kiểm soát
+
+app.use('/admin', isAdmin);
+
+// B. Thiết lập giao diện Admin (Bật cờ để Layout biết đường hiển thị Sidebar)
+app.use('/admin', function (req, res, next) {
+    res.locals.isAdminMode = true; 
+    next();
+});
+
+// // C. Redirect thông minh cho trang chủ '/'
+// // Nếu là Admin mà vào trang chủ '/', tự động chuyển về Dashboard (/admin)
+// // Trừ khi họ bấm nút "View Website" (có tham số ?mode=client)
+// app.use('/', function(req, res, next) {
+//     if (req.path === '/' && res.locals.isAdmin && req.query.mode !== 'client') {
+//         return res.redirect('/admin');
+//     }
+//     next();
+// });
+
+
+// ============================================================
+// 5. ROUTES
+// ============================================================
+
+// Các Route Admin
+app.use('/admin/account', adminAccountRouter);
+app.use('/admin/users', adminUserRouter);
+app.use('/admin/categories', adminCategoryRouter);
+
+// Các Route Client (Đặt cuối cùng để tránh override)
+app.use('/', indexRouter);
 app.use('/category', categoryRouter);
-
-// 🔴 PHẢI ĐỂ TRƯỚC ROUTES
-app.use(express.urlencoded({ extended: true }));
-
-// Session cũng nên để trước routes
-app.use(session({
-  secret: 'x8w3v9p2q1r7s6t5u4z0a8b7c6d5e4f3g2h1j9k8l7m6n5o4p3q2r1s0t9u8v7w6x5y4z3',
-  resave: false,
-  saveUninitialized: true,
-  cookie: { secure: false }
-}));
-
-// Routers
 app.use('/products', productRouter);
 app.use('/account', accountRouter);
 
-
-// Route trang chủ
-app.use('/', indexRouter);
 app.listen(PORT, function () {
   console.log(`Server is running on http://localhost:${PORT}`);
 });

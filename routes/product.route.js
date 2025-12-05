@@ -1,6 +1,6 @@
 import express from 'express';
 import * as productModel from '../models/product.model.js';
-
+import { isAuthenticated } from '../middlewares/auth.mdw.js';
 const router = express.Router();
 const N_MINUTES = 20
 
@@ -21,11 +21,12 @@ const prepareProductList = (products) => {
 };
 
 router.get('/category', async (req, res) => {
+  const sort = req.query.sort || '';
   const categoryId = req.query.catid;
   const page = parseInt(req.query.page) || 1;
   const limit = 3;
   const offset = (page - 1) * limit;
-  const products = await productModel.findByCategoryId(categoryId, limit, offset);
+  const products = await productModel.findByCategoryId(categoryId, limit, offset, sort);
   const total = await productModel.countByCategoryId(categoryId);
   
   const totalCount = total.count;
@@ -42,7 +43,8 @@ router.get('/category', async (req, res) => {
     to,
     currentPage: page,
     totalPages: nPages,
-    categoryId: categoryId
+    categoryId: categoryId,
+    sort: sort
   });
 });
 

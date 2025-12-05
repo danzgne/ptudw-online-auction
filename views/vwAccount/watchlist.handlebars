@@ -3,63 +3,21 @@
 {{/section}}
 
 <div class="container mt-4 mb-5">
-  
   <div class="row">
-    {{!-- LEFT SIDEBAR: Chỉ chứa Sort By --}}
-    <aside class="col-lg-3 mb-5 mb-lg-0">
-      <div class="sidebar-widget">
-        <h5 class="widget-title text-uppercase mb-4 pb-2" style="border-bottom: 2px solid var(--primary-color); padding-bottom: 10px;">
-          Sort By
-        </h5>
-        
-        {{!-- 
-            LOGIC SIDEBAR MỚI:
-            1. Dùng inline if {{#if categoryId}}...{{else}}...{{/if}} để xác định base URL (catid hoặc q).
-            2. Luôn kèm &page={{currentPage}} để giữ nguyên trang khi bấm sort.
-            3. Thêm class fw-bold và text-primary nếu đang active option đó.
-        --}}
-        <div class="mb-3">
-          {{!-- Option: Default (Không sort) --}}
-          <a href="?{{#if categoryId}}catid={{categoryId}}{{else}}q={{q}}{{/if}}&page={{currentPage}}" 
-             class="d-block text-decoration-none {{#unless sort}}fw-bold text-primary{{else}}text-dark{{/unless}} mb-2">
-             <i class="bi bi-list-ul"></i> Default
-          </a>
+    
+    {{!-- 1. LEFT SIDEBAR (Giống vwAccount/profile.handlebars) --}}
+    <div class="col-md-3 mb-4">
+        {{> client-sidebar activeSection='watchlist'}}
+    </div>
 
-          <a href="?{{#if categoryId}}catid={{categoryId}}{{else}}q={{q}}{{/if}}&page={{currentPage}}&sort=price_asc" 
-             class="d-block text-decoration-none {{#if (eq sort 'price_asc')}}fw-bold text-primary{{else}}text-dark{{/if}} mb-2">
-             <i class="bi bi-sort-down"></i> Price: Low to High
-          </a>
-
-          <a href="?{{#if categoryId}}catid={{categoryId}}{{else}}q={{q}}{{/if}}&page={{currentPage}}&sort=price_desc" 
-             class="d-block text-decoration-none {{#if (eq sort 'price_desc')}}fw-bold text-primary{{else}}text-dark{{/if}} mb-2">
-             <i class="bi bi-sort-up"></i> Price: High to Low
-          </a>
-
-          <a href="?{{#if categoryId}}catid={{categoryId}}{{else}}q={{q}}{{/if}}&page={{currentPage}}&sort=newest" 
-             class="d-block text-decoration-none {{#if (eq sort 'newest')}}fw-bold text-primary{{else}}text-dark{{/if}} mb-2">
-             <i class="bi bi-clock"></i> Newest First
-          </a>
-
-          <a href="?{{#if categoryId}}catid={{categoryId}}{{else}}q={{q}}{{/if}}&page={{currentPage}}&sort=oldest" 
-             class="d-block text-decoration-none {{#if (eq sort 'oldest')}}fw-bold text-primary{{else}}text-dark{{/if}}">
-             <i class="bi bi-clock-history"></i> Oldest First
-          </a>
-        </div>
-      </div>
-    </aside>
-
-    {{!-- RIGHT CONTENT --}}
-    <div class="col-lg-9">
+    {{!-- 2. RIGHT CONTENT (Giao diện giống hệt vwProduct/list.handlebars) --}}
+    <div class="col-md-9">
       
       {{!-- HEADER --}}
       <div class="display-header d-flex justify-content-between align-items-center pb-3">
         <div>
           <h2 class="display-7 text-dark text-uppercase mb-0">
-            {{#if categoryId}}
-              PRODUCT LIST
-            {{else}}
-              SEARCH RESULTS
-            {{/if}}
+             MY WATCHLIST
           </h2>
           
           <div class="mt-2">
@@ -78,11 +36,12 @@
       {{!-- CONTENT --}}
       {{#if (eq products.length 0)}}
         <div class="alert alert-info text-center py-5 rounded">
-          <h5 class="mb-3">No products found</h5>
-          <a href="/" class="btn btn-primary">Back to Home</a>
+          <h5 class="mb-3">Your watchlist is empty</h5>
+          <a href="/" class="btn btn-primary">Home</a>
         </div>
       {{else}}
       
+      {{!-- PRODUCT GRID --}}
       <div class="row g-4">
       {{#each products}}
         <div class="col-md-6 col-xl-4">
@@ -170,16 +129,8 @@
       
       {{!-- PAGINATION --}}
       <div class="pagination-wrapper mt-5 mb-4 d-flex justify-content-center align-items-center gap-2">
-        {{!-- 
-            LOGIC PHÂN TRANG MỚI:
-            Tối ưu hoá code bằng cách gom điều kiện vào trong href
-            Cấu trúc: ?(catid hoặc q)&page=số_trang&(sort nếu có)
-        --}}
-        
-        {{!-- Nút Previous --}}
         {{#if (gt currentPage 1)}}
-          <a href="?{{#if categoryId}}catid={{categoryId}}{{else}}q={{q}}{{/if}}&page={{subtract currentPage 1}}{{#if sort}}&sort={{sort}}{{/if}}" 
-             class="pagination-btn pagination-prev">
+          <a href="?page={{subtract currentPage 1}}" class="pagination-btn pagination-prev">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-left-square" viewBox="0 0 16 16">
               <path fill-rule="evenodd" d="M15 2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1zM0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm11.5 5.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5z"/>
             </svg>
@@ -194,25 +145,22 @@
           </span>
         {{/if}}
         
-        {{!-- Các số trang --}}
         <div class="pagination-numbers d-flex gap-1">
           {{#each (getPaginationRange currentPage totalPages)}}
             {{#if (eq this.type "number")}}
-              {{!-- Lưu ý: Trong loop #each, phải dùng ../sort, ../categoryId, ../q để truy cập biến cha --}}
-              <a href="?{{#if ../categoryId}}catid={{../categoryId}}{{else}}q={{../q}}{{/if}}&page={{this.number}}{{#if ../sort}}&sort={{../sort}}{{/if}}" 
-                 class="pagination-page {{#if (eq this.number ../currentPage)}}active{{/if}}">
-                 {{this.number}}
-              </a>
+              {{#if (eq this.number ../currentPage)}}
+                <a href="?page={{this.number}}" class="pagination-page active">{{this.number}}</a>
+              {{else}}
+                <a href="?page={{this.number}}" class="pagination-page">{{this.number}}</a>
+              {{/if}}
             {{else}}
               <span class="pagination-ellipsis">...</span>
             {{/if}}
           {{/each}}
         </div>
         
-        {{!-- Nút Next --}}
         {{#if (lt currentPage totalPages)}}
-          <a href="?{{#if categoryId}}catid={{categoryId}}{{else}}q={{q}}{{/if}}&page={{add currentPage 1}}{{#if sort}}&sort={{sort}}{{/if}}" 
-             class="pagination-btn pagination-next">
+          <a href="?page={{add currentPage 1}}" class="pagination-btn pagination-next">
             Next
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-right-square" viewBox="0 0 16 16">
               <path fill-rule="evenodd" d="M15 2a1 1 0 0 0-1-1H2a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1zM0 2a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm4.5 5.5a.5.5 0 0 0 0 1h5.793l-2.147 2.146a.5.5 0 0 0 .708.708l3-3a.5.5 0 0 0 0-.708l-3-3a.5.5 0 1 0-.708.708L10.293 7.5z"/>
@@ -227,6 +175,8 @@
           </span>
         {{/if}}
       </div>
-      {{/if}} </div>
+      {{/if}}
+
+    </div>
   </div>
 </div>

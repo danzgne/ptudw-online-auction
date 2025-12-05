@@ -6,8 +6,17 @@ export function isAuthenticated(req, res, next) {
         res.redirect('/account/signin');
     }
 }
+export function isSeller(req, res, next) {
+    if (req.session.authUser.role === "seller") {
+        next();
+    } else {
+        res.render('403');
+
+    }
+}
 export function isAdmin(req, res, next) {
-    if (req.session.authUser.permission === 1) {
+    console.log(req.session.authUser);
+    if (req.session.authUser.role === "admin") {
         next();
     } else {
         res.render('403');

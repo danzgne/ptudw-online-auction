@@ -11,7 +11,6 @@ router.get('/', async (req, res) => {
       productModel.findTopBids(),
       productModel.findTopPrice()
     ]);
-
     res.render('home', { 
       topEndingProducts: topEnding, 
       topBidsProducts: topBids, 

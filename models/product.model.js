@@ -111,12 +111,10 @@ export function countByKeywords(keywords) {
 export function countAll() {
   return db('products').count('id as count').first();
 }
-export function findByCategoryId(categoryId, limit, offset) {
+export function findByCategoryId(categoryId, limit, offset, sort) {
   return db('products')
     .leftJoin('users', 'products.highest_bidder_id', 'users.id')
-    .where('products.category_id', categoryId) 
-    .limit(limit)
-    .offset(offset)
+    .where('products.category_id', categoryId)
     .select(
       'products.*',
       db.raw(`
@@ -133,7 +131,28 @@ export function findByCategoryId(categoryId, limit, offset) {
           WHERE bidding_history.product_id = products.id
         ) AS bid_count
       `)
-    );
+    )
+    .modify((queryBuilder) => {
+      // Sửa lại logic sort để khớp với Frontend
+      if (sort === 'price_asc') {
+        queryBuilder.orderBy('products.current_price', 'asc');
+      }
+      else if (sort === 'price_desc') {
+        queryBuilder.orderBy('products.current_price', 'desc');
+      }
+      else if (sort === 'newest') {
+        queryBuilder.orderBy('products.created_at', 'desc');
+      }
+      else if (sort === 'oldest') {
+        queryBuilder.orderBy('products.created_at', 'asc');
+      }
+      else {
+        // Mặc định là Newest First
+        queryBuilder.orderBy('products.created_at', 'desc');
+      }
+    })
+    .limit(limit)
+    .offset(offset);
 }
 
 export function countByCategoryId(categoryId) {

@@ -7,12 +7,25 @@ export async function add(user) {
     .returning(['id', 'email', 'fullname', 'address', 'role', 'email_verified']);
   return rows[0]; // object: { id, email, fullname, ... }
 }
+export function findById(id) {
+  return db('users').where('id', id).first();
+}
+export function loadAllUsers() {
+  return db('users').orderBy('id', 'desc');
+}
+
 export function findByUserName(username) {
   return db('users').where('username', username).first();
 }
 
-export function update(id, user) {
-  return db('users').where('id', id).update(user);
+export async function update(id, user) {
+  // SỬA: Thêm await
+  const rows = await db('users')
+    .where('id', id)
+    .update(user)
+    .returning('*'); 
+  
+  return rows[0]; 
 }
 
 export function findByEmail(email) {
@@ -57,4 +70,19 @@ export function verifyUserEmail(user_id) {
   return db('users')
     .where('id', user_id)
     .update({ email_verified: true });
+}
+export function updateUserInfo(user_id, { email, fullname, address }) {
+  return db('users')
+    .where('id', user_id)
+    .update({ email, fullname, address });
+}
+export function markUpgradePending(user_id) {
+  return db('users')
+    .where('id', user_id)
+    .update({ is_upgrade_pending: true });
+}
+export function updateUserRoleToSeller(user_id) {
+  return db('users')
+    .where('id', user_id)
+    .update({ role: 'seller', is_upgrade_pending: false });
 }

@@ -1,0 +1,15 @@
+<header class="navbar navbar-dark admin-navbar sticky-top flex-md-nowrap p-0 shadow">
+  {{!-- ... Phần Logo giữ nguyên ... --}}
+  
+  <div class="navbar-nav w-100">
+    <div class="nav-item text-nowrap d-flex justify-content-end align-items-center px-3">
+       <span class="text-white-50 small me-3">Signed in as <strong>{{authUser.fullname}}</strong></span>
+       
+       {{!-- SỬA DÒNG NÀY: Thêm ?mode=client --}}
+       <a class="nav-link px-3 text-white bg-dark border-start border-secondary" href="/?mode=client" target="_blank">
+         View Website <i class="bi bi-box-arrow-up-right ms-1 small"></i>
+       </a>
+
+    </div>
+  </div>
+</header>
