@@ -50,11 +50,16 @@ app.engine('handlebars', engine({
       if (!date) return '';
       const d = new Date(date);
       if (isNaN(d.getTime())) return '';
-      return new Intl.DateTimeFormat('vi-VN', {
-        year: 'numeric', month: '2-digit', day: '2-digit',
-        hour: '2-digit', minute: '2-digit', second: '2-digit',
-        timeZone: 'Asia/Ho_Chi_Minh', hour12: false
-      }).format(d);
+
+      const year = d.getUTCFullYear();
+      const month = String(d.getUTCMonth() + 1).padStart(2, '0');
+      const day = String(d.getUTCDate()).padStart(2, '0');
+
+      const hour = String(d.getUTCHours()).padStart(2, '0');
+      const minute = String(d.getUTCMinutes()).padStart(2, '0');
+      const second = String(d.getUTCSeconds()).padStart(2, '0');
+
+      return `${hour}:${minute}:${second} ${day}/${month}/${year}`;
     },
     format_date_input: function (date) {
         if (!date) return '';
@@ -75,6 +80,60 @@ app.engine('handlebars', engine({
       const seconds = String(Math.floor((diff % (1000 * 60)) / 1000)).padStart(2, '0');
       return `${hours}:${minutes}:${seconds}`;
     },
+    format_time_remaining(date) {
+      const now = new Date();
+      const end = new Date(date);
+      console.log(end);
+      const diff = end - now;
+      
+      if (diff <= 0) return 'Auction Ended';
+      
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+      
+      // > 3 ngày: hiển thị ngày kết thúc
+      if (days > 3) {
+        if (isNaN(end.getTime())) return '';
+        const year = end.getUTCFullYear();
+        const month = String(end.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(end.getUTCDate()).padStart(2, '0');
+
+        const hour = String(end.getUTCHours()).padStart(2, '0');
+        const minute = String(end.getUTCMinutes()).padStart(2, '0');
+        const second = String(end.getUTCSeconds()).padStart(2, '0');
+        return `${hour}:${minute}:${second} ${day}/${month}/${year}`
+      }
+      
+      // <= 3 ngày: hiển thị ... days left
+      if (days >= 1) {
+        return `${days} days left`;
+      }
+      
+      // < 1 ngày: hiển thị ... hours left
+      if (hours >= 1) {
+        return `${hours} hours left`;
+      }
+      
+      // < 1 giờ: hiển thị ... minutes left
+      if (minutes >= 1) {
+        return `${minutes} minutes left`;
+      }
+      
+      // < 1 phút: hiển thị ... seconds left
+      return `${seconds} seconds left`;
+    },
+    should_show_relative_time(date) {
+      const now = new Date();
+      const end = new Date(date);
+      const diff = end - now;
+      
+      if (diff <= 0) return true; // Auction Ended counts as relative
+      
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      return days <= 3; // True nếu <= 3 ngày (hiển thị relative time)
+    },
     getPaginationRange(currentPage, totalPages) {
       const range = [];
       const maxVisible = 4;
@@ -91,12 +150,39 @@ app.engine('handlebars', engine({
       }
       return range;
     },
-    and(...args) { return args.slice(0, -1).every(Boolean); },
-    or(...args) { return args.slice(0, -1).some(Boolean); },
-    gt(a, b) { return a > b; },
-    lt(a, b) { return a < b; },
-    add(a, b) { return a + b; },
-    subtract(a, b) { return a - b; }
+    and(...args) { 
+      return args.slice(0, -1).every(Boolean); 
+    },
+    or(...args) { 
+      return args.slice(0, -1).some(Boolean); 
+    },
+    gt(a, b) { 
+      return a > b; 
+    },
+    lt(a, b) { 
+      return a < b; 
+    },
+    lte(a, b) { 
+      return a <= b; 
+    },
+    gte(a, b) { 
+      return a >= b; 
+    },
+    add(a, b) { 
+      return a + b; 
+    },
+    subtract(a, b) { 
+      return a - b; 
+    },
+    multiply(a, b) {
+      return a * b;
+    },
+    round(value, decimals) {
+      return Math.round(value * Math.pow(10, decimals)) / Math.pow(10, decimals);
+    },
+    length(arr) {
+      return Array.isArray(arr) ? arr.length : 0;
+    },
   },
   partialsDir: [
         path.join(__dirname, 'views/partials'), 

@@ -211,16 +211,23 @@ export function findTopBids() {
 
 export function findByProductId(productId) {
   return db('products')
-    .leftJoin('users', 'products.highest_bidder_id', 'users.id')
+    .leftJoin('users as highest_bidder', 'products.highest_bidder_id', 'highest_bidder.id')
     .leftJoin('product_images', 'products.id', 'product_images.product_id')
+    .leftJoin('users as seller', 'products.seller_id', 'seller.id')
+    .leftJoin('categories', 'products.category_id', 'categories.id')
     .where('products.id', productId)
     .select(
       'products.*',
       'product_images.img_link',
+      'seller.fullname as seller_name',
+      'seller.rating_plus as seller_rating_plus',
+      'seller.rating_minus as seller_rating_minus',
+      'seller.created_at as seller_created_at',
+      'categories.name as category_name',
       db.raw(`
         CASE 
-          WHEN users.fullname IS NOT NULL THEN 
-            OVERLAY(users.fullname PLACING '****' FROM 1 FOR (LENGTH(users.fullname)/2)::INTEGER)
+          WHEN highest_bidder.fullname IS NOT NULL THEN 
+            OVERLAY(highest_bidder.fullname PLACING '****' FROM 1 FOR (LENGTH(highest_bidder.fullname)/2)::INTEGER)
           ELSE NULL 
         END AS bidder_name
       `),
@@ -233,3 +240,12 @@ export function findByProductId(productId) {
       `)
     )
 }
+
+export function findRelatedProducts(productId) {
+    return db('products')
+      .leftJoin('products as p2', 'products.category_id', 'p2.category_id')
+      .where('products.id', productId)
+      .andWhere('p2.id', '!=', productId)
+      .select('p2.*')
+      .limit(5);
+  } 

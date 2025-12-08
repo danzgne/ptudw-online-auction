@@ -84,6 +84,9 @@ router.get('/search', async (req, res) => {
 router.get('/detail', async (req, res) => {
   const productId = req.query.id;
   const result = await productModel.findByProductId(productId);
+  const relatedProducts = await productModel.findRelatedProducts(productId);
+  // console.log(relatedProducts);
+  // console.log(result);
   const product = {
     thumbnail: result[0].thumbnail,
     sub_images: result.reduce((acc, curr) => {
@@ -96,15 +99,22 @@ router.get('/detail', async (req, res) => {
     name: result[0].name,
     starting_price: result[0].starting_price,
     current_price: result[0].current_price,
+    seller_id: result[0].seller_id,
+    seller_fullname: result[0].seller_name,
+    seller_rating: result[0].seller_rating_plus / (result[0].seller_rating_plus + result[0].seller_rating_minus),
+    seller_member_since: new Date(result[0].seller_created_at).getFullYear(),
     buy_now_price: result[0].buy_now_price,
     seller_id: result[0].seller_id,
     hightest_bidder_id: result[0].highest_bidder_id,
     bidder_name: result[0].bidder_name,
+    category_name: result[0].category_name,
+    bid_count: result[0].bid_count,
     created_at: result[0].created_at,
     end_at: result[0].end_at,
-    description: result[0].description
+    description: result[0].description,
+    related_products: relatedProducts
   }
-  console.log(product);
+  // console.log(product);
   res.render('vwProduct/details', { product });
 });
 

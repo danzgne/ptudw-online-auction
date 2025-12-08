@@ -98,7 +98,7 @@
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(248, 251, 253, 0.95) 100%);
   backdrop-filter: blur(20px);
   border-radius: 16px;
-  overflow: hidden;
+  overflow: visible;
   padding: 30px;
   display: flex;
   align-items: center;
@@ -122,22 +122,18 @@
   border-radius: 16px;
 }
 
-.main-image-container:hover {
-  box-shadow: 0 20px 60px rgba(114, 174, 200, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  border-color: rgba(114, 174, 200, 0.3);
+/* Zoom icon positioning */
+.main-image-container .badge {
+  position: relative;
+  z-index: 10;
 }
 
 .main-product-image {
   max-width: 100%;
   max-height: 450px;
   object-fit: contain;
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   z-index: 1;
-}
-
-.main-image-container:hover .main-product-image {
-  transform: scale(1.08) translateZ(0);
 }
 
 /* Price Card Styles - Glassmorphism */
@@ -282,6 +278,10 @@
   border: 1px solid rgba(114, 174, 200, 0.15) !important;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.6);
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: sticky;
+  top: 90px;
+  max-height: calc(100vh - 90px - 20px);
+  overflow-y: auto;
 }
 
 .sidebar-widget:hover {
@@ -366,15 +366,6 @@ h3:hover::after {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-}
-
-.gallery-thumb:hover {
-  border-color: rgba(114, 174, 200, 0.5);
-}
-
-.gallery-thumb:hover img {
-  transform: scale(1);
 }
 
 .gallery-thumb.active {
@@ -579,9 +570,7 @@ h3:hover::after {
   }
 }
 
-.cursor-pointer {
-  cursor: pointer;
-}
+
 
 /* Button Styles - Neon Glow Effects */
 .btn-place-bid {

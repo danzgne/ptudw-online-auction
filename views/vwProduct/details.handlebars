@@ -4,25 +4,29 @@
 
 {{#section "js"}}
 <script>
-  // Gallery Carousel Navigation
+  // Gallery Carousel Navigation - Chuyển ảnh chính
   function galleryNext() {
-    const track = document.querySelector('.gallery-track');
-    const thumbWidth = 130; // 120px + 10px gap
-    track.scrollLeft += thumbWidth;
+    const thumbnails = document.querySelectorAll('.gallery-thumb');
+    if (thumbnails.length > 0) {
+      const nextIndex = (currentImageIndex + 1) % thumbnails.length;
+      thumbnails[nextIndex].click();
+    }
   }
 
   function galleryPrev() {
-    const track = document.querySelector('.gallery-track');
-    const thumbWidth = 130; // 120px + 10px gap
-    track.scrollLeft -= thumbWidth;
+    const thumbnails = document.querySelectorAll('.gallery-thumb');
+    if (thumbnails.length > 0) {
+      const prevIndex = (currentImageIndex - 1 + thumbnails.length) % thumbnails.length;
+      thumbnails[prevIndex].click();
+    }
   }
 
   // Gallery images data
   const galleryImages = [
     {{#if product.thumbnail}}'/static/{{product.thumbnail}}'{{else}}'https://placehold.co/800x800?text=Image+1'{{/if}},
-    'https://placehold.co/800x800?text=Image+2',
-    'https://placehold.co/800x800?text=Image+3',
-    'https://placehold.co/800x800?text=Image+4'
+    {{#each product.sub_images}}
+      '/static/{{this}}',
+    {{/each}}
   ];
   
   let currentImageIndex = 0;
@@ -83,10 +87,39 @@
     }
   });
 
-  // Click on main image to open lightbox
-  document.getElementById('mainImage').addEventListener('click', function() {
-    openLightbox(currentImageIndex);
+  // Click on main image to open lightbox - Wait for DOM
+  window.addEventListener('load', function() {
+    const mainImage = document.getElementById('mainImage');
+    if (mainImage) {
+      mainImage.addEventListener('click', function() {
+        openLightbox(currentImageIndex);
+      });
+    }
   });
+
+  // Toggle Description Section
+  function toggleDescription() {
+    const descContent = document.getElementById('descriptionContent');
+    const descToggle = document.getElementById('descriptionToggle');
+    const isHidden = descContent.style.display === 'none';
+    
+    descContent.style.display = isHidden ? 'block' : 'none';
+    descToggle.innerHTML = isHidden 
+      ? '<i class="bi bi-chevron-up"></i>' 
+      : '<i class="bi bi-chevron-down"></i>';
+  }
+
+  // Toggle Details Section
+  function toggleDetails() {
+    const detailsContent = document.getElementById('detailsContent');
+    const detailsToggle = document.getElementById('detailsToggle');
+    const isHidden = detailsContent.style.display === 'none';
+    
+    detailsContent.style.display = isHidden ? 'block' : 'none';
+    detailsToggle.innerHTML = isHidden 
+      ? '<i class="bi bi-chevron-up"></i>' 
+      : '<i class="bi bi-chevron-down"></i>';
+  }
 </script>
 {{/section}}
 
@@ -109,7 +142,7 @@
     <!-- Product Image Section -->
     <div class="col-lg-5 mb-4 mb-lg-0">
       <div class="product-image-wrapper">
-        <div class="main-image-container position-relative cursor-pointer" onclick="openLightbox(0)">
+        <div class="main-image-container position-relative" onclick="openLightbox(0)" style="cursor: pointer;">
           {{#if product.thumbnail}}
             <img id="mainImage" src="/static/{{product.thumbnail}}" alt="{{product.name}}" class="img-fluid main-product-image">
           {{else}}
@@ -124,17 +157,9 @@
           </div>
           {{/if}}
 
-          {{#if product.buy_now_price}}
+          <!-- Zoom Icon - Positioned to not be covered by image -->
           <div class="position-absolute top-0 end-0 m-3">
-            <span class="badge bg-danger fs-6 px-3 py-2">
-              <i class="bi bi-tag-fill"></i> Buy Now
-            </span>
-          </div>
-          {{/if}}
-
-          <!-- Fullscreen Icon -->
-          <div class="position-absolute bottom-0 end-0 m-3">
-            <span class="badge bg-dark" style="opacity: 0.7;">
+            <span class="badge bg-dark" style="opacity: 0.7; cursor: pointer;">
               <i class="bi bi-arrows-fullscreen"></i>
             </span>
           </div>
@@ -236,9 +261,15 @@
               <div class="mb-3">
                 <i class="bi bi-hourglass-split" style="font-size: 1.8rem; color: #dc3545;"></i>
               </div>
-              <small class="text-muted d-block mb-2">Time Left</small>
+              <small class="text-muted d-block mb-2">
+                {{#if (should_show_relative_time product.end_at)}}
+                  Time Left
+                {{else}}
+                  End at
+                {{/if}}
+              </small>
               <h5 class="fw-bold text-danger countdown-timer" data-end-date="{{product.end_at}}">
-                {{time_remaining product.end_at}}
+                {{format_time_remaining product.end_at}}
               </h5>
             </div>
           </div>
@@ -296,7 +327,7 @@
             <h6 class="fw-bold mb-2">
               <i class="bi bi-shop" style="color: #72AEC8;"></i> Seller Information
             </h6>
-            <h5 class="fw-bold mb-1">Seller Name</h5>
+            <h5 class="fw-bold mb-1">{{product.seller_fullname}}</h5>
             <small class="text-success d-flex align-items-center gap-1">
               <i class="bi bi-check-circle-fill"></i> Verified Seller
             </small>
@@ -306,7 +337,7 @@
           </button>
         </div>
         <small class="text-muted d-block">
-          <i class="bi bi-star-fill text-warning"></i> 4.8/5 (245 reviews) • Member since 2022
+          <i class="bi bi-star-fill text-warning"></i> {{round (multiply product.seller_rating 5) 1}}/5 • Member since {{product.seller_member_since}}
         </small>
       </div>
     </div>
@@ -316,24 +347,37 @@
   <div class="row mt-5">
     <div class="col-lg-8">
       <div class="description-section bg-white p-5 rounded-4 border mb-5">
-        <h3 class="fw-bold mb-4">
-          <i class="bi bi-file-text" style="color: #72AEC8;"></i> Product Description
-        </h3>
-        <p class="text-muted" style="line-height: 1.8; font-size: 1.05rem;">
-          {{#if product.description}}
-            {{{product.description}}}
-          {{else}}
-            <em>No description provided for this product.</em>
-          {{/if}}
-        </p>
+        <div class="d-flex justify-content-between align-items-center mb-4" onclick="toggleDescription()" style="cursor: pointer;">
+          <h3 class="fw-bold mb-0">
+            <i class="bi bi-file-text" style="color: #72AEC8;"></i> Product Description
+          </h3>
+          <button id="descriptionToggle" class="btn btn-link p-0" style="color: #72AEC8; text-decoration: none;">
+            <i class="bi bi-chevron-up"></i>
+          </button>
+        </div>
+        <div id="descriptionContent">
+          <p class="text-muted" style="line-height: 1.8; font-size: 1.05rem;">
+            {{#if product.description}}
+              {{{product.description}}}
+            {{else}}
+              <em>No description provided for this product.</em>
+            {{/if}}
+          </p>
+        </div>
       </div>
 
       <!-- Product Details Tab -->
       <div class="details-section bg-white p-5 rounded-4 border">
-        <h3 class="fw-bold mb-4">
-          <i class="bi bi-info-circle" style="color: #72AEC8;"></i> Product Details
-        </h3>
-        <div class="table-responsive">
+        <div class="d-flex justify-content-between align-items-center mb-4" onclick="toggleDetails()" style="cursor: pointer;">
+          <h3 class="fw-bold mb-0">
+            <i class="bi bi-info-circle" style="color: #72AEC8;"></i> Product Details
+          </h3>
+          <button id="detailsToggle" class="btn btn-link p-0" style="color: #72AEC8; text-decoration: none;">
+            <i class="bi bi-chevron-up"></i>
+          </button>
+        </div>
+        <div id="detailsContent">
+          <div class="table-responsive">
           <table class="table table-borderless">
             <tbody>
               <tr class="border-bottom">
@@ -362,13 +406,180 @@
               </tr>
             </tbody>
           </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Q&A Section -->
+      <div class="qa-section bg-white p-5 rounded-4 border mt-5">
+        <h3 class="fw-bold mb-4">
+          <i class="bi bi-chat-dots" style="color: #72AEC8;"></i> Questions & Answers
+        </h3>
+        
+        <!-- Q&A List -->
+        <div class="qa-list">
+          {{#if product.questions}}
+            {{#each product.questions}}
+              <div class="qa-item mb-4 pb-4 border-bottom">
+                <div class="question mb-3">
+                  <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="fw-bold mb-0">{{this.user_name}}</h6>
+                    <small class="text-muted">{{format_date this.created_at}}</small>
+                  </div>
+                  <p class="text-muted mb-0">{{this.question_text}}</p>
+                </div>
+                
+                {{#if this.answer_text}}
+                  <div class="answer ms-4 ps-3 border-start" style="border-color: #72AEC8 !important;">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                      <h6 class="fw-bold mb-0" style="color: #72AEC8;">
+                        <i class="bi bi-check-circle-fill"></i> Seller's Answer
+                      </h6>
+                      <small class="text-muted">{{format_date this.answer_date}}</small>
+                    </div>
+                    <p class="text-muted mb-0">{{this.answer_text}}</p>
+                  </div>
+                {{else}}
+                  <div class="ms-4 ps-3 border-start" style="border-color: #dc3545 !important;">
+                    <small class="text-danger">
+                      <i class="bi bi-exclamation-circle"></i> Awaiting seller's answer
+                    </small>
+                  </div>
+                {{/if}}
+              </div>
+            {{/each}}
+          {{else}}
+            <div class="alert alert-info" role="alert">
+              <i class="bi bi-info-circle"></i> No questions yet. Be the first to ask!
+            </div>
+          {{/if}}
+        </div>
+
+        <!-- Ask Question Button -->
+        <div class="mt-4">
+          <button class="btn btn-lg fw-bold w-100" style="background: linear-gradient(135deg, #72AEC8 0%, #5a9ab8 100%); border: 2px solid #72AEC8; color: white;">
+            <i class="bi bi-pencil-square"></i> Ask a Question
+          </button>
+        </div>
+      </div>
+
+      <!-- Reviews Section -->
+      <div class="reviews-section bg-white p-5 rounded-4 border mt-5">
+        <h3 class="fw-bold mb-4">
+          <i class="bi bi-star-fill" style="color: #72AEC8;"></i> Customer Reviews
+        </h3>
+
+        <!-- Overall Rating -->
+        <div class="overall-rating mb-5 pb-5 border-bottom">
+          <div class="row">
+            <div class="col-md-3 text-center mb-4 mb-md-0">
+              <div style="font-size: 3rem; font-weight: bold; color: #72AEC8;">4.5</div>
+              <div class="d-flex justify-content-center mb-2">
+                <span class="text-warning">
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-fill"></i>
+                  <i class="bi bi-star-half"></i>
+                </span>
+              </div>
+              <small class="text-muted">Based on 24 reviews</small>
+            </div>
+            <div class="col-md-9">
+              <div class="rating-bars">
+                <div class="rating-bar mb-3">
+                  <div class="d-flex align-items-center gap-3">
+                    <small class="text-muted" style="width: 50px;">5 <i class="bi bi-star-fill text-warning"></i></small>
+                    <div class="progress flex-grow-1" style="height: 8px;">
+                      <div class="progress-bar" style="width: 65%; background-color: #72AEC8;"></div>
+                    </div>
+                    <small class="text-muted">15</small>
+                  </div>
+                </div>
+                <div class="rating-bar mb-3">
+                  <div class="d-flex align-items-center gap-3">
+                    <small class="text-muted" style="width: 50px;">4 <i class="bi bi-star-fill text-warning"></i></small>
+                    <div class="progress flex-grow-1" style="height: 8px;">
+                      <div class="progress-bar" style="width: 25%; background-color: #72AEC8;"></div>
+                    </div>
+                    <small class="text-muted">6</small>
+                  </div>
+                </div>
+                <div class="rating-bar mb-3">
+                  <div class="d-flex align-items-center gap-3">
+                    <small class="text-muted" style="width: 50px;">3 <i class="bi bi-star-fill text-warning"></i></small>
+                    <div class="progress flex-grow-1" style="height: 8px;">
+                      <div class="progress-bar" style="width: 8%; background-color: #72AEC8;"></div>
+                    </div>
+                    <small class="text-muted">2</small>
+                  </div>
+                </div>
+                <div class="rating-bar mb-3">
+                  <div class="d-flex align-items-center gap-3">
+                    <small class="text-muted" style="width: 50px;">2 <i class="bi bi-star-fill text-warning"></i></small>
+                    <div class="progress flex-grow-1" style="height: 8px;">
+                      <div class="progress-bar" style="width: 0%; background-color: #72AEC8;"></div>
+                    </div>
+                    <small class="text-muted">0</small>
+                  </div>
+                </div>
+                <div class="rating-bar">
+                  <div class="d-flex align-items-center gap-3">
+                    <small class="text-muted" style="width: 50px;">1 <i class="bi bi-star-fill text-warning"></i></small>
+                    <div class="progress flex-grow-1" style="height: 8px;">
+                      <div class="progress-bar" style="width: 2%; background-color: #72AEC8;"></div>
+                    </div>
+                    <small class="text-muted">1</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Individual Reviews -->
+        <div class="reviews-list">
+          {{#if product.reviews}}
+            {{#each product.reviews}}
+              <div class="review-item mb-4 pb-4 border-bottom">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                  <div>
+                    <h6 class="fw-bold mb-1">{{this.reviewer_name}}</h6>
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="text-warning small">
+                        {{#each (range 1 (add 1 (round this.rating)))}}
+                          <i class="bi bi-star-fill"></i>
+                        {{/each}}
+                        {{#if (gt (subtract this.rating (floor this.rating)) 0)}}
+                          <i class="bi bi-star-half"></i>
+                        {{/if}}
+                      </span>
+                      <small class="text-muted">{{format_date this.created_at}}</small>
+                    </div>
+                  </div>
+                </div>
+                <p class="text-muted mb-0">{{this.review_text}}</p>
+              </div>
+            {{/each}}
+          {{else}}
+            <div class="alert alert-info" role="alert">
+              <i class="bi bi-info-circle"></i> No reviews yet. Be the first to review!
+            </div>
+          {{/if}}
+        </div>
+
+        <!-- Write Review Button -->
+        <div class="mt-4">
+          <button class="btn btn-lg fw-bold w-100" style="background: linear-gradient(135deg, #72AEC8 0%, #5a9ab8 100%); border: 2px solid #72AEC8; color: white;">
+            <i class="bi bi-pencil-square"></i> Write a Review
+          </button>
         </div>
       </div>
     </div>
 
     <!-- Sidebar -->
     <div class="col-lg-4">
-      <div class="sidebar-widget bg-white p-4 rounded-4 border sticky-top" style="top: 90px;">
+      <div class="sidebar-widget bg-white p-4 rounded-4 border sticky-top" style="top: 90px; z-index: 10;">
         <h5 class="fw-bold mb-4" style="color: #72AEC8;">
           <i class="bi bi-graph-up"></i> Quick Stats
         </h5>
@@ -435,21 +646,24 @@
         </h3>
         <div class="row g-4">
           <!-- Related Product Card -->
+          {{#each product.related_products}}
           <div class="col-md-3">
-            <div class="related-product-card h-100 rounded-4 overflow-hidden shadow-sm border-0">
-              <div class="image-wrapper position-relative" style="height: 220px; overflow: hidden; background-color: #f8f9fa;">
-                <img src="https://placehold.co/300x220" alt="Related Product" class="w-100 h-100" style="object-fit: cover;">
-                <div class="overlay"></div>
-              </div>
-              <div class="p-3">
-                <h6 class="fw-bold text-truncate mb-2">Related Product Title</h6>
-                <div class="d-flex justify-content-between align-items-center">
-                  <p class="text-primary fw-bold mb-0" style="color: #72AEC8 !important;">$ 250.00</p>
-                  <small class="text-muted">(5 bids)</small>
+            <a href="/products/detail?id={{this.id}}" class="text-decoration-none">
+              <div class="related-product-card h-100 rounded-4 overflow-hidden shadow-sm border-0" style="transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: pointer;">
+                <div class="image-wrapper position-relative" style="height: 220px; overflow: hidden; background-color: #f8f9fa;">
+                  <img src="/static/{{this.thumbnail}}" alt="Related Product" class="w-100 h-100" style="object-fit: cover;">
+                  <div class="overlay"></div>
+                </div>
+                <div class="p-3">
+                  <h6 class="fw-bold text-truncate mb-2 text-dark">{{this.name}}</h6>
+                  <div class="d-flex justify-content-between align-items-center">
+                    <p class="text-primary fw-bold mb-0" style="color: #72AEC8 !important;">$ {{format_number this.current_price}}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
+            </a>
+          </div>  
+          {{/each}}
           <!-- Repeat for more related products -->
         </div>
       </div>
@@ -470,7 +684,7 @@
   <div class="lightbox-content">
     <img id="lightboxImage" src="" alt="Gallery Image" class="lightbox-img">
     <div class="lightbox-counter">
-      <span id="currentImageNum">1</span> / <span id="totalImageNum">4</span>
+      <span id="currentImageNum">1</span> / <span id="totalImageNum">{{add 1 (length product.sub_images)}}</span>
     </div>
   </div>
   
