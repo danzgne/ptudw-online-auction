@@ -125,3 +125,15 @@
   color: #AEAEAE;
   border-color: #D8D8D8;
 }
+  /* Style cho nút submit bên trong form */
+  .btn-watchlist-submit {
+    transition: all 0.2s ease;
+    border: none;
+    background: white;
+    cursor: pointer;
+  }
+  .btn-watchlist-submit:hover {
+    background-color: #ffe6e6; /* Màu nền hồng nhạt khi hover */
+    transform: scale(1.1);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* Thêm bóng đổ nhẹ */
+  }

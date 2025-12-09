@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs';
 import * as userModel from '../models/user.model.js';
 import * as upgradeRequestModel from '../models/upgradeRequest.model.js';
 import * as watchlistModel from '../models/watchlist.model.js';
+import * as reviewModel from '../models/review.model.js';
 import { isAuthenticated } from '../middlewares/auth.mdw.js';
 import { sendMail } from '../utils/mailer.js';
 
@@ -12,6 +13,29 @@ function generateOtp() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
+router.get('/ratings', isAuthenticated, async (req, res) => {
+  const currentUserId = req.session.authUser.id;
+  
+  // // Get rating point
+  const ratingData = await reviewModel.calculateRatingPoint(currentUserId);
+  const rating_point = ratingData ? ratingData.rating_point : 0;
+  // // Get all reviews
+  const reviews = await reviewModel.getReviewsByUserId(currentUserId);
+  
+  // // Calculate statistics
+  const totalReviews = reviews.length;
+  const positiveReviews = reviews.filter(r => r.rating === 1).length;
+  const negativeReviews = reviews.filter(r => r.rating === -1).length;
+  
+  res.render('vwAccount/rating', { 
+    activeSection: 'ratings',
+    rating_point,
+    reviews,
+    totalReviews,
+    positiveReviews,
+    negativeReviews
+  });
+});
 // GET /signup
 router.get('/signup', function (req, res) {
   // CẬP NHẬT: Truyền Site Key xuống view để hiển thị widget

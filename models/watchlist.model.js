@@ -15,3 +15,18 @@ export function countByUserId(user_id) {
         .count('product_id as count')
         .first();
 }
+export function isInWatchlist(user_id, product_id) {
+    return db('watchlists')
+        .where({ user_id: user_id, product_id: product_id })
+        .first()
+        .then(row => !!row);
+}
+export function addToWatchlist(user_id, product_id) {
+    return db('watchlists')
+        .insert({ user_id: user_id, product_id: product_id });
+}
+export function removeFromWatchlist(user_id, product_id) {
+    return db('watchlists')
+        .where({ user_id: user_id, product_id: product_id })
+        .del();
+}

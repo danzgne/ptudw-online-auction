@@ -15,7 +15,6 @@ export function isSeller(req, res, next) {
     }
 }
 export function isAdmin(req, res, next) {
-    console.log(req.session.authUser);
     if (req.session.authUser.role === "admin") {
         next();
     } else {

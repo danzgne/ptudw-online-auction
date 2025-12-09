@@ -111,12 +111,26 @@ export function countByKeywords(keywords) {
 export function countAll() {
   return db('products').count('id as count').first();
 }
-export function findByCategoryId(categoryId, limit, offset, sort) {
+export function findByCategoryId(categoryId, limit, offset, sort, currentUserId) {
+  // currentUserId: ID của người đang xem (nếu chưa đăng nhập thì truyền null hoặc undefined)
+
   return db('products')
     .leftJoin('users', 'products.highest_bidder_id', 'users.id')
+    
+    // --- ĐOẠN MỚI THÊM VÀO ---
+    // Join bảng watchlists với điều kiện product_id khớp VÀ user_id phải là người đang xem
+    .leftJoin('watchlists', function() {
+      this.on('products.id', '=', 'watchlists.product_id')
+        .andOnVal('watchlists.user_id', '=', currentUserId || -1); 
+        // Nếu currentUserId là null/undefined (khách vãng lai), dùng -1 để không khớp với ai cả
+    })
+    // --------------------------
+
     .where('products.category_id', categoryId)
     .select(
       'products.*',
+      
+      // Logic che tên người đấu giá (giữ nguyên)
       db.raw(`
         CASE 
           WHEN users.fullname IS NOT NULL THEN 
@@ -124,16 +138,22 @@ export function findByCategoryId(categoryId, limit, offset, sort) {
           ELSE NULL 
         END AS bidder_name
       `),
+
+      // Logic đếm số lượt đấu giá (giữ nguyên)
       db.raw(`
         (
           SELECT COUNT(*) 
           FROM bidding_history 
           WHERE bidding_history.product_id = products.id
         ) AS bid_count
-      `)
+      `),
+
+      // --- ĐOẠN MỚI THÊM VÀO ---
+      // Nếu cột product_id bên bảng watchlists có dữ liệu -> Đã like (True), ngược lại là False
+      db.raw('watchlists.product_id IS NOT NULL AS is_favorite')
+      // --------------------------
     )
     .modify((queryBuilder) => {
-      // Sửa lại logic sort để khớp với Frontend
       if (sort === 'price_asc') {
         queryBuilder.orderBy('products.current_price', 'asc');
       }
@@ -147,7 +167,6 @@ export function findByCategoryId(categoryId, limit, offset, sort) {
         queryBuilder.orderBy('products.created_at', 'asc');
       }
       else {
-        // Mặc định là Newest First
         queryBuilder.orderBy('products.created_at', 'desc');
       }
     })
@@ -249,3 +268,64 @@ export function findRelatedProducts(productId) {
       .select('p2.*')
       .limit(5);
   } 
+export async function findByProductId2(productId, userId) {
+  // Chuyển sang async để xử lý dữ liệu trước khi trả về controller
+  const rows = await db('products')
+    // 1. Join lấy thông tin người đấu giá cao nhất (Giữ nguyên)
+    .leftJoin('users', 'products.highest_bidder_id', 'users.id')
+    
+    // 2. Join lấy danh sách ảnh phụ (Giữ nguyên)
+    .leftJoin('product_images', 'products.id', 'product_images.product_id')
+
+    // 3. Join lấy thông tin Watchlist (MỚI THÊM)
+    // Logic: Join vào bảng watchlist xem user hiện tại có lưu product này không
+    .leftJoin('watchlists', function() {
+        this.on('products.id', '=', 'watchlists.product_id')
+            .andOnVal('watchlists.user_id', '=', userId || -1); 
+            // Nếu userId null (chưa login) thì so sánh với -1 để không khớp
+    })
+
+    .where('products.id', productId)
+    .select(
+      'products.*',
+      'product_images.img_link', // Lấy link ảnh phụ để lát nữa gộp mảng
+      
+      // Logic che tên người đấu giá (Giữ nguyên)
+      db.raw(`
+        CASE 
+          WHEN users.fullname IS NOT NULL THEN 
+            OVERLAY(users.fullname PLACING '****' FROM 1 FOR (LENGTH(users.fullname)/2)::INTEGER)
+          ELSE NULL 
+        END AS bidder_name
+      `),
+      
+      // Logic đếm số lượt bid (Giữ nguyên)
+      db.raw(`
+        (
+          SELECT COUNT(*) 
+          FROM bidding_history 
+          WHERE bidding_history.product_id = products.id
+        ) AS bid_count
+      `),
+
+      // 4. Logic kiểm tra yêu thích (MỚI THÊM)
+      // Nếu cột product_id bên bảng watchlists có dữ liệu -> Đã like (True)
+      db.raw('watchlists.product_id IS NOT NULL AS is_favorite')
+    );
+
+  // --- PHẦN XỬ LÝ DỮ LIỆU (QUAN TRỌNG) ---
+  
+  // Nếu không tìm thấy sản phẩm nào
+  if (rows.length === 0) return null;
+
+  // SQL trả về nhiều dòng (do 1 sp có nhiều ảnh), ta lấy dòng đầu tiên làm thông tin chính
+  const product = rows[0];
+
+  // Gom tất cả img_link của các dòng lại thành mảng sub_images
+  // Để phục vụ vòng lặp {{#each product.sub_images}} bên View
+  product.sub_images = rows
+    .map(row => row.img_link)
+    .filter(link => link && link !== product.thumbnail); // Lọc bỏ ảnh null hoặc trùng thumbnail
+
+  return product;
+}

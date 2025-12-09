@@ -1,5 +1,5 @@
 {{#section "css"}}
-<link rel="stylesheet" href="/static/css/product-details.css">
+<link rel="stylesheet" href="/static/css/product/detail.css">
 {{/section}}
 
 {{#section "js"}}
@@ -120,10 +120,122 @@
       ? '<i class="bi bi-chevron-up"></i>' 
       : '<i class="bi bi-chevron-down"></i>';
   }
+
+  // ==================== BID FUNCTIONALITY ====================
+  const bidModal = new bootstrap.Modal(document.getElementById('bidModal'));
+  const currentPrice = {{product.current_price}};
+  const productId = {{product.id}};
+  const minIncrement = 50000; // VND
+  
+  // Format number with commas
+  function formatNumberWithCommas(num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  }
+
+  // Remove commas from formatted number
+  function removeCommas(str) {
+    return str.replace(/,/g, '');
+  }
+
+  // Open bid modal
+  document.querySelector('.btn-place-bid')?.addEventListener('click', function() {
+    {{#if isAuthenticated}}
+      const suggestedBid = currentPrice + minIncrement;
+      const bidInput = document.getElementById('bidAmount');
+      bidInput.value = formatNumberWithCommas(suggestedBid);
+      bidInput.setAttribute('data-raw-value', suggestedBid);
+      bidModal.show();
+    {{else}}
+      window.location.href = '/account/signin?retUrl=/products/detail?id={{product.id}}';
+    {{/if}}
+  });
+
+  // Format bid input on user input
+  document.getElementById('bidAmount')?.addEventListener('input', function(e) {
+    let value = removeCommas(this.value);
+    
+    // Remove non-numeric characters
+    value = value.replace(/[^\d]/g, '');
+    
+    if (value === '') {
+      this.value = '';
+      this.setAttribute('data-raw-value', '0');
+      return;
+    }
+    
+    const numValue = parseInt(value);
+    this.setAttribute('data-raw-value', numValue);
+    this.value = formatNumberWithCommas(numValue);
+    
+    // Validation
+    const minBid = currentPrice + minIncrement;
+    if (numValue && numValue < minBid) {
+      this.setCustomValidity('Bid must be at least ' + formatNumberWithCommas(minBid) + ' VND');
+    } else {
+      this.setCustomValidity('');
+    }
+  });
+
+  // Handle bid form submission - Server-side rendering
+  document.getElementById('bidForm')?.addEventListener('submit', function(e) {
+    const bidInput = document.getElementById('bidAmount');
+    const rawValue = bidInput.getAttribute('data-raw-value');
+    
+    // Set the raw value (without commas) to a hidden input
+    const hiddenInput = document.getElementById('bidAmountRaw');
+    if (hiddenInput) {
+      hiddenInput.value = rawValue || removeCommas(bidInput.value);
+    }
+    const productId = {{product.id}};
+    // Disable submit button to prevent double submission
+    const submitBtn = document.getElementById('submitBidBtn');
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+    
+    // Form will submit normally to server
+  });
+
+  // ==================== COMMENT REPLY FUNCTIONALITY ====================
+  document.querySelectorAll('.reply-btn').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const commentId = this.getAttribute('data-comment-id');
+      const replyForm = document.getElementById(`reply-form-${commentId}`);
+      replyForm.style.display = 'block';
+      this.style.display = 'none';
+    });
+  });
+
+  document.querySelectorAll('.cancel-reply').forEach(btn => {
+    btn.addEventListener('click', function() {
+      const commentId = this.getAttribute('data-comment-id');
+      const replyForm = document.getElementById(`reply-form-${commentId}`);
+      const replyBtn = document.querySelector(`.reply-btn[data-comment-id="${commentId}"]`);
+      replyForm.style.display = 'none';
+      replyBtn.style.display = 'inline-block';
+    });
+  });
+
 </script>
 {{/section}}
 
 <div class="container mb-5">
+  <!-- Flash Messages -->
+  {{#if success_message}}
+  <div class="alert alert-success alert-dismissible fade show mt-3" role="alert">
+    <i class="bi bi-check-circle-fill me-2"></i>
+    <strong>Success!</strong> {{success_message}}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+  {{/if}}
+
+  {{#if error_message}}
+  <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    <strong>Error!</strong> {{error_message}}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+  {{/if}}
+
   <!-- Breadcrumb Navigation -->
   <nav aria-label="breadcrumb" class="mb-4">
     <ol class="breadcrumb">
@@ -230,8 +342,8 @@
             <div class="price-card p-4 rounded-4 bg-gradient-light border-0 h-100 d-flex flex-column justify-content-center">
               <small class="text-muted d-block mb-2 fw-500">Current Bid</small>
               <div class="d-flex align-items-baseline gap-2">
-                <span class="text-muted">$</span>
                 <h2 class="fw-bold text-primary mb-0" style="color: #72AEC8 !important;">{{format_number product.current_price}}</h2>
+                <span class="text-muted">VND</span>
               </div>
             </div>
           </div>
@@ -240,8 +352,8 @@
               <small class="text-muted d-block mb-2 fw-500">Buy Now Price</small>
               {{#if product.buy_now_price}}
                 <div class="d-flex align-items-baseline gap-2">
-                  <span class="text-muted">$</span>
                   <h2 class="fw-bold mb-0" style="color: #72AEC8;">{{format_number product.buy_now_price}}</h2>
+                  <span class="text-muted">VND</span>
                 </div>
               {{else}}
                 <div class="d-flex align-items-baseline gap-2">
@@ -301,12 +413,40 @@
       <!-- Action Buttons -->
       <div class="action-buttons mb-4">
         <div class="d-grid gap-2 d-md-flex">
+          
+          {{!-- Nút Place Bid (Giữ nguyên) --}}
           <button class="btn btn-lg flex-fill fw-bold btn-place-bid">
             <i class="bi bi-hammer"></i> Place Bid
           </button>
-          <button class="btn btn-lg flex-fill fw-bold btn-watch">
-            <i class="bi bi-heart"></i> Watch
-          </button>
+          {{#if isAuthenticated}}
+            {{#if product.is_favorite}}
+              <form action="/products/watchlist?_method=DELETE" method="POST" class="flex-fill">
+                <input type="hidden" name="productId" value="{{product.id}}">
+                <button type="submit" class="btn btn-lg w-100 fw-bold btn-watch text-danger" title="Remove from Watchlist">
+                  <i class="bi bi-heart-fill"></i> Watching
+                </button>
+              </form>
+
+            {{else}}
+              {{!-- TRƯỜNG HỢP 2: CHƯA THÍCH -> Form POST --}}
+              <form action="/products/watchlist" method="POST" class="flex-fill">
+                <input type="hidden" name="productId" value="{{product.id}}">
+                <button type="submit" class="btn btn-lg w-100 fw-bold btn-watch" title="Add to Watchlist">
+                  <i class="bi bi-heart"></i> Watch
+                </button>
+              </form>
+            {{/if}}
+
+          {{else}}
+             {{!-- 
+                TRƯỜNG HỢP 3: CHƯA ĐĂNG NHẬP
+                Giữ nguyên giao diện nút nhưng chuyển thành thẻ <a> để dẫn tới trang signin
+             --}}
+             <a href="/account/signin?retUrl=/products/detail/{{product.id}}" class="btn btn-lg flex-fill fw-bold btn-watch d-flex align-items-center justify-content-center text-decoration-none">
+                <i class="bi bi-heart me-2"></i> Watch
+             </a>
+          {{/if}}
+
         </div>
       </div>
 
@@ -332,9 +472,6 @@
               <i class="bi bi-check-circle-fill"></i> Verified Seller
             </small>
           </div>
-          <button class="btn btn-contact btn-sm">
-            Contact
-          </button>
         </div>
         <small class="text-muted d-block">
           <i class="bi bi-star-fill text-warning"></i> {{round (multiply product.seller_rating 5) 1}}/5 • Member since {{product.seller_member_since}}
@@ -575,6 +712,304 @@
           </button>
         </div>
       </div>
+
+      <!-- Bidding History Section -->
+      <div class="bidding-history-section bg-white p-5 rounded-4 border mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h3 class="fw-bold mb-0">
+            <i class="bi bi-clock-history" style="color: #72AEC8;"></i> Bidding History
+          </h3>
+          {{#if isAuthenticated}}
+            <a href="/products/bidding-history?id={{product.id}}" class="btn btn-primary" style="background-color: #72AEC8; border: none;">
+              <i class="bi bi-list-ul me-2"></i>View Full History
+            </a>
+          {{else}}
+            <a href="/account/signin?retUrl=/products/bidding-history?id={{product.id}}" class="btn btn-outline-primary">
+              <i class="bi bi-lock-fill me-2"></i>Signin to View
+            </a>
+          {{/if}}
+        </div>
+
+        <div class="text-center text-muted py-5">
+          <i class="bi bi-clock-history" style="font-size: 3rem; opacity: 0.3;"></i>
+          <p class="mt-3">{{#if isAuthenticated}}Click "View Full History" to see all bids{{else}}Signin to view bidding history{{/if}}</p>
+        </div>
+      </div>
+
+      <!-- Comments Section -->
+      <div class="comments-section bg-white p-5 rounded-4 border">
+        <h3 class="fw-bold mb-4">
+          <i class="bi bi-chat-dots" style="color: #72AEC8;"></i> Questions & Answers
+        </h3>
+
+        {{#if isAuthenticated}}
+          <!-- Comment Form -->
+          <div class="comment-form mb-4">
+            <form action="/products/comment" method="POST">
+              <input type="hidden" name="productId" value="{{product.id}}">
+              <div class="mb-3">
+                <textarea 
+                  class="form-control" 
+                  name="content" 
+                  rows="3" 
+                  placeholder="Ask a question about this product..."
+                  required
+                  maxlength="500"></textarea>
+              </div>
+              <div class="text-end">
+                <button type="submit" class="btn btn-primary" style="background-color: #72AEC8; border: none;">
+                  <i class="bi bi-send me-2"></i>Post Question
+                </button>
+              </div>
+            </form>
+          </div>
+          <hr class="my-4">
+        {{else}}
+          <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            <a href="/account/signin?retUrl=/products/detail?id={{product.id}}" class="alert-link">Signin</a> to ask questions about this product
+          </div>
+        {{/if}}
+
+        <!-- Comments List -->
+        {{#if comments.length}}
+          <div class="comments-list">
+            {{#each comments}}
+              <div class="comment-item mb-4 pb-4 border-bottom">
+                <div class="d-flex align-items-start">
+                  <div class="flex-shrink-0 me-3">
+                    <div class="rounded-circle bg-primary bg-opacity-10 p-2" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
+                      <i class="bi bi-person-fill" style="color: #667eea; font-size: 1.5rem;"></i>
+                    </div>
+                  </div>
+                  <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                      <div>
+                        <strong>{{user_name}}</strong>
+                        {{#if (eq user_role 'seller')}}
+                          <span class="badge bg-success ms-2">Seller</span>
+                        {{/if}}
+                        <br>
+                        <small class="text-muted">{{format_date created_at}}</small>
+                      </div>
+                    </div>
+                    <p class="mb-2">{{content}}</p>
+                    
+                    {{#if isAuthenticated}}
+                      <button class="btn btn-sm btn-link p-0 text-decoration-none reply-btn" data-comment-id="{{id}}">
+                        <i class="bi bi-reply me-1"></i>Reply
+                      </button>
+
+                      <!-- Reply Form (Hidden by default) -->
+                      <div class="reply-form mt-3" id="reply-form-{{id}}" style="display: none;">
+                        <form action="/products/comment" method="POST">
+                          <input type="hidden" name="productId" value="{{../product.id}}">
+                          <input type="hidden" name="parentId" value="{{id}}">
+                          <div class="mb-2">
+                            <textarea 
+                              class="form-control form-control-sm" 
+                              name="content" 
+                              rows="2" 
+                              placeholder="Write a reply..."
+                              required
+                              maxlength="500"></textarea>
+                          </div>
+                          <div class="text-end">
+                            <button type="button" class="btn btn-sm btn-secondary cancel-reply" data-comment-id="{{id}}">Cancel</button>
+                            <button type="submit" class="btn btn-sm btn-primary" style="background-color: #72AEC8; border: none;">Reply</button>
+                          </div>
+                        </form>
+                      </div>
+                    {{/if}}
+
+                    <!-- Replies -->
+                    {{#if replies.length}}
+                      <div class="replies mt-3 ms-4">
+                        {{#each replies}}
+                          <div class="reply-item mb-3 ps-3 border-start border-2" style="border-color: #e9ecef !important;">
+                            <div class="d-flex align-items-start">
+                              <div class="flex-shrink-0 me-2">
+                                <div class="rounded-circle bg-secondary bg-opacity-10 p-2" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
+                                  <i class="bi bi-person-fill" style="color: #6c757d; font-size: 1.2rem;"></i>
+                                </div>
+                              </div>
+                              <div class="flex-grow-1">
+                                <div class="mb-1">
+                                  <strong class="small">{{user_name}}</strong>
+                                  {{#if (eq user_role 'seller')}}
+                                    <span class="badge bg-success badge-sm ms-1">Seller</span>
+                                  {{/if}}
+                                  <br>
+                                  <small class="text-muted">{{format_date created_at}}</small>
+                                </div>
+                                <p class="mb-0 small">{{content}}</p>
+                              </div>
+                            </div>
+                          </div>
+                        {{/each}}
+                      </div>
+                    {{/if}}
+                  </div>
+                </div>
+              </div>
+            {{/each}}
+          </div>
+        {{else}}
+          <div class="text-center text-muted py-5">
+            <i class="bi bi-chat-dots" style="font-size: 3rem; opacity: 0.3;"></i>
+            <p class="mt-3">No questions yet. Be the first to ask!</p>
+          </div>
+        {{/if}}
+      </div>
+
+      <!-- Bidding History Section -->
+      <div class="bidding-history-section bg-white p-5 rounded-4 border mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h3 class="fw-bold mb-0">
+            <i class="bi bi-clock-history" style="color: #72AEC8;"></i> Bidding History
+          </h3>
+          {{#if isAuthenticated}}
+            <a href="/products/bidding-history?id={{product.id}}" class="btn btn-primary" style="background-color: #72AEC8; border: none;">
+              <i class="bi bi-list-ul me-2"></i>View Full History
+            </a>
+          {{else}}
+            <a href="/account/signin?retUrl=/products/bidding-history?id={{product.id}}" class="btn btn-outline-primary">
+              <i class="bi bi-lock-fill me-2"></i>Signin to View
+            </a>
+          {{/if}}
+        </div>
+
+        <div class="text-center text-muted py-5">
+          <i class="bi bi-clock-history" style="font-size: 3rem; opacity: 0.3;"></i>
+          <p class="mt-3">{{#if isAuthenticated}}Click "View Full History" to see all bids{{else}}Signin to view bidding history{{/if}}</p>
+        </div>
+      </div>
+
+      <!-- Comments Section -->
+      <div class="comments-section bg-white p-5 rounded-4 border">
+        <h3 class="fw-bold mb-4">
+          <i class="bi bi-chat-dots" style="color: #72AEC8;"></i> Questions & Answers
+        </h3>
+
+        {{#if isAuthenticated}}
+          <!-- Comment Form -->
+          <div class="comment-form mb-4">
+            <form action="/products/comment" method="POST">
+              <input type="hidden" name="productId" value="{{product.id}}">
+              <div class="mb-3">
+                <textarea 
+                  class="form-control" 
+                  name="content" 
+                  rows="3" 
+                  placeholder="Ask a question about this product..."
+                  required
+                  maxlength="500"></textarea>
+              </div>
+              <div class="text-end">
+                <button type="submit" class="btn btn-primary" style="background-color: #72AEC8; border: none;">
+                  <i class="bi bi-send me-2"></i>Post Question
+                </button>
+              </div>
+            </form>
+          </div>
+          <hr class="my-4">
+        {{else}}
+          <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            <a href="/account/signin?retUrl=/products/detail?id={{product.id}}" class="alert-link">Signin</a> to ask questions about this product
+          </div>
+        {{/if}}
+
+        <!-- Comments List -->
+        {{#if comments.length}}
+          <div class="comments-list">
+            {{#each comments}}
+              <div class="comment-item mb-4 pb-4 border-bottom">
+                <div class="d-flex align-items-start">
+                  <div class="flex-shrink-0 me-3">
+                    <div class="rounded-circle bg-primary bg-opacity-10 p-2" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
+                      <i class="bi bi-person-fill" style="color: #667eea; font-size: 1.5rem;"></i>
+                    </div>
+                  </div>
+                  <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                      <div>
+                        <strong>{{user_name}}</strong>
+                        {{#if (eq user_role 'seller')}}
+                          <span class="badge bg-success ms-2">Seller</span>
+                        {{/if}}
+                        <br>
+                        <small class="text-muted">{{format_date created_at}}</small>
+                      </div>
+                    </div>
+                    <p class="mb-2">{{content}}</p>
+                    
+                    {{#if isAuthenticated}}
+                      <button class="btn btn-sm btn-link p-0 text-decoration-none reply-btn" data-comment-id="{{id}}">
+                        <i class="bi bi-reply me-1"></i>Reply
+                      </button>
+
+                      <!-- Reply Form (Hidden by default) -->
+                      <div class="reply-form mt-3" id="reply-form-{{id}}" style="display: none;">
+                        <form action="/products/comment" method="POST">
+                          <input type="hidden" name="productId" value="{{../product.id}}">
+                          <input type="hidden" name="parentId" value="{{id}}">
+                          <div class="mb-2">
+                            <textarea 
+                              class="form-control form-control-sm" 
+                              name="content" 
+                              rows="2" 
+                              placeholder="Write a reply..."
+                              required
+                              maxlength="500"></textarea>
+                          </div>
+                          <div class="text-end">
+                            <button type="button" class="btn btn-sm btn-secondary cancel-reply" data-comment-id="{{id}}">Cancel</button>
+                            <button type="submit" class="btn btn-sm btn-primary" style="background-color: #72AEC8; border: none;">Reply</button>
+                          </div>
+                        </form>
+                      </div>
+                    {{/if}}
+
+                    <!-- Replies -->
+                    {{#if replies.length}}
+                      <div class="replies mt-3 ms-4">
+                        {{#each replies}}
+                          <div class="reply-item mb-3 ps-3 border-start border-2" style="border-color: #e9ecef !important;">
+                            <div class="d-flex align-items-start">
+                              <div class="flex-shrink-0 me-2">
+                                <div class="rounded-circle bg-secondary bg-opacity-10 p-2" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
+                                  <i class="bi bi-person-fill" style="color: #6c757d; font-size: 1.2rem;"></i>
+                                </div>
+                              </div>
+                              <div class="flex-grow-1">
+                                <div class="mb-1">
+                                  <strong class="small">{{user_name}}</strong>
+                                  {{#if (eq user_role 'seller')}}
+                                    <span class="badge bg-success badge-sm ms-1">Seller</span>
+                                  {{/if}}
+                                  <br>
+                                  <small class="text-muted">{{format_date created_at}}</small>
+                                </div>
+                                <p class="mb-0 small">{{content}}</p>
+                              </div>
+                            </div>
+                          </div>
+                        {{/each}}
+                      </div>
+                    {{/if}}
+                  </div>
+                </div>
+              </div>
+            {{/each}}
+          </div>
+        {{else}}
+          <div class="text-center text-muted py-5">
+            <i class="bi bi-chat-dots" style="font-size: 3rem; opacity: 0.3;"></i>
+            <p class="mt-3">No questions yet. Be the first to ask!</p>
+          </div>
+        {{/if}}
+      </div>
     </div>
 
     <!-- Sidebar -->
@@ -691,4 +1126,63 @@
   <button class="lightbox-nav lightbox-next" onclick="nextImage()" title="Next">
     <i class="bi bi-chevron-right"></i>
   </button>
+</div>
+
+<!-- Bid Modal -->
+<div class="modal fade" id="bidModal" tabindex="-1" aria-labelledby="bidModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg">
+      <div class="modal-header border-0 pb-0">
+        <h5 class="modal-title fw-bold" id="bidModalLabel">
+          <i class="bi bi-hammer" style="color: #72AEC8;"></i> Place Your Bid
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body px-4 py-4">
+        <div class="alert alert-info border-0 mb-4" style="background-color: rgba(114, 174, 200, 0.1);">
+          <div class="d-flex align-items-center">
+            <i class="bi bi-info-circle-fill me-2" style="color: #72AEC8;"></i>
+            <div>
+              <strong>Current Price:</strong> <span id="modalCurrentPrice">{{format_number product.current_price}}</span> VND
+            </div>
+          </div>
+        </div>
+
+        <form id="bidForm" action="/products/bid" method="POST">
+          <input type="hidden" name="productId" value="{{product.id}}">
+          <input type="hidden" name="bidAmount" id="bidAmountRaw" value="">
+          
+          <div class="mb-4">
+            <label for="bidAmount" class="form-label fw-bold">Your Bid Amount</label>
+            <div class="input-group input-group-lg">
+              <input 
+                type="text" 
+                class="form-control" 
+                id="bidAmount" 
+                placeholder="Enter bid amount"
+                required
+                autofocus
+                inputmode="numeric"
+                pattern="[0-9,]*">
+              <span class="input-group-text bg-light">
+                VND
+              </span>
+            </div>
+            <small class="text-muted">
+              <i class="bi bi-lightbulb"></i> Minimum increment: 50,000 VND
+            </small>
+          </div>
+
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-lg fw-bold" id="submitBidBtn" style="background-color: #72AEC8; color: white; border: none;">
+              <i class="bi bi-check-circle"></i> Confirm Bid
+            </button>
+            <button type="button" class="btn btn-lg btn-outline-secondary" data-bs-dismiss="modal">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
 </div>

@@ -588,9 +588,8 @@ h3.cart-title {
 .site-header {
     position: fixed;
     width: 100%;
-    z-index: 100;
+    z-index: 1050;
     transition: background 0.3s ease-out;
-    isolation: isolate;
 }
 
 .site-header .navbar {
@@ -599,10 +598,6 @@ h3.cart-title {
 
 .site-header .d-flex.align-items-center {
     align-items: center !important;
-}
-
-.site-header .container-fluid {
-    isolation: isolate;
 }
 .navbar-toggler svg.navbar-icon {
     width: 50px;
@@ -636,6 +631,15 @@ h3.cart-title {
     padding-left: 20px;
 }
 
+/* Ensure dropdowns aren't clipped by offcanvas */
+.offcanvas-body {
+    overflow: visible !important;
+}
+
+.navbar-expand-lg .offcanvas-body {
+    overflow: visible !important;
+}
+
 /*------------ Top User Icons -----------*/
 .site-header .user-items svg {
     width: 18px;
@@ -652,6 +656,12 @@ h3.cart-title {
 /*------------ Dropdown Show on Hover ----------- */
 .navbar-nav .dropdown:hover .dropdown-menu {
   display: block;
+}
+
+/* Ensure dropdown appears above all content */
+.navbar-nav .dropdown-menu {
+  position: absolute !important;
+  z-index: 9999 !important;
 }
 
 /*------------ Hierarchical Dropdown ----------- */
@@ -690,7 +700,7 @@ h3.cart-title {
   opacity: 0;
   visibility: hidden;
   transition: opacity 0.3s ease, visibility 0.3s ease, margin-top 0.3s ease;
-  z-index: 1001;
+  z-index: 10000 !important;
 }
 
 .dropdown-submenu:hover > .dropdown-menu {
@@ -920,18 +930,18 @@ h3.cart-title {
   --progress: -102%;
 }
   
-  .dropdown-menu .dropdown-item {
-    padding-left: 2rem;
-  }
-  
-  .dropdown-submenu > .dropdown-toggle::after {
-    float: none;
-    transform: none;
-    margin-right: 0;
-    margin-left: auto;
-    display: none;
-  }
+.dropdown-menu .dropdown-item {
+  padding-left: 2rem;
 }
+
+.dropdown-submenu > .dropdown-toggle::after {
+  float: none;
+  transform: none;
+  margin-right: 0;
+  margin-left: auto;
+  display: none;
+}
+
 
 
 /* 2. Billboard

@@ -19,10 +19,6 @@
     }
 
     if (newPass || confirmPass) {
-        if (newPass.length < 6) {
-            Swal.fire({ icon: 'error', title: 'Weak Password', text: 'New password must be at least 6 characters.' });
-            return;
-        }
         if (newPass !== confirmPass) {
             Swal.fire({ icon: 'error', title: 'Mismatch', text: 'New passwords do not match.' });
             return;

@@ -45,6 +45,7 @@ app.engine('handlebars', engine({
   helpers: {
     section: expressHandlebarsSections(),
     eq(a, b) { return a === b; },
+    add(a, b) { return a + b; },
     format_number(price) { return new Intl.NumberFormat('en-US').format(price); },
     format_date(date) {
       if (!date) return '';
@@ -159,6 +160,7 @@ app.engine('handlebars', engine({
     gt(a, b) { 
       return a > b; 
     },
+    gte(a, b) { return a >= b; },
     lt(a, b) { 
       return a < b; 
     },
@@ -168,11 +170,13 @@ app.engine('handlebars', engine({
     gte(a, b) { 
       return a >= b; 
     },
+    lte(a, b) { return a <= b; },
     add(a, b) { 
       return a + b; 
     },
     subtract(a, b) { 
-      return a - b; 
+      return a - b; },
+    multiply(a, b) { return Math.round(a * b); 
     },
     multiply(a, b) {
       return a * b;
@@ -209,10 +213,6 @@ app.use(function (req, res, next) {
 
 // 3.2. Middleware Category (Chỉ load cho Client)
 app.use(async function (req, res, next) {
-  // Nếu là admin route HOẶC là admin đang ở trang chủ (theo logic redirect dưới) thì không cần load
-  if (req.path.startsWith('/admin')) {
-      return next();
-  }
   const plist = await categoryModel.findLevel1Categories();
   const clist = await categoryModel.findLevel2Categories();
   res.locals.lcCategories1 = plist;
