@@ -1,3 +1,7 @@
+{{#section 'css'}}
+<link rel="stylesheet" href="/static/css/admin/category/detail.css">
+{{/section}}
+
 <div class="container mt-4 mb-5">
   <div class="row">
     
@@ -43,7 +47,7 @@
                   {{#if category.parent_name}}
                     <span class="badge bg-info text-dark">{{category.parent_name}}</span>
                   {{else}}
-                    <span class="text-muted">None (Top Level)</span>
+                    <span class="text-muted">None (Level 1)</span>
                   {{/if}}
                 </div>
               </div>
@@ -65,13 +69,20 @@
           </div>
 
           <!-- Action Buttons -->
-          <div class="d-flex gap-2 mt-4 pt-4 border-top justify-content-center">
-            <a href="/admin/categories/edit/{{category.id}}" class="btn btn-primary px-4">
-                <i class="bi bi-pencil-square me-2"></i> Edit Category
-            </a>
-            <a href="/admin/categories/list" class="btn btn-outline-secondary px-4">
-                <i class="bi bi-list me-2"></i> Back to List
-            </a>
+          <div class="mt-4 pt-4 border-top">
+            <div class="d-flex justify-content-between">
+              <a href="/admin/categories/list" class="btn btn-secondary">
+                <i class="bi bi-arrow-left me-2"></i>Back to List
+              </a>
+              <div>
+                <a href="/admin/categories/edit/{{category.id}}" class="btn btn-primary me-2">
+                  <i class="bi bi-pencil-square me-2"></i>Edit Category
+                </a>
+                <button type="button" class="btn btn-danger" data-category-id="{{category.id}}" data-category-name="{{category.name}}" onclick="confirmDelete(this)" {{#if category.product_count}}disabled{{/if}}>
+                  <i class="bi bi-trash me-2"></i>Delete Category
+                </button>
+              </div>
+            </div>
           </div>
 
           {{else}}
@@ -84,3 +95,39 @@
     </div>
   </div>
 </div>
+
+{{#section 'js'}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+function confirmDelete(button) {
+    const categoryId = button.dataset.categoryId;
+    const categoryName = button.dataset.categoryName;
+    
+    Swal.fire({
+        title: 'Are you sure?',
+        html: `You are about to delete category: <strong>${categoryName}</strong><br>This action cannot be undone!`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/admin/categories/delete';
+            
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'id';
+            input.value = categoryId;
+            
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    });
+}
+</script>
+{{/section}}

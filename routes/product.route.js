@@ -111,8 +111,6 @@ router.get('/detail', async (req, res) => {
   const error_message = req.session.error_message;
   delete req.session.success_message;
   delete req.session.error_message;
-  
-  console.log(product);
   res.render('vwProduct/details', { 
     product,
     comments,

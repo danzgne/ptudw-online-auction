@@ -13,9 +13,11 @@ import accountRouter from './routes/account.route.js';
 import adminCategoryRouter from './routes/admin/category.route.js';
 import adminUserRouter from './routes/admin/user.route.js';
 import adminAccountRouter from './routes/admin/account.route.js';
+import adminProductRouter from './routes/admin/product.route.js';
 // Import Middlewares
 import { isAdmin } from './middlewares/auth.mdw.js';
 import * as categoryModel from './models/category.model.js';
+import * as userModel from './models/user.model.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -200,10 +202,35 @@ app.set('views', './views');
 // ============================================================
 
 // 3.1. Middleware User Info
-app.use(function (req, res, next) {
+app.use(async function (req, res, next) {
   if (typeof req.session.isAuthenticated === 'undefined') {
     req.session.isAuthenticated = false;
   }
+  
+  // Nếu user đã đăng nhập, kiểm tra xem thông tin có thay đổi không
+  if (req.session.isAuthenticated && req.session.authUser) {
+    const currentUser = await userModel.findById(req.session.authUser.id);
+    
+    // Nếu không tìm thấy user (bị xóa) hoặc thông tin đã thay đổi, cập nhật session
+    if (!currentUser) {
+      // User bị xóa, đăng xuất
+      req.session.isAuthenticated = false;
+      req.session.authUser = null;
+    } else {
+      // Cập nhật thông tin mới từ DB vào session
+      req.session.authUser = {
+        id: currentUser.id,
+        username: currentUser.username,
+        fullname: currentUser.fullname,
+        email: currentUser.email,
+        role: currentUser.role,
+        address: currentUser.address,
+        date_of_birth: currentUser.date_of_birth,
+        email_verified: currentUser.email_verified
+      };
+    }
+  }
+  
   res.locals.isAuthenticated = req.session.isAuthenticated;
   res.locals.authUser = req.session.authUser;
   res.locals.isAdmin = req.session.authUser?.role === 'admin';
@@ -252,7 +279,7 @@ app.use('/admin', function (req, res, next) {
 app.use('/admin/account', adminAccountRouter);
 app.use('/admin/users', adminUserRouter);
 app.use('/admin/categories', adminCategoryRouter);
-
+app.use('/admin/products', adminProductRouter); 
 // Các Route Client (Đặt cuối cùng để tránh override)
 app.use('/', indexRouter);
 app.use('/products', productRouter);

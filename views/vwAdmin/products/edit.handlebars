@@ -1,0 +1,263 @@
+{{#section 'css'}}
+<link rel="stylesheet" href="/static/css/admin/products/edit.css">
+{{/section}}
+
+<div class="container mt-4 mb-5">
+    <div class="row">
+        
+        <!-- SIDEBAR -->
+        <div class="col-md-3 mb-4">
+            {{> admin-sidebar activeSection='products'}}
+        </div>
+
+        <!-- CONTENT -->
+        <div class="col-md-9">
+            <div class="card shadow-sm border-0">
+                
+                <!-- Header -->
+                <div class="card-header bg-white border-bottom py-3">
+                    <h5 class="mb-0 fw-bold text-danger">
+                        <i class="bi bi-pencil-square me-2"></i>EDIT PRODUCT
+                    </h5>
+                </div>
+                
+                <!-- Body -->
+                <div class="card-body p-4">
+                    {{#if error_message}}
+                    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>{{error_message}}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {{/if}}
+
+                    {{#if product}}
+                    <form id="formEditProduct" method="POST" action="/admin/products/edit">
+                        <input type="hidden" name="id" value="{{product.id}}">
+                        
+                        <!-- Product ID (Read-only) -->
+                        <div class="mb-4">
+                            <label class="form-label text-muted">
+                                <i class="bi bi-hash me-1"></i>Product ID
+                            </label>
+                            <input type="text" class="form-control bg-light" value="#{{product.id}}" disabled>
+                        </div>
+
+                        <!-- Product Name -->
+                        <div class="mb-4">
+                            <label for="txtName" class="form-label">
+                                <i class="bi bi-box-seam me-1"></i>Product Name <span class="required">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="txtName" name="name" 
+                                   value="{{product.name}}" placeholder="Enter product name" required>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-4">
+                            <label for="txtDescription" class="form-label">
+                                <i class="bi bi-file-text me-1"></i>Description
+                            </label>
+                            <textarea class="form-control" id="txtDescription" name="description" 
+                                      rows="4" placeholder="Enter product description">{{product.description}}</textarea>
+                        </div>
+
+                        <!-- Thumbnail URL -->
+                        <div class="mb-4">
+                            <label for="txtThumbnail" class="form-label">
+                                <i class="bi bi-image me-1"></i>Thumbnail URL
+                            </label>
+                            <input type="text" class="form-control" id="txtThumbnail" name="thumbnail" 
+                                   value="{{product.thumbnail}}" placeholder="https://example.com/image.jpg">
+                            <div class="form-text">Enter the image URL for the product thumbnail.</div>
+                        </div>
+
+                        <!-- Category -->
+                        <div class="mb-4">
+                            <label for="selCategory" class="form-label">
+                                <i class="bi bi-tag me-1"></i>Category <span class="required">*</span>
+                            </label>
+                            <select class="form-select" id="selCategory" name="category_id" required>
+                                <option value="">— Select a category —</option>
+                                {{#each categories}}
+                                <option value="{{id}}" {{#if (eq id ../product.category_id)}}selected{{/if}}>
+                                    {{name}}
+                                </option>
+                                {{/each}}
+                            </select>
+                        </div>
+
+                        <!-- Pricing Section -->
+                        <h6 class="text-uppercase text-muted mb-3 mt-4">
+                            <i class="bi bi-cash-stack me-1"></i>Pricing
+                        </h6>
+
+                        <div class="row">
+                            <!-- Starting Price -->
+                            <div class="col-md-6 mb-4">
+                                <label for="txtStartingPrice" class="form-label">
+                                    Starting Price (VND) <span class="required">*</span>
+                                </label>
+                                <input type="number" class="form-control" id="txtStartingPrice" name="starting_price" 
+                                       value="{{product.starting_price}}" min="0" required>
+                            </div>
+
+                            <!-- Current Price -->
+                            <div class="col-md-6 mb-4">
+                                <label for="txtCurrentPrice" class="form-label">
+                                    Current Price (VND) <span class="required">*</span>
+                                </label>
+                                <input type="number" class="form-control" id="txtCurrentPrice" name="current_price" 
+                                       value="{{product.current_price}}" min="0" required>
+                            </div>
+
+                            <!-- Step Price -->
+                            <div class="col-md-6 mb-4">
+                                <label for="txtStepPrice" class="form-label">
+                                    Step Price (VND) <span class="required">*</span>
+                                </label>
+                                <input type="number" class="form-control" id="txtStepPrice" name="step_price" 
+                                       value="{{product.step_price}}" min="1" required>
+                                <div class="form-text">Minimum increment for each bid.</div>
+                            </div>
+
+                            <!-- Buy Now Price -->
+                            <div class="col-md-6 mb-4">
+                                <label for="txtBuyNowPrice" class="form-label">
+                                    Buy Now Price (VND)
+                                </label>
+                                <input type="number" class="form-control" id="txtBuyNowPrice" name="buy_now_price" 
+                                       value="{{product.buy_now_price}}" min="0">
+                                <div class="form-text">Optional. Leave 0 to disable.</div>
+                            </div>
+                        </div>
+
+                        <!-- Auction Settings -->
+                        <h6 class="text-uppercase text-muted mb-3 mt-4">
+                            <i class="bi bi-gear me-1"></i>Auction Settings
+                        </h6>
+
+                        <div class="row">
+                            <!-- End Date -->
+                            <div class="col-md-6 mb-4">
+                                <label for="txtEndAt" class="form-label">
+                                    Auction End Date <span class="required">*</span>
+                                </label>
+                                <input type="datetime-local" class="form-control" id="txtEndAt" name="end_at" 
+                                       value="{{format_date product.end_at}}" required>
+                            </div>
+
+                            <!-- Checkboxes -->
+                            <div class="col-md-6 mb-4">
+                                <label class="form-label d-block">Options</label>
+                                
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="chkAutoExtend" name="auto_extend" 
+                                           {{#if product.auto_extend}}checked{{/if}}>
+                                    <label class="form-check-label" for="chkAutoExtend">
+                                        Auto Extend
+                                    </label>
+                                </div>
+
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="chkAllowUnrated" name="allow_unrated_bidder" 
+                                           {{#if product.allow_unrated_bidder}}checked{{/if}}>
+                                    <label class="form-check-label" for="chkAllowUnrated">
+                                        Allow Unrated Bidders
+                                    </label>
+                                </div>
+
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="chkIsSold" name="is_sold" 
+                                           {{#if product.is_sold}}checked{{/if}}>
+                                    <label class="form-check-label" for="chkIsSold">
+                                        Mark as Sold
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Submit Buttons -->
+                        <div class="d-flex gap-2 mt-4 pt-4 border-top justify-content-center">
+                            <button type="submit" class="btn btn-danger px-4">
+                                <i class="bi bi-check-lg me-2"></i>Update Product
+                            </button>
+                            <a href="/admin/products/list" class="btn btn-outline-secondary px-4">
+                                <i class="bi bi-list me-2"></i>Back to List
+                            </a>
+                        </div>
+                    </form>
+                    {{else}}
+                    <div class="alert alert-warning">
+                        <i class="bi bi-exclamation-triangle me-2"></i>Product not found!
+                    </div>
+                    {{/if}}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{#section 'js'}}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+$(document).ready(function() {
+    // Form validation
+    $('#formEditProduct').on('submit', function(e) {
+        const name = $('#txtName').val().trim();
+        const categoryId = $('#selCategory').val();
+        const startingPrice = parseInt($('#txtStartingPrice').val());
+        const stepPrice = parseInt($('#txtStepPrice').val());
+        const endAt = $('#txtEndAt').val();
+        
+        if (!name) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'error',
+                title: 'Validation Error',
+                text: 'Product name is required!'
+            });
+            return false;
+        }
+
+        if (!categoryId) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'error',
+                title: 'Validation Error',
+                text: 'Please select a category!'
+            });
+            return false;
+        }
+
+        if (startingPrice < 0) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'error',
+                title: 'Validation Error',
+                text: 'Starting price must be 0 or greater!'
+            });
+            return false;
+        }
+
+        if (stepPrice <= 0) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'error',
+                title: 'Validation Error',
+                text: 'Step price must be greater than 0!'
+            });
+            return false;
+        }
+
+        if (!endAt) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'error',
+                title: 'Validation Error',
+                text: 'Auction end date is required!'
+            });
+            return false;
+        }
+    });
+});
+</script>
+{{/section}}

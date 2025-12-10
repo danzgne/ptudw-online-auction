@@ -1,3 +1,7 @@
+{{#section 'css'}}
+<link rel="stylesheet" href="/static/css/admin/category/edit.css">
+{{/section}}
+
 {{#section 'js'}}
 <script>
     $(document).ready(function() {
@@ -77,14 +81,13 @@
                   <i class="bi bi-diagram-3 me-1"></i> Parent Category
               </label>
               <select class="form-select form-select-lg" id="selParent" name="parent_id">
-                  <option value="">— None (Convert to Level 1) —</option>
                   {{#each parentCategories}}
                   <option value="{{id}}" {{#if (eq id ../category.parent_id)}}selected{{/if}}>
                       {{name}}
                   </option>
                   {{/each}}
               </select>
-              <div class="form-text">Change parent category or set to None to convert to Level 1.</div>
+              <div class="form-text">Choose a parent category.</div>
             </div>
             {{else}}
             <div class="mb-4">

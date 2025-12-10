@@ -86,11 +86,3 @@ export function updateUserRoleToSeller(user_id) {
     .where('id', user_id)
     .update({ role: 'seller', is_upgrade_pending: false });
 } 
-export function calculateRatingPoint(user_id) {
-  return db('users')
-    .where('id', user_id)
-    .select(
-      db.raw('CASE WHEN (rating_minus + rating_plus) = 0 THEN 0 ELSE rating_plus::float / (rating_minus + rating_plus) END as rating_point')
-    )
-    .first();
-}

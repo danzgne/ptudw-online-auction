@@ -2,17 +2,10 @@ import db from '../utils/db.js';
 
 export function findAll() {
   return db('products')
-    .leftJoin('users', 'products.highest_bidder_id', 'users.id')
+    .leftJoin('users as bidder', 'products.highest_bidder_id', 'bidder.id')
+    .leftJoin('users as seller', 'products.seller_id', 'seller.id')
     .select(
-      'products.*', 
-    
-      db.raw(`
-        CASE 
-          WHEN users.fullname IS NOT NULL THEN 
-            OVERLAY(users.fullname PLACING '****' FROM 1 FOR (LENGTH(users.fullname)/2)::INTEGER)
-          ELSE NULL 
-        END AS bidder_name
-      `),
+      'products.*', 'seller.fullname as seller_name', 'bidder.fullname as highest_bidder_name',
       db.raw(`
         (
           SELECT COUNT(*) 
@@ -22,6 +15,61 @@ export function findAll() {
       `)
     );
 }
+export async function findByProductIdForAdmin(productId, userId) {
+  // Chuyển sang async để xử lý dữ liệu trước khi trả về controller
+  const rows = await db('products')
+    // 1. Join lấy thông tin người đấu giá cao nhất (Giữ nguyên)
+    .leftJoin('users', 'products.highest_bidder_id', 'users.id')
+    
+    // 2. Join lấy danh sách ảnh phụ (Giữ nguyên)
+    .leftJoin('product_images', 'products.id', 'product_images.product_id')
+    .leftJoin('categories', 'products.category_id', 'categories.id')
+    // 3. Join lấy thông tin Watchlist (MỚI THÊM)
+    // Logic: Join vào bảng watchlist xem user hiện tại có lưu product này không
+    .leftJoin('watchlists', function() {
+        this.on('products.id', '=', 'watchlists.product_id')
+            .andOnVal('watchlists.user_id', '=', userId || -1); 
+            // Nếu userId null (chưa login) thì so sánh với -1 để không khớp
+    })
+
+    .where('products.id', productId)
+    .select(
+      'products.*',
+      'product_images.img_link', // Lấy link ảnh phụ để lát nữa gộp mảng
+      'users.fullname as highest_bidder_name',
+      'categories.name as category_name',
+      // Logic che tên người đấu giá (Giữ nguyên)
+      // Logic đếm số lượt bid (Giữ nguyên)
+      db.raw(`
+        (
+          SELECT COUNT(*) 
+          FROM bidding_history 
+          WHERE bidding_history.product_id = products.id
+        ) AS bid_count
+      `),
+
+      // 4. Logic kiểm tra yêu thích (MỚI THÊM)
+      // Nếu cột product_id bên bảng watchlists có dữ liệu -> Đã like (True)
+      db.raw('watchlists.product_id IS NOT NULL AS is_favorite')
+    );
+
+  // --- PHẦN XỬ LÝ DỮ LIỆU (QUAN TRỌNG) ---
+  
+  // Nếu không tìm thấy sản phẩm nào
+  if (rows.length === 0) return null;
+
+  // SQL trả về nhiều dòng (do 1 sp có nhiều ảnh), ta lấy dòng đầu tiên làm thông tin chính
+  const product = rows[0];
+
+  // Gom tất cả img_link của các dòng lại thành mảng sub_images
+  // Để phục vụ vòng lặp {{#each product.sub_images}} bên View
+  product.sub_images = rows
+    .map(row => row.img_link)
+    .filter(link => link && link !== product.thumbnail); // Lọc bỏ ảnh null hoặc trùng thumbnail
+
+  return product;
+}
+
 export function findPage(limit, offset) {
   return db('products')
     .leftJoin('users', 'products.highest_bidder_id', 'users.id')
