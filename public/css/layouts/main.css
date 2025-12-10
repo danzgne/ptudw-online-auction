@@ -7,6 +7,12 @@ Description: Ministore is specially designed product packaged for Ministore by M
 Version: 
 */
 
+/* Navbar z-index */
+#header,
+.site-header {
+  z-index: 1000 !important;
+}
+
 /*--------------------------------------------------------------
 This is main CSS file that contains custom style rules used in this template
 --------------------------------------------------------------*/
@@ -583,7 +589,7 @@ h3.cart-title {
 }
 
 
-/* 1. Header
+/* 1. Header */
 /*----------------------------------------------*/
 .site-header {
     position: fixed;

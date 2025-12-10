@@ -1,6 +1,6 @@
 import express from 'express';
 import * as productModel from '../models/product.model.js';
-import * as userModel from '../models/user.model.js';
+import * as reviewModel from '../models/review.model.js';
 import * as watchListModel from '../models/watchlist.model.js';
 import * as biddingHistoryModel from '../models/biddingHistory.model.js';
 import * as productCommentModel from '../models/productComment.model.js';
@@ -92,6 +92,7 @@ router.get('/detail', async (req, res) => {
   const userId = req.session.authUser ? req.session.authUser.id : null;
   const productId = req.query.id;
   const product = await productModel.findByProductId2(productId, userId);
+  const related_products = await productModel.findRelatedProducts(productId);
   
   // Kiểm tra nếu không tìm thấy sản phẩm
   if (!product) {
@@ -111,11 +112,17 @@ router.get('/detail', async (req, res) => {
   const error_message = req.session.error_message;
   delete req.session.success_message;
   delete req.session.error_message;
+
+  const ratingObject = await reviewModel.calculateRatingPoint(product.seller_id);
+  
+  console.log(product);
   res.render('vwProduct/details', { 
     product,
     comments,
     success_message,
-    error_message
+    error_message,
+    related_products,
+    rating_point: ratingObject.rating_point
   });
 });
 

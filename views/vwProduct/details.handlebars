@@ -467,14 +467,14 @@
             <h6 class="fw-bold mb-2">
               <i class="bi bi-shop" style="color: #72AEC8;"></i> Seller Information
             </h6>
-            <h5 class="fw-bold mb-1">{{product.seller_fullname}}</h5>
+            <h5 class="fw-bold mb-1">{{product.seller_name}}</h5>
             <small class="text-success d-flex align-items-center gap-1">
               <i class="bi bi-check-circle-fill"></i> Verified Seller
             </small>
           </div>
         </div>
         <small class="text-muted d-block">
-          <i class="bi bi-star-fill text-warning"></i> {{round (multiply product.seller_rating 5) 1}}/5 • Member since {{product.seller_member_since}}
+          <i class="bi bi-star-fill text-warning"></i> {{round (multiply rating_point 5) 1}}/5 • Member since {{format_date product.seller_created_at}}
         </small>
       </div>
     </div>
@@ -504,7 +504,7 @@
       </div>
 
       <!-- Product Details Tab -->
-      <div class="details-section bg-white p-5 rounded-4 border">
+      <div class="details-section bg-white p-5 rounded-4 border mb-5">
         <div class="d-flex justify-content-between align-items-center mb-4" onclick="toggleDetails()" style="cursor: pointer;">
           <h3 class="fw-bold mb-0">
             <i class="bi bi-info-circle" style="color: #72AEC8;"></i> Product Details
@@ -547,349 +547,13 @@
         </div>
       </div>
 
-      <!-- Q&A Section -->
-      <div class="qa-section bg-white p-5 rounded-4 border mt-5">
-        <h3 class="fw-bold mb-4">
-          <i class="bi bi-chat-dots" style="color: #72AEC8;"></i> Questions & Answers
-        </h3>
-        
-        <!-- Q&A List -->
-        <div class="qa-list">
-          {{#if product.questions}}
-            {{#each product.questions}}
-              <div class="qa-item mb-4 pb-4 border-bottom">
-                <div class="question mb-3">
-                  <div class="d-flex justify-content-between align-items-start mb-2">
-                    <h6 class="fw-bold mb-0">{{this.user_name}}</h6>
-                    <small class="text-muted">{{format_date this.created_at}}</small>
-                  </div>
-                  <p class="text-muted mb-0">{{this.question_text}}</p>
-                </div>
-                
-                {{#if this.answer_text}}
-                  <div class="answer ms-4 ps-3 border-start" style="border-color: #72AEC8 !important;">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                      <h6 class="fw-bold mb-0" style="color: #72AEC8;">
-                        <i class="bi bi-check-circle-fill"></i> Seller's Answer
-                      </h6>
-                      <small class="text-muted">{{format_date this.answer_date}}</small>
-                    </div>
-                    <p class="text-muted mb-0">{{this.answer_text}}</p>
-                  </div>
-                {{else}}
-                  <div class="ms-4 ps-3 border-start" style="border-color: #dc3545 !important;">
-                    <small class="text-danger">
-                      <i class="bi bi-exclamation-circle"></i> Awaiting seller's answer
-                    </small>
-                  </div>
-                {{/if}}
-              </div>
-            {{/each}}
-          {{else}}
-            <div class="alert alert-info" role="alert">
-              <i class="bi bi-info-circle"></i> No questions yet. Be the first to ask!
-            </div>
-          {{/if}}
-        </div>
-
-        <!-- Ask Question Button -->
-        <div class="mt-4">
-          <button class="btn btn-lg fw-bold w-100" style="background: linear-gradient(135deg, #72AEC8 0%, #5a9ab8 100%); border: 2px solid #72AEC8; color: white;">
-            <i class="bi bi-pencil-square"></i> Ask a Question
-          </button>
-        </div>
-      </div>
-
-      <!-- Reviews Section -->
-      <div class="reviews-section bg-white p-5 rounded-4 border mt-5">
-        <h3 class="fw-bold mb-4">
-          <i class="bi bi-star-fill" style="color: #72AEC8;"></i> Customer Reviews
-        </h3>
-
-        <!-- Overall Rating -->
-        <div class="overall-rating mb-5 pb-5 border-bottom">
-          <div class="row">
-            <div class="col-md-3 text-center mb-4 mb-md-0">
-              <div style="font-size: 3rem; font-weight: bold; color: #72AEC8;">4.5</div>
-              <div class="d-flex justify-content-center mb-2">
-                <span class="text-warning">
-                  <i class="bi bi-star-fill"></i>
-                  <i class="bi bi-star-fill"></i>
-                  <i class="bi bi-star-fill"></i>
-                  <i class="bi bi-star-fill"></i>
-                  <i class="bi bi-star-half"></i>
-                </span>
-              </div>
-              <small class="text-muted">Based on 24 reviews</small>
-            </div>
-            <div class="col-md-9">
-              <div class="rating-bars">
-                <div class="rating-bar mb-3">
-                  <div class="d-flex align-items-center gap-3">
-                    <small class="text-muted" style="width: 50px;">5 <i class="bi bi-star-fill text-warning"></i></small>
-                    <div class="progress flex-grow-1" style="height: 8px;">
-                      <div class="progress-bar" style="width: 65%; background-color: #72AEC8;"></div>
-                    </div>
-                    <small class="text-muted">15</small>
-                  </div>
-                </div>
-                <div class="rating-bar mb-3">
-                  <div class="d-flex align-items-center gap-3">
-                    <small class="text-muted" style="width: 50px;">4 <i class="bi bi-star-fill text-warning"></i></small>
-                    <div class="progress flex-grow-1" style="height: 8px;">
-                      <div class="progress-bar" style="width: 25%; background-color: #72AEC8;"></div>
-                    </div>
-                    <small class="text-muted">6</small>
-                  </div>
-                </div>
-                <div class="rating-bar mb-3">
-                  <div class="d-flex align-items-center gap-3">
-                    <small class="text-muted" style="width: 50px;">3 <i class="bi bi-star-fill text-warning"></i></small>
-                    <div class="progress flex-grow-1" style="height: 8px;">
-                      <div class="progress-bar" style="width: 8%; background-color: #72AEC8;"></div>
-                    </div>
-                    <small class="text-muted">2</small>
-                  </div>
-                </div>
-                <div class="rating-bar mb-3">
-                  <div class="d-flex align-items-center gap-3">
-                    <small class="text-muted" style="width: 50px;">2 <i class="bi bi-star-fill text-warning"></i></small>
-                    <div class="progress flex-grow-1" style="height: 8px;">
-                      <div class="progress-bar" style="width: 0%; background-color: #72AEC8;"></div>
-                    </div>
-                    <small class="text-muted">0</small>
-                  </div>
-                </div>
-                <div class="rating-bar">
-                  <div class="d-flex align-items-center gap-3">
-                    <small class="text-muted" style="width: 50px;">1 <i class="bi bi-star-fill text-warning"></i></small>
-                    <div class="progress flex-grow-1" style="height: 8px;">
-                      <div class="progress-bar" style="width: 2%; background-color: #72AEC8;"></div>
-                    </div>
-                    <small class="text-muted">1</small>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Individual Reviews -->
-        <div class="reviews-list">
-          {{#if product.reviews}}
-            {{#each product.reviews}}
-              <div class="review-item mb-4 pb-4 border-bottom">
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                  <div>
-                    <h6 class="fw-bold mb-1">{{this.reviewer_name}}</h6>
-                    <div class="d-flex align-items-center gap-2">
-                      <span class="text-warning small">
-                        {{#each (range 1 (add 1 (round this.rating)))}}
-                          <i class="bi bi-star-fill"></i>
-                        {{/each}}
-                        {{#if (gt (subtract this.rating (floor this.rating)) 0)}}
-                          <i class="bi bi-star-half"></i>
-                        {{/if}}
-                      </span>
-                      <small class="text-muted">{{format_date this.created_at}}</small>
-                    </div>
-                  </div>
-                </div>
-                <p class="text-muted mb-0">{{this.review_text}}</p>
-              </div>
-            {{/each}}
-          {{else}}
-            <div class="alert alert-info" role="alert">
-              <i class="bi bi-info-circle"></i> No reviews yet. Be the first to review!
-            </div>
-          {{/if}}
-        </div>
-
-        <!-- Write Review Button -->
-        <div class="mt-4">
-          <button class="btn btn-lg fw-bold w-100" style="background: linear-gradient(135deg, #72AEC8 0%, #5a9ab8 100%); border: 2px solid #72AEC8; color: white;">
-            <i class="bi bi-pencil-square"></i> Write a Review
-          </button>
-        </div>
-      </div>
-
-      <!-- Bidding History Section -->
-      <div class="bidding-history-section bg-white p-5 rounded-4 border mb-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <h3 class="fw-bold mb-0">
-            <i class="bi bi-clock-history" style="color: #72AEC8;"></i> Bidding History
-          </h3>
-          {{#if isAuthenticated}}
-            <a href="/products/bidding-history?id={{product.id}}" class="btn btn-primary" style="background-color: #72AEC8; border: none;">
-              <i class="bi bi-list-ul me-2"></i>View Full History
-            </a>
-          {{else}}
-            <a href="/account/signin?retUrl=/products/bidding-history?id={{product.id}}" class="btn btn-outline-primary">
-              <i class="bi bi-lock-fill me-2"></i>Signin to View
-            </a>
-          {{/if}}
-        </div>
-
-        <div class="text-center text-muted py-5">
-          <i class="bi bi-clock-history" style="font-size: 3rem; opacity: 0.3;"></i>
-          <p class="mt-3">{{#if isAuthenticated}}Click "View Full History" to see all bids{{else}}Signin to view bidding history{{/if}}</p>
-        </div>
-      </div>
-
       <!-- Comments Section -->
       <div class="comments-section bg-white p-5 rounded-4 border">
-        <h3 class="fw-bold mb-4">
-          <i class="bi bi-chat-dots" style="color: #72AEC8;"></i> Questions & Answers
-        </h3>
-
-        {{#if isAuthenticated}}
-          <!-- Comment Form -->
-          <div class="comment-form mb-4">
-            <form action="/products/comment" method="POST">
-              <input type="hidden" name="productId" value="{{product.id}}">
-              <div class="mb-3">
-                <textarea 
-                  class="form-control" 
-                  name="content" 
-                  rows="3" 
-                  placeholder="Ask a question about this product..."
-                  required
-                  maxlength="500"></textarea>
-              </div>
-              <div class="text-end">
-                <button type="submit" class="btn btn-primary" style="background-color: #72AEC8; border: none;">
-                  <i class="bi bi-send me-2"></i>Post Question
-                </button>
-              </div>
-            </form>
-          </div>
-          <hr class="my-4">
-        {{else}}
-          <div class="alert alert-info">
-            <i class="bi bi-info-circle me-2"></i>
-            <a href="/account/signin?retUrl=/products/detail?id={{product.id}}" class="alert-link">Signin</a> to ask questions about this product
-          </div>
-        {{/if}}
-
-        <!-- Comments List -->
-        {{#if comments.length}}
-          <div class="comments-list">
-            {{#each comments}}
-              <div class="comment-item mb-4 pb-4 border-bottom">
-                <div class="d-flex align-items-start">
-                  <div class="flex-shrink-0 me-3">
-                    <div class="rounded-circle bg-primary bg-opacity-10 p-2" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
-                      <i class="bi bi-person-fill" style="color: #667eea; font-size: 1.5rem;"></i>
-                    </div>
-                  </div>
-                  <div class="flex-grow-1">
-                    <div class="d-flex justify-content-between align-items-start mb-2">
-                      <div>
-                        <strong>{{user_name}}</strong>
-                        {{#if (eq user_role 'seller')}}
-                          <span class="badge bg-success ms-2">Seller</span>
-                        {{/if}}
-                        <br>
-                        <small class="text-muted">{{format_date created_at}}</small>
-                      </div>
-                    </div>
-                    <p class="mb-2">{{content}}</p>
-                    
-                    {{#if isAuthenticated}}
-                      <button class="btn btn-sm btn-link p-0 text-decoration-none reply-btn" data-comment-id="{{id}}">
-                        <i class="bi bi-reply me-1"></i>Reply
-                      </button>
-
-                      <!-- Reply Form (Hidden by default) -->
-                      <div class="reply-form mt-3" id="reply-form-{{id}}" style="display: none;">
-                        <form action="/products/comment" method="POST">
-                          <input type="hidden" name="productId" value="{{../product.id}}">
-                          <input type="hidden" name="parentId" value="{{id}}">
-                          <div class="mb-2">
-                            <textarea 
-                              class="form-control form-control-sm" 
-                              name="content" 
-                              rows="2" 
-                              placeholder="Write a reply..."
-                              required
-                              maxlength="500"></textarea>
-                          </div>
-                          <div class="text-end">
-                            <button type="button" class="btn btn-sm btn-secondary cancel-reply" data-comment-id="{{id}}">Cancel</button>
-                            <button type="submit" class="btn btn-sm btn-primary" style="background-color: #72AEC8; border: none;">Reply</button>
-                          </div>
-                        </form>
-                      </div>
-                    {{/if}}
-
-                    <!-- Replies -->
-                    {{#if replies.length}}
-                      <div class="replies mt-3 ms-4">
-                        {{#each replies}}
-                          <div class="reply-item mb-3 ps-3 border-start border-2" style="border-color: #e9ecef !important;">
-                            <div class="d-flex align-items-start">
-                              <div class="flex-shrink-0 me-2">
-                                <div class="rounded-circle bg-secondary bg-opacity-10 p-2" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
-                                  <i class="bi bi-person-fill" style="color: #6c757d; font-size: 1.2rem;"></i>
-                                </div>
-                              </div>
-                              <div class="flex-grow-1">
-                                <div class="mb-1">
-                                  <strong class="small">{{user_name}}</strong>
-                                  {{#if (eq user_role 'seller')}}
-                                    <span class="badge bg-success badge-sm ms-1">Seller</span>
-                                  {{/if}}
-                                  <br>
-                                  <small class="text-muted">{{format_date created_at}}</small>
-                                </div>
-                                <p class="mb-0 small">{{content}}</p>
-                              </div>
-                            </div>
-                          </div>
-                        {{/each}}
-                      </div>
-                    {{/if}}
-                  </div>
-                </div>
-              </div>
-            {{/each}}
-          </div>
-        {{else}}
-          <div class="text-center text-muted py-5">
-            <i class="bi bi-chat-dots" style="font-size: 3rem; opacity: 0.3;"></i>
-            <p class="mt-3">No questions yet. Be the first to ask!</p>
-          </div>
-        {{/if}}
-      </div>
-
-      <!-- Bidding History Section -->
-      <div class="bidding-history-section bg-white p-5 rounded-4 border mb-5">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <h3 class="fw-bold mb-0">
-            <i class="bi bi-clock-history" style="color: #72AEC8;"></i> Bidding History
+            <i class="bi bi-chat-dots" style="color: #72AEC8;"></i> Questions & Answers
           </h3>
-          {{#if isAuthenticated}}
-            <a href="/products/bidding-history?id={{product.id}}" class="btn btn-primary" style="background-color: #72AEC8; border: none;">
-              <i class="bi bi-list-ul me-2"></i>View Full History
-            </a>
-          {{else}}
-            <a href="/account/signin?retUrl=/products/bidding-history?id={{product.id}}" class="btn btn-outline-primary">
-              <i class="bi bi-lock-fill me-2"></i>Signin to View
-            </a>
-          {{/if}}
         </div>
-
-        <div class="text-center text-muted py-5">
-          <i class="bi bi-clock-history" style="font-size: 3rem; opacity: 0.3;"></i>
-          <p class="mt-3">{{#if isAuthenticated}}Click "View Full History" to see all bids{{else}}Signin to view bidding history{{/if}}</p>
-        </div>
-      </div>
-
-      <!-- Comments Section -->
-      <div class="comments-section bg-white p-5 rounded-4 border">
-        <h3 class="fw-bold mb-4">
-          <i class="bi bi-chat-dots" style="color: #72AEC8;"></i> Questions & Answers
-        </h3>
 
         {{#if isAuthenticated}}
           <!-- Comment Form -->
@@ -1014,59 +678,26 @@
 
     <!-- Sidebar -->
     <div class="col-lg-4">
-      <div class="sidebar-widget bg-white p-4 rounded-4 border sticky-top" style="top: 90px; z-index: 10;">
-        <h5 class="fw-bold mb-4" style="color: #72AEC8;">
-          <i class="bi bi-graph-up"></i> Quick Stats
-        </h5>
-        
-        <div class="stat-item mb-4">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <span class="text-muted small">Views</span>
-            <strong class="text-dark">1,234</strong>
-          </div>
-          <div class="progress" style="height: 6px; background-color: #e9ecef;">
-            <div class="progress-bar" style="width: 85%; background-color: #72AEC8; border-radius: 3px;"></div>
-          </div>
+      <!-- Bidding History Section -->
+      <div class="bidding-history-section bg-white p-4 rounded-4 border sticky-top" style="top: 90px; z-index: 10;">
+        <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom flex-nowrap">
+          <h5 class="fw-bold mb-0 me-2" style="white-space: nowrap;">
+            <i class="bi bi-clock-history" style="color: #72AEC8;"></i> Bidding History
+          </h5>
+          {{#if isAuthenticated}}
+            <a href="/products/bidding-history?id={{product.id}}" class="btn btn-sm fw-bold flex-shrink-0" style="background: linear-gradient(135deg, #72AEC8 0%, #5a9ab8 100%); border: none; color: white;">
+              <i class="bi bi-list-ul me-1"></i>View Full
+            </a>
+          {{else}}
+            <a href="/account/signin?retUrl=/products/bidding-history?id={{product.id}}" class="btn btn-outline-primary flex-shrink-0">
+              <span class="btn-text"><i class="bi bi-lock-fill me-1"></i>Signin</span>
+            </a>
+          {{/if}}
         </div>
 
-        <div class="stat-item mb-4">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <span class="text-muted small">Watchers</span>
-            <strong class="text-dark">89</strong>
-          </div>
-          <div class="progress" style="height: 6px; background-color: #e9ecef;">
-            <div class="progress-bar" style="width: 45%; background-color: #72AEC8; border-radius: 3px;"></div>
-          </div>
-        </div>
-
-        <div class="stat-item mb-4">
-          <div class="d-flex justify-content-between align-items-center mb-2">
-            <span class="text-muted small">Bids</span>
-            <strong class="text-dark">{{product.bid_count}}</strong>
-          </div>
-          <div class="progress" style="height: 6px; background-color: #e9ecef;">
-            <div class="progress-bar" style="width: 65%; background-color: #72AEC8; border-radius: 3px;"></div>
-          </div>
-        </div>
-
-        <hr class="my-4">
-
-        <div class="share-section">
-          <h6 class="fw-bold mb-3">Share This Item</h6>
-          <div class="d-flex gap-2">
-            <button class="btn btn-outline-secondary btn-sm flex-fill rounded-3" title="Share on Facebook">
-              <i class="bi bi-facebook"></i>
-            </button>
-            <button class="btn btn-outline-secondary btn-sm flex-fill rounded-3" title="Share on Twitter">
-              <i class="bi bi-twitter"></i>
-            </button>
-            <button class="btn btn-outline-secondary btn-sm flex-fill rounded-3" title="Share on Pinterest">
-              <i class="bi bi-pinterest"></i>
-            </button>
-            <button class="btn btn-outline-secondary btn-sm flex-fill rounded-3" title="Copy Link">
-              <i class="bi bi-link-45deg"></i>
-            </button>
-          </div>
+        <div class="text-center text-muted py-4">
+          <i class="bi bi-clock-history" style="font-size: 3rem; opacity: 0.3;"></i>
+          <p class="mt-3">{{#if isAuthenticated}}Click "View Full" to see all bids{{else}}Signin to view bidding history{{/if}}</p>
         </div>
       </div>
     </div>
@@ -1075,13 +706,13 @@
   <!-- Related Products Section -->
   <div class="row mt-5">
     <div class="col-12">
+      <h3 class="fw-bold mb-4">
+        <i class="bi bi-box-seam" style="color: #72AEC8;"></i> Related Products
+      </h3>
       <div class="related-section">
-        <h3 class="fw-bold mb-5">
-          <i class="bi bi-box-seam" style="color: #72AEC8;"></i> Related Products
-        </h3>
         <div class="row g-4">
           <!-- Related Product Card -->
-          {{#each product.related_products}}
+          {{#each related_products}}
           <div class="col-md-3">
             <a href="/products/detail?id={{this.id}}" class="text-decoration-none">
               <div class="related-product-card h-100 rounded-4 overflow-hidden shadow-sm border-0" style="transition: transform 0.3s ease, box-shadow 0.3s ease; cursor: pointer;">
@@ -1099,7 +730,6 @@
             </a>
           </div>  
           {{/each}}
-          <!-- Repeat for more related products -->
         </div>
       </div>
     </div>

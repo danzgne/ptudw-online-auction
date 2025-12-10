@@ -550,4 +550,13 @@ router.get('/watchlist', isAuthenticated ,async (req, res) => {
     totalPages: nPages,
   });
 });
+
+router.get('/seller/products', isAuthenticated, async (req, res) => {
+  res.render('vwAccount/my-products');
+});
+
+router.get('/seller/sold-products', isAuthenticated, async (req, res) => {
+  res.render('vwAccount/sold-products');
+});
+
 export default router;

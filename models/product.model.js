@@ -332,12 +332,15 @@ export async function findByProductId2(productId, userId) {
             .andOnVal('watchlists.user_id', '=', userId || -1); 
             // Nếu userId null (chưa login) thì so sánh với -1 để không khớp
     })
+    .leftJoin('users as seller', 'products.seller_id', 'seller.id')
 
     .where('products.id', productId)
     .select(
       'products.*',
       'product_images.img_link', // Lấy link ảnh phụ để lát nữa gộp mảng
-      
+      'seller.fullname as seller_name',
+      'seller.created_at as seller_created_at',
+
       // Logic che tên người đấu giá (Giữ nguyên)
       db.raw(`
         CASE 
@@ -376,4 +379,18 @@ export async function findByProductId2(productId, userId) {
     .filter(link => link && link !== product.thumbnail); // Lọc bỏ ảnh null hoặc trùng thumbnail
 
   return product;
+}
+
+export function addProduct(product) {
+  return db('products').insert(product).returning('id');
+}
+
+export function addProductImages(images) {
+  return db('product_images').insert(images);
+}
+
+export function updateProductThumbnail(productId, thumbnailPath) {
+  return db('products')
+    .where('id', productId)
+    .update({ thumbnail: thumbnailPath });
 }

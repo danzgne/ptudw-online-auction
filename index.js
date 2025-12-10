@@ -5,6 +5,9 @@ import session from 'express-session';
 import methodOverride from 'method-override';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import multer from 'multer';
+import { v4 as uuidv4 } from 'uuid';
+import fs from 'fs';
 
 // Import Routes
 import indexRouter from './routes/index.route.js';
@@ -14,8 +17,9 @@ import adminCategoryRouter from './routes/admin/category.route.js';
 import adminUserRouter from './routes/admin/user.route.js';
 import adminAccountRouter from './routes/admin/account.route.js';
 import adminProductRouter from './routes/admin/product.route.js';
+import sellerRouter from './routes/seller.route.js';
 // Import Middlewares
-import { isAdmin } from './middlewares/auth.mdw.js';
+import { isAuthenticated, isSeller, isAdmin } from './middlewares/auth.mdw.js';
 import * as categoryModel from './models/category.model.js';
 import * as userModel from './models/user.model.js';
 
@@ -29,7 +33,8 @@ const PORT = process.env.PORT || 3005;
 // 1. CẤU HÌNH CỐT LÕI
 // ============================================================
 app.use('/static', express.static('public'));
-app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+app.use(express.json({ limit: '50mb' }));
 app.use(methodOverride('_method'));
 app.use(session({
   secret: 'x8w3v9p2q1r7s6t5u4z0a8b7c6d5e4f3g2h1j9k8l7m6n5o4p3q2r1s0t9u8v7w6x5y4z3',
@@ -48,6 +53,11 @@ app.engine('handlebars', engine({
     eq(a, b) { return a === b; },
     add(a, b) { return a + b; },
     format_number(price) { return new Intl.NumberFormat('en-US').format(price); },
+    truncate(str, len) {
+      if (!str) return '';
+      if (str.length <= len) return str;
+      return str.substring(0, len) + '...';
+    },
     format_date(date) {
       if (!date) return '';
       const d = new Date(date);
@@ -177,8 +187,6 @@ app.engine('handlebars', engine({
     },
     subtract(a, b) { 
       return a - b; },
-    multiply(a, b) { return Math.round(a * b); 
-    },
     multiply(a, b) {
       return a * b;
     },
@@ -196,6 +204,25 @@ app.engine('handlebars', engine({
 }));
 app.set('view engine', 'handlebars');
 app.set('views', './views');
+
+// Tạo thư mục uploads nếu chưa có
+const uploadDir = path.join(__dirname, 'public', 'images', 'products');
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+}
+
+// File filter (chỉ cho phép ảnh)
+const fileFilter = (req, file, cb) => {
+  const allowedTypes = /jpeg|jpg|png|webp/;
+  const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+  const mimetype = allowedTypes.test(file.mimetype);
+
+  if (mimetype && extname) {
+    return cb(null, true);
+  } else {
+    cb(new Error('Only image files (jpeg, jpg, png, webp) are allowed!'));
+  }
+};
 
 // ============================================================
 // 3. MIDDLEWARE TOÀN CỤC (Chạy cho mọi request)
@@ -280,6 +307,9 @@ app.use('/admin/account', adminAccountRouter);
 app.use('/admin/users', adminUserRouter);
 app.use('/admin/categories', adminCategoryRouter);
 app.use('/admin/products', adminProductRouter); 
+// Các Route Seller
+app.use('/seller', isAuthenticated, isSeller, sellerRouter);
+
 // Các Route Client (Đặt cuối cùng để tránh override)
 app.use('/', indexRouter);
 app.use('/products', productRouter);

@@ -818,7 +818,14 @@ h3:hover::after {
 }
 
 .description-section,
-.details-section {
+.details-section,
+.comments-section,
+.bidding-history-section {
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(248, 251, 253, 0.5) 100%);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+  border: 1px solid rgba(114, 174, 200, 0.1) !important;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   animation: slideInUp 0.6s ease-out;
 }
 
@@ -834,4 +841,138 @@ html {
 .btn-watch-active:hover {
     background-color: #dc3545 !important;
     color: white !important;
+}
+
+/* Bidding History Signin Button - Join Us Style */
+.bidding-history-section .btn-outline-primary,
+.bidding-history-section .btn-outline-primary *,
+.bidding-history-section .btn-outline-primary :after,
+.bidding-history-section .btn-outline-primary :before,
+.bidding-history-section .btn-outline-primary:after,
+.bidding-history-section .btn-outline-primary:before {
+  border: 0 solid;
+  box-sizing: border-box;
+}
+
+.bidding-history-section .btn-outline-primary {
+  -webkit-tap-highlight-color: transparent;
+  background-color: #72AEC8;
+  background-image: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 700;
+  line-height: 1.5;
+  margin: 0;
+  -webkit-mask-image: -webkit-radial-gradient(#000, #fff);
+  padding: 0.5rem 1.5rem;
+  text-transform: uppercase;
+  border-radius: 99rem;
+  border: 2px solid #72AEC8;
+  z-index: 1;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+  isolation: isolate;
+  display: inline-block;
+  vertical-align: middle;
+  overflow: hidden;
+  position: relative;
+}
+
+.bidding-history-section .btn-outline-primary .btn-text {
+  position: relative;
+  z-index: 3;
+  display: inline-block;
+  color: #fff;
+  transition: color 0.3s ease;
+}
+
+.bidding-history-section .btn-outline-primary:hover {
+  border-color: #72AEC8;
+  box-shadow: 0 8px 20px rgba(114, 174, 200, 0.4);
+}
+
+.bidding-history-section .btn-outline-primary:hover .btn-text {
+  color: #2c3e50;
+}
+
+.bidding-history-section .btn-outline-primary:after,
+.bidding-history-section .btn-outline-primary:before {
+  --skew: 0.2;
+  background: #fff;
+  content: "";
+  display: block;
+  height: 105%;
+  left: calc(-50% - 50% * var(--skew));
+  pointer-events: none;
+  position: absolute;
+  top: -106%;
+  transform: skew(calc(150deg * var(--skew))) translateY(var(--progress, 0));
+  transition: transform 0.2s ease;
+  width: 100%;
+  will-change: transform;
+  z-index: 1;
+}
+
+.bidding-history-section .btn-outline-primary:after {
+  --progress: 0%;
+  left: calc(50% + 50% * var(--skew));
+  top: 103%;
+  z-index: 1;
+}
+
+.bidding-history-section .btn-outline-primary:hover:before {
+  --progress: 100%;
+}
+
+.bidding-history-section .btn-outline-primary:hover:after {
+  --progress: -102%;
+}
+
+.bidding-history-section .btn-outline-primary i {
+  position: relative;
+  z-index: 3;
+}
+
+/* Related Products Horizontal Scroll */
+.related-section {
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.related-section .row {
+  flex-wrap: nowrap;
+  display: flex;
+  gap: 1rem;
+}
+
+.related-section .col-md-3 {
+  flex: 0 0 calc(25% - 0.75rem);
+  min-width: 250px;
+}
+
+/* Scrollbar styling */
+.related-section::-webkit-scrollbar {
+  height: 8px;
+}
+
+.related-section::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.related-section::-webkit-scrollbar-thumb {
+  background: #72AEC8;
+  border-radius: 10px;
+  transition: background 0.3s ease;
+}
+
+.related-section::-webkit-scrollbar-thumb:hover {
+  background: #5a9ab8;
+}
+
+/* Firefox scrollbar */
+.related-section {
+  scrollbar-color: #72AEC8 #f1f1f1;
+  scrollbar-width: thin;
 }
