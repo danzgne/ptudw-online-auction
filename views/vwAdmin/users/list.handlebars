@@ -7,8 +7,6 @@
         const id = $(this).data('id');
         const form = $('#formDelete');
         
-        // Cập nhật action của form và input ID
-        // Lưu ý: Route này cần được khai báo bên backend
         form.attr('action', '/admin/users/delete'); 
         $('#txtDeleteId').val(id);
         
@@ -113,13 +111,16 @@
                             </td>
                             <td>{{email}}</td>
                             <td class="text-end pe-4">
+                                {{!-- View Detail Button --}}
+                                <a href="/admin/users/detail/{{id}}" class="btn btn-sm btn-outline-info shadow-sm me-1" title="View Details">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                {{!-- Delete Button (Ẩn với Admin để tránh xóa nhầm chính mình hoặc admin khác nếu chưa phân quyền kỹ) --}}
+                                {{#unless (eq role 'admin')}} 
                                 {{!-- Edit Button --}}
                                 <a href="/admin/users/edit/{{id}}" class="btn btn-sm btn-outline-primary shadow-sm me-1" title="Edit User">
                                     <i class="bi bi-pencil-square"></i>
                                 </a>
-                                
-                                {{!-- Delete Button (Ẩn với Admin để tránh xóa nhầm chính mình hoặc admin khác nếu chưa phân quyền kỹ) --}}
-                                {{#unless (eq role 'admin')}} 
                                 <button type="button" class="btn btn-sm btn-outline-danger btn-delete shadow-sm" data-id="{{id}}" title="Delete User">
                                     <i class="bi bi-trash"></i>
                                 </button>

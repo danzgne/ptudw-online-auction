@@ -9,7 +9,6 @@ import { fileURLToPath } from 'url';
 // Import Routes
 import indexRouter from './routes/index.route.js';
 import productRouter from './routes/product.route.js';
-import categoryRouter from './routes/category.route.js';
 import accountRouter from './routes/account.route.js';
 import adminCategoryRouter from './routes/admin/category.route.js';
 import adminUserRouter from './routes/admin/user.route.js';
@@ -256,7 +255,6 @@ app.use('/admin/categories', adminCategoryRouter);
 
 // Các Route Client (Đặt cuối cùng để tránh override)
 app.use('/', indexRouter);
-app.use('/category', categoryRouter);
 app.use('/products', productRouter);
 app.use('/account', accountRouter);
 

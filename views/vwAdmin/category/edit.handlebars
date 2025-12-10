@@ -1,0 +1,119 @@
+{{#section 'js'}}
+<script>
+    $(document).ready(function() {
+        // Validation form trước khi submit
+        $('#formEditCategory').on('submit', function(e) {
+            const name = $('#txtName').val().trim();
+            
+            if (!name) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validation Error',
+                    text: 'Category name is required!'
+                });
+                return false;
+            }
+        });
+    });
+</script>
+{{/section}}
+
+<div class="container mt-4 mb-5">
+  <div class="row">
+    
+    <!-- SIDEBAR -->
+    <div class="col-md-3 mb-4">
+        {{> admin-sidebar activeSection='categories'}}
+    </div>
+
+    <!-- CONTENT -->
+    <div class="col-md-9">
+      <div class="card shadow-sm border-0">
+        
+        <!-- Header -->
+        <div class="card-header bg-white border-bottom py-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0 fw-bold text-danger">
+                <i class="bi bi-pencil-square me-2"></i> EDIT CATEGORY
+            </h5>
+          </div>
+        </div>
+        
+        <!-- Body -->
+        <div class="card-body p-4">
+          {{#if error_message}}
+          <div class="alert alert-danger alert-dismissible fade show" role="alert">
+              <i class="bi bi-exclamation-triangle-fill me-2"></i> {{error_message}}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+          {{/if}}
+
+          {{#if category}}
+          <form id="formEditCategory" method="POST" action="/admin/categories/edit">
+            <input type="hidden" name="id" value="{{category.id}}">
+            
+            <!-- Category ID (Read-only) -->
+            <div class="mb-4">
+              <label class="form-label fw-bold text-muted">
+                  <i class="bi bi-hash me-1"></i> Category ID
+              </label>
+              <input type="text" class="form-control form-control-lg bg-light" value="#{{category.id}}" disabled>
+            </div>
+            <!-- Category Name -->
+            <div class="mb-4">
+              <label for="txtName" class="form-label fw-bold">
+                  <i class="bi bi-tag me-1"></i> Category Name <span class="text-danger">*</span>
+              </label>
+              <input type="text" class="form-control form-control-lg" id="txtName" name="name" 
+                     value="{{category.name}}" placeholder="Enter category name" required>
+              <div class="form-text">Enter a unique and descriptive name for the category.</div>
+            </div>
+
+            <!-- Parent Category -->
+            {{#if category.parent_id}}
+            <div class="mb-4">
+              <label for="selParent" class="form-label fw-bold">
+                  <i class="bi bi-diagram-3 me-1"></i> Parent Category
+              </label>
+              <select class="form-select form-select-lg" id="selParent" name="parent_id">
+                  <option value="">— None (Convert to Level 1) —</option>
+                  {{#each parentCategories}}
+                  <option value="{{id}}" {{#if (eq id ../category.parent_id)}}selected{{/if}}>
+                      {{name}}
+                  </option>
+                  {{/each}}
+              </select>
+              <div class="form-text">Change parent category or set to None to convert to Level 1.</div>
+            </div>
+            {{else}}
+            <div class="mb-4">
+              <label class="form-label fw-bold text-muted">
+                  <i class="bi bi-diagram-3 me-1"></i> Parent Category
+              </label>
+              <div class="alert alert-info mb-0">
+                  <i class="bi bi-info-circle me-2"></i> This is a <strong>Level 1 (Main Category)</strong>. Level 1 categories cannot have a parent category.
+              </div>
+            </div>
+            {{/if}}
+
+            <!-- Submit Buttons -->
+            <div class="d-flex gap-2 mt-4 pt-4 border-top justify-content-center">
+              <button type="submit" class="btn btn-danger px-4">
+                  <i class="bi bi-check-lg me-2"></i> Update Category
+              </button>
+              <a href="/admin/categories/list" class="btn btn-outline-secondary px-4">
+                  <i class="bi bi-list me-2"></i> Back to List
+              </a>
+            </div>
+          </form>
+          {{else}}
+          <div class="alert alert-warning">
+              <i class="bi bi-exclamation-triangle me-2"></i> Category not found.
+          </div>
+          {{/if}}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

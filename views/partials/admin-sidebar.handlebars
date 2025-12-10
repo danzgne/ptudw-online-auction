@@ -27,7 +27,7 @@
     
     {{!-- 2. Quản lý danh mục (4.1) --}}
     <a class="list-group-item list-group-item-action py-3 d-flex align-items-center gap-2 {{#if (eq activeSection 'categories')}}active fw-bold{{/if}}" 
-       href="/admin/categories">
+       href="/admin/categories/list">
       <i class="bi bi-tags fs-5"></i> 
       <span>Manage Categories</span>
     </a>
@@ -42,7 +42,7 @@
     {{!-- 4. Quản lý người dùng (4.3) --}}
     {{!-- Bao gồm: Xem danh sách, Xoá, Sửa, và DUYỆT NÂNG CẤP --}}
     <a class="list-group-item list-group-item-action py-3 d-flex align-items-center gap-2 {{#if (eq activeSection 'users')}}active fw-bold{{/if}}" 
-       href="/admin/users">
+       href="/admin/users/list">
        <i class="bi bi-people fs-5"></i> 
        <span>Manage Users</span>
     </a>
