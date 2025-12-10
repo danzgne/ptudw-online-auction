@@ -24,6 +24,7 @@
     
     <!-- CSS riêng cho Admin nếu đang ở chế độ Admin -->
     {{#if isAdminMode}}
+    <link rel="stylesheet" type="text/css" href="/static/css/admin-sidebar.css">
     <style>
         body { background-color: #f4f6f9; }
         .admin-navbar { background-color: #212529; z-index: 1030; }
@@ -37,6 +38,10 @@
         .site-header .dropdown-menu { z-index: 99999 !important; position: absolute !important; }
         .site-header .dropdown-submenu > .dropdown-menu { z-index: 99999 !important; }
     </style>
+    {{else if isSellerMode}}
+    <link rel="stylesheet" type="text/css" href="/static/css/seller.css">
+    {{else}}
+    <link rel="stylesheet" type="text/css" href="/static/css/client-sidebar.css">
     {{/if}}
 </head>
 

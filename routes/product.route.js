@@ -1,6 +1,7 @@
 import express from 'express';
 import * as productModel from '../models/product.model.js';
 import * as reviewModel from '../models/review.model.js';
+import * as userModel from '../models/user.model.js';
 import * as watchListModel from '../models/watchlist.model.js';
 import * as biddingHistoryModel from '../models/biddingHistory.model.js';
 import * as productCommentModel from '../models/productComment.model.js';

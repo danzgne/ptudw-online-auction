@@ -24,6 +24,17 @@ router.get('/list', async (req, res) => {
     });
 });
 
+
+router.get('/add', async (req, res) => {
+    res.render('vwAdmin/products/add');
+});
+
+router.post('/add', async (req, res) => {
+    const newProduct = req.body;
+    await productModel.createProduct(newProduct);
+    req.session.success_message = 'Product added successfully!';
+    res.redirect('/admin/products/list');
+});
 router.get('/detail/:id', async (req, res) => {
     const id = req.params.id;
     const product = await productModel.findByProductIdForAdmin(id);

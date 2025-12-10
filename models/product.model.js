@@ -19,8 +19,8 @@ export async function findByProductIdForAdmin(productId, userId) {
   // Chuyển sang async để xử lý dữ liệu trước khi trả về controller
   const rows = await db('products')
     // 1. Join lấy thông tin người đấu giá cao nhất (Giữ nguyên)
-    .leftJoin('users', 'products.highest_bidder_id', 'users.id')
-    
+    .leftJoin('users as bidder', 'products.highest_bidder_id', 'bidder.id')
+    .leftJoin('users as seller', 'products.seller_id', 'seller.id')
     // 2. Join lấy danh sách ảnh phụ (Giữ nguyên)
     .leftJoin('product_images', 'products.id', 'product_images.product_id')
     .leftJoin('categories', 'products.category_id', 'categories.id')
@@ -36,7 +36,8 @@ export async function findByProductIdForAdmin(productId, userId) {
     .select(
       'products.*',
       'product_images.img_link', // Lấy link ảnh phụ để lát nữa gộp mảng
-      'users.fullname as highest_bidder_name',
+      'bidder.fullname as highest_bidder_name',
+      'seller.fullname as seller_name',
       'categories.name as category_name',
       // Logic che tên người đấu giá (Giữ nguyên)
       // Logic đếm số lượt bid (Giữ nguyên)
