@@ -201,12 +201,21 @@ button[aria-label*="Remove"] {
 #uppy-subimages {
   position: relative;
   z-index: 1;
+  width: 100%;
+  display: block;
 }
 
 #uppy-thumbnail .uppy-Dashboard,
 #uppy-subimages .uppy-Dashboard {
   position: relative !important;
   z-index: 1 !important;
+  width: 100% !important;
+}
+
+#uppy-thumbnail .uppy-Dashboard-inner,
+#uppy-subimages .uppy-Dashboard-inner {
+  width: 100% !important;
+  box-sizing: border-box !important;
 }
 
 /* Form Validation Styles */

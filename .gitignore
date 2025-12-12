@@ -59,3 +59,7 @@ out/
 # OS
 .DS_Store
 Thumbs.db
+
+public/uploads/*.jpg
+public/uploads/*.jpeg
+public/uploads/*.png

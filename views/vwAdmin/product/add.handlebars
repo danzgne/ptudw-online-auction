@@ -4,7 +4,7 @@
 <!-- Uppy CSS -->
 <link href="https://releases.transloadit.com/uppy/v5.2.0/uppy.min.css" rel="stylesheet">
 <!-- Seller Custom CSS -->
-<link rel="stylesheet" href="/static/css/admin/product/add.css">
+<link rel="stylesheet" href="/static/css/admin/products/add.css">
 {{/section}}
 
 <div class="container-fluid mt-4 mb-5">
@@ -269,7 +269,7 @@
     proudlyDisplayPoweredByUppy: false
   })
   uppyThumbnail.use(XHRUpload, {
-    endpoint: '/seller/products/upload-thumbnail',
+    endpoint: '/admin/products/upload-thumbnail',
     fieldName: 'thumbnail',
     formData: true
   })
@@ -302,7 +302,7 @@
     proudlyDisplayPoweredByUppy: false
   })
   uppySubImages.use(XHRUpload, {
-    endpoint: '/seller/products/upload-subimages',
+    endpoint: '/admin/products/upload-subimages',
     fieldName: 'images',
     formData: true
   })

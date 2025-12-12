@@ -1,6 +1,8 @@
 import express from 'express';
 import * as productModel from '../../models/product.model.js';
 import * as userModel from '../../models/user.model.js';
+import multer from 'multer';
+
 const router = express.Router();
 
 router.get('/list', async (req, res) => {
@@ -69,10 +71,38 @@ router.post('/edit', async (req, res) => {
     req.session.success_message = 'Product updated successfully!';
     res.redirect('/admin/product/list');
 });
+
 router.post('/delete', async (req, res) => {
     const { id } = req.body;
     await productModel.deleteProduct(id);
     req.session.success_message = 'Product deleted successfully!';
     res.redirect('/admin/product/list');
 });
+
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'public/uploads/');
+    },
+    filename: function (req, file, cb) {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, uniqueSuffix + '-' + file.originalname);
+    }
+});
+
+const upload = multer({ storage: storage });
+
+router.post('/upload-thumbnail', upload.single('thumbnail'), async function (req, res) {
+    res.json({
+        success: true,
+        file: req.file
+    });
+});
+
+router.post('/upload-subimages', upload.array('images', 10), async function (req, res) {
+    res.json({
+        success: true,
+        files: req.files
+    });
+});
+
 export default router;
