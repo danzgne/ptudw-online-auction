@@ -1,16 +1,22 @@
-{{#section 'css'}}
-    <link rel="stylesheet" href="/static/css/admin/products/add.css">
+{{#section "css"}}
+<!-- Quill CSS -->
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+<!-- Uppy CSS -->
+<link href="https://releases.transloadit.com/uppy/v5.2.0/uppy.min.css" rel="stylesheet">
+<!-- Seller Custom CSS -->
+<link rel="stylesheet" href="/static/css/admin/product/add.css">
 {{/section}}
+
 <div class="container-fluid mt-4 mb-5">
   <div class="row">
     
     {{!-- LEFT SIDEBAR --}}
-    <div class="col-md-3 mb-4">
+    <div class="col-lg-3 mb-4">
         {{> admin-sidebar activeSection='products'}}
     </div>
 
     {{!-- RIGHT CONTENT --}}
-    <div class="col-md-9">
+    <div class="col-lg-9">
       
       {{!-- HEADER --}}
       <div class="d-flex justify-content-between align-items-center mb-4">
@@ -192,6 +198,35 @@
           </div>
         </div>
 
+        <div class="card border-0 shadow-sm mb-4">
+          <div class="card-header text-white" style="background-color: #72AEC8;">
+            <h5 class="mb-0"><i class="bi bi-person-badge me-2"></i>Seller Assignment</h5>
+          </div>
+          <div class="card-body">
+            
+            {{!-- Seller Selection --}}
+            <div class="mb-3">
+              <label for="seller" class="form-label required">Assign to Seller</label>
+              <select class="form-select" id="seller" name="seller_id">
+                <option value="">Select a seller</option>
+                {{#each sellers}}
+                  <option value="{{this.id}}">
+                    {{this.fullname}} ({{this.email}})
+                    {{#if this.products_count}}
+                      - {{this.products_count}} products
+                    {{/if}}
+                  </option>
+                {{/each}}
+              </select>
+              <div class="invalid-feedback" id="sellerError">Please select a seller for this product.</div>
+              <small class="form-text text-muted">
+                <i class="bi bi-info-circle"></i> Choose which seller account will own this product.
+              </small>
+            </div>
+
+          </div>
+        </div>
+
         {{!-- Submit Buttons --}}
         <div class="d-flex gap-2 mb-4">
           <button type="submit" class="btn btn-lg px-5" style="background-color: #72AEC8; color: white; border: none;">
@@ -366,6 +401,11 @@ document.getElementById('endDate').addEventListener('change', function() {
     const localDateTime = this.value.replace('T', ' ') + ':00';
     document.getElementById('endDateFormatted').value = localDateTime;
   }
+});
+
+document.getElementById('seller').addEventListener('change', function() {
+  this.classList.remove('is-invalid');
+  document.getElementById('sellerError').classList.remove('d-block');
 });
 
 // Set created_at to current timestamp when page loads
@@ -554,6 +594,24 @@ document.getElementById('addProductForm').addEventListener('submit', async funct
     return;
   } else {
     document.getElementById('subImagesError').style.display = 'none';
+  }
+
+  // Validate seller selection
+  const seller = document.getElementById('seller').value;
+  if (seller === '') {
+    const inputElement = document.getElementById('seller');
+    const errorElement = document.getElementById('sellerError');
+    inputElement.classList.add('is-invalid');
+    errorElement.classList.add('d-block');
+    inputElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    inputElement.focus();
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'Please select a seller for this product.',
+      confirmButtonColor: '#72AEC8'
+    });
+    return;
   }
 
   // Handle checkbox values before submit

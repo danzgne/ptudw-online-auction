@@ -14,6 +14,13 @@ export function loadAllUsers() {
   return db('users').orderBy('id', 'desc');
 }
 
+export function findUsersByRole(role) {
+  return db('users')
+    .select('users.id', 'users.fullname', 'users.email', 'users.role')
+    .where('users.role', role)
+    .orderBy('users.fullname', 'asc');
+}
+
 export function findByUserName(username) {
   return db('users').where('username', username).first();
 }

@@ -46,6 +46,14 @@
        <i class="bi bi-people fs-5"></i> 
        <span>Manage Users</span>
     </a>
+
+    {{!-- 5. System Settings --}}
+    <a class="list-group-item list-group-item-action py-3 d-flex align-items-center gap-2 {{#if (eq activeSection 'settings')}}active fw-bold{{/if}}" 
+       href="/admin/system/settings">
+       <i class="bi bi-gear fs-5"></i> 
+       <span>System Settings</span>
+    </a>
+
     
     {{!-- Logout --}}
     <form id="formAdminLogout" action="/account/logout" method="POST"></form>

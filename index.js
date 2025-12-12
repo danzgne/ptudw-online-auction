@@ -10,13 +10,14 @@ import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 
 // Import Routes
-import indexRouter from './routes/index.route.js';
+import homeRouter from './routes/home.route.js';
 import productRouter from './routes/product.route.js';
 import accountRouter from './routes/account.route.js';
 import adminCategoryRouter from './routes/admin/category.route.js';
 import adminUserRouter from './routes/admin/user.route.js';
 import adminAccountRouter from './routes/admin/account.route.js';
 import adminProductRouter from './routes/admin/product.route.js';
+import adminSystemRouter from './routes/admin/system.route.js';
 import sellerRouter from './routes/seller.route.js';
 // Import Middlewares
 import { isAuthenticated, isSeller, isAdmin } from './middlewares/auth.mdw.js';
@@ -306,12 +307,13 @@ app.use('/admin', function (req, res, next) {
 app.use('/admin/account', adminAccountRouter);
 app.use('/admin/users', adminUserRouter);
 app.use('/admin/categories', adminCategoryRouter);
-app.use('/admin/products', adminProductRouter); 
+app.use('/admin/products', adminProductRouter);
+app.use('/admin/system', adminSystemRouter);
 // Các Route Seller
 app.use('/seller', isAuthenticated, isSeller, sellerRouter);
 
 // Các Route Client (Đặt cuối cùng để tránh override)
-app.use('/', indexRouter);
+app.use('/', homeRouter);
 app.use('/products', productRouter);
 app.use('/account', accountRouter);
 
