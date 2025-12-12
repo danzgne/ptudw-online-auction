@@ -1,5 +1,6 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
+import passport from '../utils/passport.js';
 import * as userModel from '../models/user.model.js';
 import * as upgradeRequestModel from '../models/upgradeRequest.model.js';
 import * as watchlistModel from '../models/watchlist.model.js';
@@ -440,12 +441,14 @@ router.put('/profile', isAuthenticated, async (req, res) => {
     // Lấy thông tin user hiện tại
     const currentUser = await userModel.findById(currentUserId);
 
-    // 2. KIỂM TRA MẬT KHẨU CŨ
-    if (!old_password || !bcrypt.compareSync(old_password, currentUser.password_hash)) {
-      return res.render('vwAccount/profile', {
-        user: currentUser,
-        err_message: 'Password is incorrect!'
-      });
+    // 2. KIỂM TRA MẬT KHẨU CŨ (Chỉ cho non-OAuth users)
+    if (!currentUser.oauth_provider) {
+      if (!old_password || !bcrypt.compareSync(old_password, currentUser.password_hash)) {
+        return res.render('vwAccount/profile', {
+          user: currentUser,
+          err_message: 'Password is incorrect!'
+        });
+      }
     }
 
     // 3. KIỂM TRA TRÙNG EMAIL
@@ -459,8 +462,8 @@ router.put('/profile', isAuthenticated, async (req, res) => {
       }
     }
 
-    // 4. KIỂM TRA MẬT KHẨU MỚI
-    if (new_password) {
+    // 4. KIỂM TRA MẬT KHẨU MỚI (Chỉ cho non-OAuth users)
+    if (!currentUser.oauth_provider && new_password) {
       if (new_password !== confirm_new_password) {
         return res.render('vwAccount/profile', {
           user: currentUser,
@@ -475,10 +478,14 @@ router.put('/profile', isAuthenticated, async (req, res) => {
       fullname,
       address: address || currentUser.address,
       date_of_birth: date_of_birth ? new Date(date_of_birth) : currentUser.date_of_birth,
-      password_hash: new_password
-        ? bcrypt.hashSync(new_password, 10)
-        : currentUser.password_hash,
     };
+    
+    // Chỉ cập nhật password cho non-OAuth users
+    if (!currentUser.oauth_provider) {
+      entity.password_hash = new_password
+        ? bcrypt.hashSync(new_password, 10)
+        : currentUser.password_hash;
+    }
 
     // 6. GỌI MODEL UPDATE (Model đã sửa để trả về Object)
     const updatedUser = await userModel.update(currentUserId, entity);
@@ -558,5 +565,66 @@ router.get('/seller/products', isAuthenticated, async (req, res) => {
 router.get('/seller/sold-products', isAuthenticated, async (req, res) => {
   res.render('vwAccount/sold-products');
 });
+
+// ===================== OAUTH ROUTES =====================
+
+// Google OAuth
+router.get('/auth/google',
+  passport.authenticate('google', { scope: ['profile', 'email'] })
+);
+
+router.get('/auth/google/callback',
+  passport.authenticate('google', { failureRedirect: '/account/signin' }),
+  (req, res) => {
+    // Lưu user vào session
+    req.session.authUser = req.user;
+    req.session.isAuthenticated = true;
+    res.redirect('/');
+  }
+);
+
+// Facebook OAuth
+// NOTE: 'email' scope chỉ hoạt động với Admin/Developer/Tester trong Development Mode
+// Tạm thời chỉ dùng 'public_profile' để test, sau đó thêm 'email' khi đã add tester
+router.get('/auth/facebook',
+  passport.authenticate('facebook', { scope: ['public_profile'] })
+);
+
+router.get('/auth/facebook/callback',
+  passport.authenticate('facebook', { failureRedirect: '/account/signin' }),
+  (req, res) => {
+    req.session.authUser = req.user;
+    req.session.isAuthenticated = true;
+    res.redirect('/');
+  }
+);
+
+// Twitter OAuth - DISABLED (Twitter API requires $100/month subscription)
+// router.get('/auth/twitter',
+//   passport.authenticate('twitter')
+// );
+
+// router.get('/auth/twitter/callback',
+//   passport.authenticate('twitter', { failureRedirect: '/account/signin' }),
+//   (req, res) => {
+//     req.session.authUser = req.user;
+//     req.session.isAuthenticated = true;
+//     res.redirect('/');
+//   }
+// );
+
+// GitHub OAuth
+router.get('/auth/github',
+  passport.authenticate('github', { scope: ['user:email'] })
+);
+
+router.get('/auth/github/callback',
+  passport.authenticate('github', { failureRedirect: '/account/signin' }),
+  (req, res) => {
+    req.session.authUser = req.user;
+    req.session.isAuthenticated = true;
+    res.redirect('/');
+  }
+);
 
 export default router;

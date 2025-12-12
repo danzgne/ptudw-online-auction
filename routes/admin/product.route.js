@@ -59,7 +59,8 @@ router.get('/detail/:id', async (req, res) => {
 router.get('/edit/:id', async (req, res) => {
     const id = req.params.id;
     const product = await productModel.findByProductIdForAdmin(id);
-    res.render('vwAdmin/product/edit', { product } );
+    const sellers = await userModel.findUsersByRole('seller');
+    res.render('vwAdmin/product/edit', { product, sellers } );
 });
 
 router.post('/edit', async (req, res) => {

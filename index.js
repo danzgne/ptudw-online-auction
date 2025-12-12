@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import express from 'express';
 import { engine } from 'express-handlebars';
 import expressHandlebarsSections from 'express-handlebars-sections';
@@ -8,6 +9,7 @@ import { fileURLToPath } from 'url';
 import multer from 'multer';
 import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
+import passport from './utils/passport.js';
 
 // Import Routes
 import homeRouter from './routes/home.route.js';
@@ -43,6 +45,10 @@ app.use(session({
   saveUninitialized: true,
   cookie: { secure: false } // false chạy localhost
 }));
+
+// Initialize Passport
+app.use(passport.initialize());
+app.use(passport.session());
 
 // ============================================================
 // 2. CẤU HÌNH VIEW ENGINE (Handlebars)
@@ -254,7 +260,9 @@ app.use(async function (req, res, next) {
         role: currentUser.role,
         address: currentUser.address,
         date_of_birth: currentUser.date_of_birth,
-        email_verified: currentUser.email_verified
+        email_verified: currentUser.email_verified,
+        oauth_provider: currentUser.oauth_provider,
+        oauth_id: currentUser.oauth_id
       };
     }
   }
