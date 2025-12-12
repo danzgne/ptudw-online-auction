@@ -976,3 +976,40 @@ html {
   scrollbar-color: #72AEC8 #f1f1f1;
   scrollbar-width: thin;
 }
+
+/* Mention styling - for @username in reply input */
+.mention {
+  color: #72AEC8;
+  font-weight: 600;
+}
+/* Reply button hover effect */
+.reply-btn:hover {
+  background: linear-gradient(135deg, #5a9ab8 0%, #4a7fa3 100%) !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(114, 174, 200, 0.3);
+}
+
+.reply-btn:active {
+  transform: translateY(0);
+}
+/* Contenteditable reply input styling */
+.reply-input {
+  border: 1px solid #ced4da !important;
+  border-radius: 0.25rem !important;
+  padding: 0.375rem 0.75rem !important;
+  font-size: 0.875rem;
+  font-family: inherit;
+  outline: none;
+}
+
+.reply-input:focus {
+  border-color: #72AEC8 !important;
+  box-shadow: 0 0 0 0.2rem rgba(114, 174, 200, 0.25) !important;
+}
+
+.pagination .page-link:hover:not(.disabled span) {
+  background: linear-gradient(135deg, #72AEC8 0%, #5a9ab8 100%) !important;
+  color: white !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(114, 174, 200, 0.4);
+}

@@ -72,3 +72,9 @@ export function deleteCategory(id) {
 export function isCategoryHasProducts(id) {
     return db('products').where('category_id', id).first();
 }
+
+export function findChildCategoryIds(parentCategoryId) {
+    return db('categories')
+        .where('parent_id', parentCategoryId)
+        .select('id');
+}

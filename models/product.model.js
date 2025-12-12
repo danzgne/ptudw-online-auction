@@ -230,6 +230,60 @@ export function countByCategoryId(categoryId) {
     .first();
 }
 
+export function findByCategoryIds(categoryIds, limit, offset, sort, currentUserId) {
+  return db('products')
+    .leftJoin('users', 'products.highest_bidder_id', 'users.id')
+    .leftJoin('watchlists', function() {
+      this.on('products.id', '=', 'watchlists.product_id')
+        .andOnVal('watchlists.user_id', '=', currentUserId || -1);
+    })
+    .whereIn('products.category_id', categoryIds)
+    .select(
+      'products.*',
+      db.raw(`
+        CASE 
+          WHEN users.fullname IS NOT NULL THEN 
+            OVERLAY(users.fullname PLACING '****' FROM 1 FOR (LENGTH(users.fullname)/2)::INTEGER)
+          ELSE NULL 
+        END AS bidder_name
+      `),
+      db.raw(`
+        (
+          SELECT COUNT(*) 
+          FROM bidding_history 
+          WHERE bidding_history.product_id = products.id
+        ) AS bid_count
+      `),
+      db.raw('watchlists.product_id IS NOT NULL AS is_favorite')
+    )
+    .modify((queryBuilder) => {
+      if (sort === 'price_asc') {
+        queryBuilder.orderBy('products.current_price', 'asc');
+      }
+      else if (sort === 'price_desc') {
+        queryBuilder.orderBy('products.current_price', 'desc');
+      }
+      else if (sort === 'newest') {
+        queryBuilder.orderBy('products.created_at', 'desc');
+      }
+      else if (sort === 'oldest') {
+        queryBuilder.orderBy('products.created_at', 'asc');
+      }
+      else {
+        queryBuilder.orderBy('products.created_at', 'desc');
+      }
+    })
+    .limit(limit)
+    .offset(offset);
+}
+
+export function countByCategoryIds(categoryIds) {
+  return db('products')
+    .whereIn('category_id', categoryIds)
+    .count('id as count')
+    .first();
+}
+
 // Helper chung để select cột và che tên bidder
 const BASE_QUERY = db('products')
   .leftJoin('users', 'products.highest_bidder_id', 'users.id')

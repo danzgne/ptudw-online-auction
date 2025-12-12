@@ -5,6 +5,7 @@ import * as userModel from '../models/user.model.js';
 import * as watchListModel from '../models/watchlist.model.js';
 import * as biddingHistoryModel from '../models/biddingHistory.model.js';
 import * as productCommentModel from '../models/productComment.model.js';
+import * as categoryModel from '../models/category.model.js';
 import { isAuthenticated } from '../middlewares/auth.mdw.js';
 import { sendMail } from '../utils/mailer.js';
 import db from '../utils/db.js';
@@ -34,8 +35,21 @@ router.get('/category', async (req, res) => {
   const page = parseInt(req.query.page) || 1;
   const limit = 3;
   const offset = (page - 1) * limit;
-  const products = await productModel.findByCategoryId(categoryId, limit, offset, sort, userId);
-  const total = await productModel.countByCategoryId(categoryId);
+  
+  // Check if category is level 1 (parent_id is null)
+  const category = await categoryModel.findByCategoryId(categoryId);
+  
+  let categoryIds = [categoryId];
+  
+  // If it's a level 1 category, include all child categories
+  if (category && category.parent_id === null) {
+    const childCategories = await categoryModel.findChildCategoryIds(categoryId);
+    const childIds = childCategories.map(cat => cat.id);
+    categoryIds = [categoryId, ...childIds];
+  }
+  
+  const products = await productModel.findByCategoryIds(categoryIds, limit, offset, sort, userId);
+  const total = await productModel.countByCategoryIds(categoryIds);
   
   const totalCount = total.count;
   const nPages = Math.ceil(totalCount / limit);
@@ -100,13 +114,22 @@ router.get('/detail', async (req, res) => {
     return res.status(404).render('404', { message: 'Product not found' });
   }
 
-  // Load comments
-  const comments = await productCommentModel.getCommentsByProductId(productId);
+  // Pagination cho comments
+  const commentPage = parseInt(req.query.commentPage) || 1;
+  const commentsPerPage = 2; // Mỗi trang 2 comments
+  const offset = (commentPage - 1) * commentsPerPage;
+
+  // Load comments với pagination
+  const comments = await productCommentModel.getCommentsByProductId(productId, commentsPerPage, offset);
   
-  // Load replies for each comment
+  // Load replies cho từng comment
   for (let comment of comments) {
     comment.replies = await productCommentModel.getRepliesByCommentId(comment.id);
   }
+  
+  // Tính tổng số trang
+  const totalComments = await productCommentModel.countCommentsByProductId(productId);
+  const totalPages = Math.ceil(totalComments / commentsPerPage);
   
   // Get flash messages from session
   const success_message = req.session.success_message;
@@ -123,7 +146,10 @@ router.get('/detail', async (req, res) => {
     success_message,
     error_message,
     related_products,
-    rating_point: ratingObject.rating_point
+    rating_point: ratingObject.rating_point,
+    commentPage,
+    totalPages,
+    totalComments
   });
 });
 

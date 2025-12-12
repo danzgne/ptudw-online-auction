@@ -199,7 +199,23 @@
   document.querySelectorAll('.reply-btn').forEach(btn => {
     btn.addEventListener('click', function() {
       const commentId = this.getAttribute('data-comment-id');
+      const userName = this.getAttribute('data-user-name');
       const replyForm = document.getElementById(`reply-form-${commentId}`);
+      const replyInput = replyForm.querySelector('.reply-input');
+      
+      // Pre-fill with colored @username (using HTML)
+      if (userName && replyInput) {
+        replyInput.innerHTML = `<span class="mention">@${userName}</span>&nbsp;`;
+        replyInput.focus();
+        // Move cursor to end
+        const range = document.createRange();
+        const sel = window.getSelection();
+        range.selectNodeContents(replyInput);
+        range.collapse(false);
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
+      
       replyForm.style.display = 'block';
       this.style.display = 'none';
     });
@@ -210,9 +226,30 @@
       const commentId = this.getAttribute('data-comment-id');
       const replyForm = document.getElementById(`reply-form-${commentId}`);
       const replyBtn = document.querySelector(`.reply-btn[data-comment-id="${commentId}"]`);
+      const replyInput = replyForm.querySelector('.reply-input');
+      
+      // Clear editor content
+      if (replyInput) {
+        replyInput.innerHTML = '';
+      }
+      
       replyForm.style.display = 'none';
       replyBtn.style.display = 'inline-block';
     });
+  });
+
+  // ==================== SYNC CONTENTEDITABLE TO HIDDEN INPUT ====================
+  document.querySelectorAll('.reply-input').forEach(editor => {
+    // Sync to hidden input on form submit
+    const form = editor.closest('form');
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        const hiddenInput = form.querySelector('.reply-content-hidden');
+        if (hiddenInput) {
+          hiddenInput.value = editor.textContent;
+        }
+      });
+    }
   });
 
 </script>
@@ -548,7 +585,7 @@
       </div>
 
       <!-- Comments Section -->
-      <div class="comments-section bg-white p-5 rounded-4 border">
+      <div id="comments" class="comments-section bg-white p-5 rounded-4 border">
         <div class="d-flex justify-content-between align-items-center mb-4">
           <h3 class="fw-bold mb-0">
             <i class="bi bi-chat-dots" style="color: #72AEC8;"></i> Questions & Answers
@@ -556,27 +593,29 @@
         </div>
 
         {{#if isAuthenticated}}
-          <!-- Comment Form -->
-          <div class="comment-form mb-4">
-            <form action="/products/comment" method="POST">
-              <input type="hidden" name="productId" value="{{product.id}}">
-              <div class="mb-3">
-                <textarea 
-                  class="form-control" 
-                  name="content" 
-                  rows="3" 
-                  placeholder="Ask a question about this product..."
-                  required
-                  maxlength="500"></textarea>
-              </div>
-              <div class="text-end">
-                <button type="submit" class="btn btn-primary" style="background-color: #72AEC8; border: none;">
-                  <i class="bi bi-send me-2"></i>Post Question
-                </button>
-              </div>
-            </form>
-          </div>
-          <hr class="my-4">
+          {{#if (ne authUser.id product.seller_id)}}
+            <!-- Comment Form -->
+            <div class="comment-form mb-4">
+              <form action="/products/comment" method="POST">
+                <input type="hidden" name="productId" value="{{product.id}}">
+                <div class="mb-3">
+                  <textarea 
+                    class="form-control" 
+                    name="content" 
+                    rows="3" 
+                    placeholder="Ask a question about this product..."
+                    required
+                    maxlength="500"></textarea>
+                </div>
+                <div class="text-end">
+                  <button type="submit" class="btn btn-primary" style="background-color: #72AEC8; border: none;">
+                    <i class="bi bi-send me-2"></i>Post Question
+                  </button>
+                </div>
+              </form>
+            </div>
+            <hr class="my-4">
+          {{/if}}
         {{else}}
           <div class="alert alert-info">
             <i class="bi bi-info-circle me-2"></i>
@@ -600,7 +639,7 @@
                       <div>
                         <strong>{{user_name}}</strong>
                         {{#if (eq user_role 'seller')}}
-                          <span class="badge bg-success ms-2">Seller</span>
+                          {{!-- <span class="badge bg-success ms-2">Seller</span> --}}
                         {{/if}}
                         <br>
                         <small class="text-muted">{{format_date created_at}}</small>
@@ -608,8 +647,9 @@
                     </div>
                     <p class="mb-2">{{content}}</p>
                     
-                    {{#if isAuthenticated}}
-                      <button class="btn btn-sm btn-link p-0 text-decoration-none reply-btn" data-comment-id="{{id}}">
+                    {{!-- Only show reply button if current user is the seller of this product and not replying to themselves --}}
+                    {{#if (and ../isAuthenticated (eq ../authUser.role 'seller') (eq ../product.seller_id ../authUser.id) (ne user_id ../authUser.id))}}
+                      <button class="btn btn-sm reply-btn" data-comment-id="{{id}}" data-user-name="{{user_name}}" style="background-color: #72AEC8; color: white; border: none; border-radius: 6px; padding: 4px 12px; font-weight: 500; transition: all 0.3s ease;">
                         <i class="bi bi-reply me-1"></i>Reply
                       </button>
 
@@ -618,55 +658,112 @@
                         <form action="/products/comment" method="POST">
                           <input type="hidden" name="productId" value="{{../product.id}}">
                           <input type="hidden" name="parentId" value="{{id}}">
-                          <div class="mb-2">
-                            <textarea 
-                              class="form-control form-control-sm" 
-                              name="content" 
-                              rows="2" 
+                          <div class="mb-2 reply-textarea-wrapper">
+                            <div 
+                              class="form-control form-control-sm reply-input" 
+                              contenteditable="true"
+                              data-comment-id="{{id}}"
                               placeholder="Write a reply..."
-                              required
-                              maxlength="500"></textarea>
+                              style="min-height: 50px; max-height: 200px; overflow-y: auto; white-space: pre-wrap; word-wrap: break-word;"></div>
+                            <input type="hidden" name="content" class="reply-content-hidden" value="">
                           </div>
                           <div class="text-end">
-                            <button type="button" class="btn btn-sm btn-secondary cancel-reply" data-comment-id="{{id}}">Cancel</button>
-                            <button type="submit" class="btn btn-sm btn-primary" style="background-color: #72AEC8; border: none;">Reply</button>
+                            <button type="button" class="btn btn-sm btn-secondary cancel-reply" data-comment-id="{{id}}" style="min-width: 80px; padding: 6px 16px; height: 32px;">Cancel</button>
+                            <button type="submit" class="btn btn-sm btn-primary reply-submit" style="background-color: #72AEC8; border: none; min-width: 80px; padding: 6px 16px; height: 32px;">Reply</button>
                           </div>
                         </form>
-                      </div>
-                    {{/if}}
-
-                    <!-- Replies -->
-                    {{#if replies.length}}
-                      <div class="replies mt-3 ms-4">
-                        {{#each replies}}
-                          <div class="reply-item mb-3 ps-3 border-start border-2" style="border-color: #e9ecef !important;">
-                            <div class="d-flex align-items-start">
-                              <div class="flex-shrink-0 me-2">
-                                <div class="rounded-circle bg-secondary bg-opacity-10 p-2" style="width: 35px; height: 35px; display: flex; align-items: center; justify-content: center;">
-                                  <i class="bi bi-person-fill" style="color: #6c757d; font-size: 1.2rem;"></i>
-                                </div>
-                              </div>
-                              <div class="flex-grow-1">
-                                <div class="mb-1">
-                                  <strong class="small">{{user_name}}</strong>
-                                  {{#if (eq user_role 'seller')}}
-                                    <span class="badge bg-success badge-sm ms-1">Seller</span>
-                                  {{/if}}
-                                  <br>
-                                  <small class="text-muted">{{format_date created_at}}</small>
-                                </div>
-                                <p class="mb-0 small">{{content}}</p>
-                              </div>
-                            </div>
-                          </div>
-                        {{/each}}
                       </div>
                     {{/if}}
                   </div>
                 </div>
               </div>
+
+              {{!-- Display replies --}}
+              {{#if replies.length}}
+                {{#each replies}}
+                  <div class="comment-item mb-4 pb-4 border-bottom">
+                    <div class="d-flex align-items-start">
+                      <div class="flex-shrink-0 me-3">
+                        <div class="rounded-circle reply-avatar p-2" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center; background: #fff; border: 3px solid #72AEC8;">
+                          <i class="bi bi-person-fill" style="color: #72AEC8; font-size: 1.5rem;"></i>
+                        </div>
+                      </div>
+                      <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                          <div>
+                            <strong>{{user_name}}</strong>
+                            {{#if (eq user_role 'seller')}}
+                              {{!-- <span class="badge bg-success ms-2">Seller</span> --}}
+                            {{/if}}
+                            {{#if (eq user_id ../../product.seller_id)}}
+                              <span class="badge bg-success ms-2">
+                                <i class="bi bi-star-fill"></i> Seller
+                              </span>
+                            {{/if}}
+                            <br>
+                            <small class="text-muted">{{format_date created_at}}</small>
+                          </div>
+                        </div>
+                        <p class="mb-0">{{content}}</p>
+                      </div>
+                    </div>
+                  </div>
+                {{/each}}
+              {{/if}}
             {{/each}}
           </div>
+
+          <!-- Pagination -->
+          {{#if (gt totalPages 1)}}
+            <div class="d-flex justify-content-between align-items-center mt-5 pt-4 border-top">
+              <div class="text-muted">
+                <small><i class="bi bi-chat-dots-fill me-1" style="color: #72AEC8;"></i>Page <strong>{{commentPage}}</strong> of <strong>{{totalPages}}</strong> </small>
+              </div>
+              <nav aria-label="Comments pagination">
+                <ul class="pagination pagination-sm mb-0" style="gap: 5px;">
+                  {{#if (gt commentPage 1)}}
+                    <li class="page-item">
+                      <a class="page-link rounded-3" href="/products/detail?id={{product.id}}&commentPage={{subtract commentPage 1}}#comments" aria-label="Previous" style="border: 2px solid #72AEC8; color: #72AEC8; font-weight: 600; padding: 8px 12px; transition: all 0.3s;">
+                        <i class="bi bi-chevron-left"></i>
+                      </a>
+                    </li>
+                  {{else}}
+                    <li class="page-item disabled">
+                      <span class="page-link rounded-3" style="border: 2px solid #e9ecef; color: #ccc; padding: 8px 12px;">
+                        <i class="bi bi-chevron-left"></i>
+                      </span>
+                    </li>
+                  {{/if}}
+
+                  {{#each (range 1 (add totalPages 1))}}
+                    {{#if (eq this ../commentPage)}}
+                      <li class="page-item active">
+                        <span class="page-link rounded-3" style="background: linear-gradient(135deg, #72AEC8 0%, #5a9ab8 100%); border: none; color: white; font-weight: 600; padding: 8px 14px; box-shadow: 0 2px 8px rgba(114, 174, 200, 0.3);">{{this}}</span>
+                      </li>
+                    {{else}}
+                      <li class="page-item">
+                        <a class="page-link rounded-3" href="/products/detail?id={{../product.id}}&commentPage={{this}}#comments" style="border: 2px solid #72AEC8; color: #72AEC8; font-weight: 600; padding: 8px 14px; transition: all 0.3s;">{{this}}</a>
+                      </li>
+                    {{/if}}
+                  {{/each}}
+
+                  {{#if (lt commentPage totalPages)}}
+                    <li class="page-item">
+                      <a class="page-link rounded-3" href="/products/detail?id={{product.id}}&commentPage={{add commentPage 1}}#comments" aria-label="Next" style="border: 2px solid #72AEC8; color: #72AEC8; font-weight: 600; padding: 8px 12px; transition: all 0.3s;">
+                        <i class="bi bi-chevron-right"></i>
+                      </a>
+                    </li>
+                  {{else}}
+                    <li class="page-item disabled">
+                      <span class="page-link rounded-3" style="border: 2px solid #e9ecef; color: #ccc; padding: 8px 12px;">
+                        <i class="bi bi-chevron-right"></i>
+                      </span>
+                    </li>
+                  {{/if}}
+                </ul>
+              </nav>
+            </div>
+          {{/if}}
         {{else}}
           <div class="text-center text-muted py-5">
             <i class="bi bi-chat-dots" style="font-size: 3rem; opacity: 0.3;"></i>

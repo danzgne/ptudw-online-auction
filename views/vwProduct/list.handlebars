@@ -1,5 +1,5 @@
 {{#section "css"}}
-<link rel="stylesheet" href="/static/css/product-list.css">
+<link rel="stylesheet" href="/static/css/product/list.css">
 {{/section}}
 
 <div class="container mt-4 mb-5">
@@ -177,39 +177,56 @@
       </div>
       
       {{!-- PAGINATION --}}
-      <div class="pagination-wrapper mt-5 mb-4 d-flex justify-content-center align-items-center gap-2">
-        {{#if (gt currentPage 1)}}
-          <a href="?{{#if categoryId}}catid={{categoryId}}{{else}}q={{q}}{{/if}}&page={{subtract currentPage 1}}{{#if sort}}&sort={{sort}}{{/if}}" class="pagination-btn pagination-prev">
-            <i class="bi bi-arrow-left-square"></i> Previous 
-          </a>
-        {{else}}
-          <span class="pagination-btn pagination-prev disabled">
-             <i class="bi bi-arrow-left-square"></i> Previous
-          </span>
-        {{/if}}
-        
-        <div class="pagination-numbers d-flex gap-1">
-          {{#each (getPaginationRange currentPage totalPages)}}
-            {{#if (eq this.type "number")}}
-              <a href="?{{#if ../categoryId}}catid={{../categoryId}}{{else}}q={{../q}}{{/if}}&page={{this.number}}{{#if ../sort}}&sort={{../sort}}{{/if}}" 
-                 class="pagination-page {{#if (eq this.number ../currentPage)}}active{{/if}}">
-                 {{this.number}}
-              </a>
+      <div class="pagination-wrapper mt-5 mb-4">
+        <nav aria-label="Product pagination" class="d-flex justify-content-center">
+          <ul class="pagination pagination-custom mb-0">
+            {{#if (gt currentPage 1)}}
+              <li class="page-item">
+                <a class="page-link page-link-custom rounded-3" href="?{{#if categoryId}}catid={{categoryId}}{{else}}q={{q}}{{/if}}&page={{subtract currentPage 1}}{{#if sort}}&sort={{sort}}{{/if}}" aria-label="Previous">
+                  <i class="bi bi-chevron-left"></i>
+                </a>
+              </li>
             {{else}}
-              <span class="pagination-ellipsis">...</span>
+              <li class="page-item disabled">
+                <span class="page-link page-link-custom rounded-3">
+                  <i class="bi bi-chevron-left"></i>
+                </span>
+              </li>
             {{/if}}
-          {{/each}}
-        </div>
-        
-        {{#if (lt currentPage totalPages)}}
-          <a href="?{{#if categoryId}}catid={{categoryId}}{{else}}q={{q}}{{/if}}&page={{add currentPage 1}}{{#if sort}}&sort={{sort}}{{/if}}" class="pagination-btn pagination-next">
-            Next <i class="bi bi-arrow-right-square"></i>
-          </a>
-        {{else}}
-          <span class="pagination-btn pagination-next disabled">
-            Next <i class="bi bi-arrow-right-square"></i>
-          </span>
-        {{/if}}
+            
+            {{#each (getPaginationRange currentPage totalPages)}}
+              {{#if (eq this.type "number")}}
+                {{#if (eq this.number ../currentPage)}}
+                  <li class="page-item active">
+                    <span class="page-link page-link-custom page-link-active rounded-3">{{this.number}}</span>
+                  </li>
+                {{else}}
+                  <li class="page-item">
+                    <a class="page-link page-link-custom rounded-3" href="?{{#if ../categoryId}}catid={{../categoryId}}{{else}}q={{../q}}{{/if}}&page={{this.number}}{{#if ../sort}}&sort={{../sort}}{{/if}}">{{this.number}}</a>
+                  </li>
+                {{/if}}
+              {{else}}
+                <li class="page-item disabled">
+                  <span class="page-link page-link-custom rounded-3">...</span>
+                </li>
+              {{/if}}
+            {{/each}}
+            
+            {{#if (lt currentPage totalPages)}}
+              <li class="page-item">
+                <a class="page-link page-link-custom rounded-3" href="?{{#if categoryId}}catid={{categoryId}}{{else}}q={{q}}{{/if}}&page={{add currentPage 1}}{{#if sort}}&sort={{sort}}{{/if}}" aria-label="Next">
+                  <i class="bi bi-chevron-right"></i>
+                </a>
+              </li>
+            {{else}}
+              <li class="page-item disabled">
+                <span class="page-link page-link-custom rounded-3">
+                  <i class="bi bi-chevron-right"></i>
+                </span>
+              </li>
+            {{/if}}
+          </ul>
+        </nav>
       </div>
       {{/if}} 
     </div>

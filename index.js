@@ -182,6 +182,9 @@ app.engine('handlebars', engine({
     lt(a, b) { 
       return a < b; 
     },
+    ne(a, b) {
+      return a !== b;
+    },
     lte(a, b) { 
       return a <= b; 
     },
@@ -196,6 +199,13 @@ app.engine('handlebars', engine({
       return a - b; },
     multiply(a, b) {
       return a * b;
+    },
+    range(start, end) {
+      const result = [];
+      for (let i = start; i < end; i++) {
+        result.push(i);
+      }
+      return result;
     },
     round(value, decimals) {
       return Math.round(value * Math.pow(10, decimals)) / Math.pow(10, decimals);
@@ -270,6 +280,7 @@ app.use(async function (req, res, next) {
   res.locals.isAuthenticated = req.session.isAuthenticated;
   res.locals.authUser = req.session.authUser;
   res.locals.isAdmin = req.session.authUser?.role === 'admin';
+  res.locals.isSeller = req.session.authUser?.role === 'seller';
   next();
 });
 

@@ -14,10 +14,10 @@ export async function createComment(productId, userId, content, parentId = null)
 }
 
 /**
- * Lấy tất cả comments của sản phẩm (bao gồm replies)
+ * Lấy tất cả comments của sản phẩm với pagination
  */
-export async function getCommentsByProductId(productId) {
-  return db('product_comments')
+export async function getCommentsByProductId(productId, limit = null, offset = 0) {
+  let query = db('product_comments')
     .join('users', 'product_comments.user_id', 'users.id')
     .where('product_comments.product_id', productId)
     .whereNull('product_comments.parent_id')
@@ -27,6 +27,24 @@ export async function getCommentsByProductId(productId) {
       'users.role as user_role'
     )
     .orderBy('product_comments.created_at', 'desc');
+  
+  if (limit !== null) {
+    query = query.limit(limit).offset(offset);
+  }
+  
+  return query;
+}
+
+/**
+ * Đếm tổng số parent comments của sản phẩm
+ */
+export async function countCommentsByProductId(productId) {
+  const result = await db('product_comments')
+    .where('product_id', productId)
+    .whereNull('parent_id')
+    .count('* as count')
+    .first();
+  return parseInt(result.count);
 }
 
 /**
