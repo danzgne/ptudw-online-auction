@@ -116,3 +116,8 @@ export function addOAuthProvider(user_id, provider, oauth_id) {
       email_verified: true
     });
 } 
+export async function deleteUser(id) {
+  return db('users')  
+    .where('id', id)
+    .del();
+}

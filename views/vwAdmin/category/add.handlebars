@@ -1,3 +1,31 @@
+{{#section 'css'}}
+<style>
+  .btn-admin-primary {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    transition: all 0.3s ease;
+  }
+  .btn-admin-primary:hover {
+    background-color: #bb2d3b;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+  }
+  .btn-admin-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(220, 53, 69, 0.4);
+  }
+  .btn-admin-secondary {
+    transition: all 0.3s ease;
+  }
+  .btn-admin-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+  }
+</style>
+{{/section}}
+
 {{#section 'js'}}
 <script>
     $(document).ready(function() {
@@ -37,9 +65,6 @@
             <h5 class="mb-0 fw-bold text-danger">
                 <i class="bi bi-plus-circle-fill me-2"></i> ADD NEW CATEGORY
             </h5>
-            <a href="/admin/categories/list" class="btn btn-outline-secondary btn-sm rounded-pill px-3">
-                <i class="bi bi-arrow-left me-1"></i> Back to List
-            </a>
           </div>
         </div>
         
@@ -80,11 +105,11 @@
 
             <!-- Submit Buttons -->
             <div class="d-flex gap-2 mt-4 pt-3 border-top">
-              <button type="submit" class="btn btn-danger px-4">
-                  <i class="bi bi-check-lg me-2"></i> Create Category
+              <button type="submit" class="btn btn-lg px-5 btn-admin-primary">
+                  <i class="bi bi-check-circle me-2"></i>Create Category
               </button>
-              <a href="/admin/categories/list" class="btn btn-outline-secondary px-4">
-                  <i class="bi bi-x-lg me-2"></i> Cancel
+              <a href="/admin/categories/list" class="btn btn-outline-secondary btn-lg px-4 btn-admin-secondary">
+                  <i class="bi bi-x-circle me-2"></i>Cancel
               </a>
             </div>
           </form>

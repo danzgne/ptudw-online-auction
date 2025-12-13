@@ -112,8 +112,7 @@ router.post('/reset-password', async (req, res) => {
 router.post('/delete', async (req, res) => {
     try {
         const { id } = req.body;
-        // Implement delete user logic here
-        // await userModel.deleteUser(id);
+        await userModel.deleteUser(id);
         req.session.success_message = 'User deleted successfully!';
         res.redirect('/admin/users/list');
     } catch (error) {

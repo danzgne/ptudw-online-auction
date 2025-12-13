@@ -449,3 +449,15 @@ export function updateProductThumbnail(productId, thumbnailPath) {
     .where('id', productId)
     .update({ thumbnail: thumbnailPath });
 }
+
+export function updateProduct(productId, productData) {
+  return db('products')
+    .where('id', productId)
+    .update(productData);
+}
+
+export function deleteProduct(productId) {
+  return db('products')
+    .where('id', productId)
+    .del();
+}

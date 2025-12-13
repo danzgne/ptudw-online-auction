@@ -42,10 +42,6 @@ router.post('/products/add', async function (req, res) {
     const dirPath = path.join('public', 'images', 'products').replace(/\\/g, "/");
 
     const imgs = JSON.parse(product.imgs_list);
-    // const subimagesData = imgs.map(imgUrl => ({
-    //     product_id: returnedID[0].id,
-    //     img_link: imgUrl
-    // }));
 
     // Move and rename thumbnail
     const mainPath = path.join(dirPath, `p${returnedID[0].id}_thumb.jpg`).replace(/\\/g, "/");

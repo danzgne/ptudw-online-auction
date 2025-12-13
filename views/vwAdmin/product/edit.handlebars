@@ -5,6 +5,31 @@
 <link href="https://releases.transloadit.com/uppy/v5.2.0/uppy.min.css" rel="stylesheet">
 <!-- Seller Custom CSS -->
 <link rel="stylesheet" href="/static/css/admin/product/add.css">
+<style>
+  .btn-admin-primary {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    transition: all 0.3s ease;
+  }
+  .btn-admin-primary:hover {
+    background-color: #bb2d3b;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+  }
+  .btn-admin-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(220, 53, 69, 0.4);
+  }
+  .btn-admin-secondary {
+    transition: all 0.3s ease;
+  }
+  .btn-admin-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+  }
+</style>
 {{/section}}
 
 <div class="container-fluid mt-4 mb-5">
@@ -21,11 +46,11 @@
       {{!-- HEADER --}}
       <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-          <h2 class="display-6 text-dark mb-1">Add New Product</h2>
-          <p class="text-muted">Create a new auction product</p>
+          <h2 class="display-6 text-dark mb-1">Edit {{product.name}}</h2>
+          <p class="text-muted">Modify the details of this auction product below.</p>
         </div>
-        <a href="/seller/products" class="btn btn-outline-secondary">
-          <i class="bi bi-arrow-left"></i> Back to Products
+        <a href="/admin/products/list" class="btn btn-outline-secondary">
+          <i class="bi bi-arrow-left"></i> Back to list products
         </a>
       </div>
 
@@ -49,7 +74,7 @@
         <input type="hidden" name="id" value="{{product.id}}">
         
         <div class="card border-0 shadow-sm mb-4">
-          <div class="card-header text-white" style="background-color: #72AEC8;">
+          <div class="card-header text-white" style="background-color: #dc3545;">
             <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Basic Information</h5>
           </div>
           <div class="card-body">
@@ -79,8 +104,8 @@
             {{!-- Description --}}
             <div class="mb-3">
               <label for="description" class="form-label">Product Description</label>
-              <div id="editor-container"></div>
-              <input type="hidden" name="description" id="descriptionInput">
+              <div id="editor-container">{{{product.description}}}</div>
+              <input type="hidden" name="description" id="descriptionInput" value="">
               <div class="invalid-feedback" id="descriptionError">Please enter a product description.</div>
             </div>
 
@@ -88,15 +113,15 @@
         </div>
 
         <div class="card border-0 shadow-sm mb-4">
-          <div class="card-header text-white" style="background-color: #72AEC8;">
+          <div class="card-header text-white" style="background-color: #dc3545;">
             <h5 class="mb-0"><i class="bi bi-currency-dollar me-2"></i>Pricing & Duration</h5>
           </div>
           <div class="card-body">
             
             {{!-- Starting Price --}}
             <div class="mb-3">
-              <label for="startPrice" class="form-label required">Starting Price (VND)</label>
-              <input class="form-control" id="startPrice" name="start_price" value="{{product.start_price}}">
+              <label for="startingPrice" class="form-label required">Starting Price (VND)</label>
+              <input class="form-control" id="startingPrice" name="starting_price" value="{{product.starting_price}}">
               <div class="invalid-feedback" id="startPriceError">Please enter a valid starting price (minimum 1,000 VND).</div>
             </div>
 
@@ -130,7 +155,7 @@
         </div>
 
         <div class="card border-0 shadow-sm mb-4">
-          <div class="card-header text-white" style="background-color: #5a92ab;">
+          <div class="card-header text-white" style="background-color: #dc3545;">
             <h5 class="mb-0"><i class="bi bi-images me-2"></i>Product Images</h5>
           </div>
           <div class="card-body">
@@ -179,7 +204,7 @@
         </div>
 
         <div class="card border-0 shadow-sm mb-4">
-          <div class="card-header text-white" style="background-color: #89c4dc;">
+          <div class="card-header text-white" style="background-color: #dc3545;">
             <h5 class="mb-0"><i class="bi bi-gear me-2"></i>Auction Settings</h5>
           </div>
           <div class="card-body">
@@ -216,7 +241,7 @@
         </div>
 
         <div class="card border-0 shadow-sm mb-4">
-          <div class="card-header text-white" style="background-color: #72AEC8;">
+          <div class="card-header text-white" style="background-color: #dc3545;">
             <h5 class="mb-0"><i class="bi bi-person-badge me-2"></i>Seller Assignment</h5>
           </div>
           <div class="card-body">
@@ -246,10 +271,10 @@
 
         {{!-- Submit Buttons --}}
         <div class="d-flex gap-2 mb-4">
-          <button type="submit" class="btn btn-lg px-5" style="background-color: #72AEC8; color: white; border: none;">
+          <button type="submit" class="btn btn-lg px-5 btn-admin-primary">
             <i class="bi bi-check-circle me-2"></i>Update Product
           </button>
-          <a href="/admin/products/list" class="btn btn-outline-secondary btn-lg px-4">
+          <a href="/admin/products/list" class="btn btn-outline-secondary btn-lg px-4 btn-admin-secondary">
             <i class="bi bi-x-circle me-2"></i>Cancel
           </a>
         </div>
@@ -381,12 +406,6 @@ const quill = new Quill('#editor-container', {
 quill.root.innerHTML = `{{{product.description}}}`;
 {{/if}}
 
-document.querySelector('#addProductForm').addEventListener('submit', function(e) {
-  e.preventDefault();
-  document.getElementById('descriptionInput').value = quill.root.innerHTML.trim();
-  // Trigger the actual validation handler
-  document.getElementById('addProductForm').dispatchEvent(new Event('submit', { bubbles: true }));
-});
 // Remove error styling when user types
 document.getElementById('productName').addEventListener('input', function() {
   this.classList.remove('is-invalid');
@@ -652,6 +671,9 @@ document.getElementById('addProductForm').addEventListener('submit', async funct
   if (allowNewBiddersCheckbox.checked) {
     allowNewBiddersHidden.disabled = true;
   }
+
+  // Update description from Quill editor
+  document.getElementById('descriptionInput').value = quill.root.innerHTML.trim();
 
   // Submit form
   const formData = new FormData(e.target);

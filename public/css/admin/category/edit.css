@@ -1,8 +1,8 @@
 /* Admin Category Edit - Button Styles */
 
 :root {
-  --primary-color: #72AEC8;
-  --danger-color: #dc3545;
+  --primary-color: #dc3545;
+  --primary-hover: #bb2d3b;
   --secondary-color: #6c757d;
   --dark-color: #212529;
   --light-color: #f8f9fa;
@@ -14,46 +14,44 @@
   letter-spacing: 0.5px;
   border-radius: 6px;
   transition: all 0.3s ease;
-  border: none;
-  position: relative;
-  overflow: hidden;
 }
 
-.btn::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 0;
-  height: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.3);
-  transform: translate(-50%, -50%);
-  transition: width 0.6s, height 0.6s;
-}
-
-.btn:hover::after {
-  width: 300px;
-  height: 300px;
-}
-
-.btn-danger {
+.btn-admin-primary {
   background-color: var(--primary-color);
   color: var(--light-color);
-  box-shadow: 0 2px 8px rgba(114, 174, 200, 0.3);
+  border: none;
 }
 
-.btn-danger:hover {
-  background-color: #5a95b0;
+.btn-admin-primary:hover {
+  background-color: var(--primary-hover);
   color: var(--light-color);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(114, 174, 200, 0.4);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+}
+
+.btn-admin-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 6px rgba(220, 53, 69, 0.4);
+}
+
+.btn-admin-secondary {
+  background: transparent;
+  color: var(--secondary-color);
+  border: 1px solid var(--secondary-color);
+}
+
+.btn-admin-secondary:hover {
+  background: var(--secondary-color);
+  color: var(--light-color);
+  border-color: var(--secondary-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
 }
 
 .btn-outline-secondary {
   background: transparent;
   color: var(--secondary-color);
-  border: 2px solid var(--secondary-color);
+  border: 1px solid var(--secondary-color);
 }
 
 .btn-outline-secondary:hover {
@@ -73,7 +71,7 @@
 .form-control:focus,
 .form-select:focus {
   border-color: var(--primary-color);
-  box-shadow: 0 0 0 0.2rem rgba(114, 174, 200, 0.25);
+  box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.25);
 }
 
 .card {

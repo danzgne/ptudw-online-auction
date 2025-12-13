@@ -1,3 +1,38 @@
+{{#section 'css'}}
+<style>
+  .btn-admin-primary {
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    transition: all 0.3s ease;
+  }
+  .btn-admin-primary:hover {
+    background-color: #bb2d3b;
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+  }
+  .btn-admin-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 6px rgba(220, 53, 69, 0.4);
+  }
+  .btn-admin-secondary {
+    transition: all 0.3s ease;
+  }
+  .btn-admin-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
+  }
+  .btn-admin-warning {
+    transition: all 0.3s ease;
+  }
+  .btn-admin-warning:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(255, 193, 7, 0.4);
+  }
+</style>
+{{/section}}
+
 {{#section 'js'}}
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
@@ -174,17 +209,17 @@
             </div>
 
             <!-- Submit Buttons -->
-            <div class="d-flex gap-2 mt-4 pt-4 border-top justify-content-center">
-              <button type="submit" class="btn btn-danger px-4">
-                  <i class="bi bi-check-lg me-2"></i>Update User
+            <div class="d-flex gap-2 mt-4 pt-4 border-top">
+              <button type="submit" class="btn btn-lg px-5 btn-admin-primary">
+                  <i class="bi bi-check-circle me-2"></i>Update User
               </button>
-              <button type="button" id="btnResetPassword" class="btn btn-warning px-4" 
+              <button type="button" id="btnResetPassword" class="btn btn-warning btn-lg px-4 btn-admin-warning" 
                       data-user-id="{{user.id}}" data-user-name="{{user.fullname}}">
                   <i class="bi bi-key me-2"></i>Reset Password
               </button>
-              <a href="/admin/users/list" class="btn btn-outline-secondary px-4">
-                  <i class="bi bi-list me-2"></i>Back to List
-              </a>
+              <a href="/admin/users/list" class="btn btn-outline-secondary btn-lg px-4 btn-admin-secondary">
+                <i class="bi bi-x-circle me-2"></i>Cancel
+             </a>
             </div>
           </form>
           {{else}}
