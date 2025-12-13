@@ -23,16 +23,34 @@
       <span>Dashboard</span>
     </a>
     
-    <a class="list-group-item list-group-item-action py-3 d-flex align-items-center gap-2 {{#if (eq activeSection 'my-products')}}active fw-bold{{/if}}" 
+    <a class="list-group-item list-group-item-action py-3 d-flex align-items-center gap-2 {{#if (eq activeSection 'all-products')}}active fw-bold{{/if}}" 
        href="/seller/products">
       <i class="bi bi-box-seam fs-5"></i> 
-      <span>My Products</span>
+      <span>All Products</span>
+    </a>
+
+    <a class="list-group-item list-group-item-action py-3 d-flex align-items-center gap-2 {{#if (eq activeSection 'active-products')}}active fw-bold{{/if}}" 
+       href="/seller/products/active">
+      <i class="bi bi-play-circle fs-5"></i> 
+      <span>Active</span>
+    </a>
+
+    <a class="list-group-item list-group-item-action py-3 d-flex align-items-center gap-2 {{#if (eq activeSection 'pending-products')}}active fw-bold{{/if}}" 
+       href="/seller/products/pending">
+      <i class="bi bi-hourglass-split fs-5"></i> 
+      <span>Pending</span>
     </a>
 
     <a class="list-group-item list-group-item-action py-3 d-flex align-items-center gap-2 {{#if (eq activeSection 'sold-products')}}active fw-bold{{/if}}" 
        href="/seller/products/sold">
       <i class="bi bi-bag-check fs-5"></i> 
-      <span>Sold Products</span>
+      <span>Sold</span>
+    </a>
+
+    <a class="list-group-item list-group-item-action py-3 d-flex align-items-center gap-2 {{#if (eq activeSection 'expired-products')}}active fw-bold{{/if}}" 
+       href="/seller/products/expired">
+      <i class="bi bi-x-circle fs-5"></i> 
+      <span>Expired</span>
     </a>
     
     <hr class="my-2">

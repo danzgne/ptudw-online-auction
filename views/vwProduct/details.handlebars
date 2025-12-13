@@ -554,10 +554,12 @@
           <div class="table-responsive">
           <table class="table table-borderless">
             <tbody>
-              <tr class="border-bottom">
-                <td class="fw-bold text-muted" style="width: 30%;">Product ID</td>
-                <td class="fw-500">{{product.id}}</td>
-              </tr>
+              {{!-- <tr class="border-bottom"> --}}
+                {{!-- <td class="fw-bold text-muted" style="width: 30%;">Product ID</td> --}}
+                {{!-- <td class="fw-500"> --}}
+                  {{!-- product id --}}
+                {{!-- </td> --}}
+              {{!-- </tr> --}}
               <tr class="border-bottom">
                 <td class="fw-bold text-muted">Category</td>
                 <td class="fw-500">{{product.category_name}}</td>
@@ -647,8 +649,8 @@
                     </div>
                     <p class="mb-2">{{content}}</p>
                     
-                    {{!-- Only show reply button if current user is the seller of this product and not replying to themselves --}}
-                    {{#if (and ../isAuthenticated (eq ../authUser.role 'seller') (eq ../product.seller_id ../authUser.id) (ne user_id ../authUser.id))}}
+                    {{!-- Only show reply button if current user is the seller of this product, not replying to themselves, and the question hasn't been answered yet --}}
+                    {{#if (and ../isAuthenticated (eq ../authUser.role 'seller') (eq ../product.seller_id ../authUser.id) (ne user_id ../authUser.id) (eq replies.length 0))}}
                       <button class="btn btn-sm reply-btn" data-comment-id="{{id}}" data-user-name="{{user_name}}" style="background-color: #72AEC8; color: white; border: none; border-radius: 6px; padding: 4px 12px; font-weight: 500; transition: all 0.3s ease;">
                         <i class="bi bi-reply me-1"></i>Reply
                       </button>

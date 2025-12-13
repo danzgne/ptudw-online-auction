@@ -15,6 +15,7 @@ export function findAll() {
       `)
     );
 }
+
 export async function findByProductIdForAdmin(productId, userId) {
   // Chuyển sang async để xử lý dữ liệu trước khi trả về controller
   const rows = await db('products')
@@ -160,6 +161,7 @@ export function countByKeywords(keywords) {
 export function countAll() {
   return db('products').count('id as count').first();
 }
+
 export function findByCategoryId(categoryId, limit, offset, sort, currentUserId) {
   // currentUserId: ID của người đang xem (nếu chưa đăng nhập thì truyền null hoặc undefined)
 
@@ -371,6 +373,7 @@ export function findRelatedProducts(productId) {
       .select('p2.*')
       .limit(5);
   } 
+
 export async function findByProductId2(productId, userId) {
   // Chuyển sang async để xử lý dữ liệu trước khi trả về controller
   const rows = await db('products')
@@ -389,12 +392,15 @@ export async function findByProductId2(productId, userId) {
     })
     .leftJoin('users as seller', 'products.seller_id', 'seller.id')
 
+    .leftJoin('categories', 'products.category_id', 'categories.id')
+
     .where('products.id', productId)
     .select(
       'products.*',
       'product_images.img_link', // Lấy link ảnh phụ để lát nữa gộp mảng
       'seller.fullname as seller_name',
       'seller.created_at as seller_created_at',
+      'categories.name as category_name',
 
       // Logic che tên người đấu giá (Giữ nguyên)
       db.raw(`
@@ -460,4 +466,276 @@ export function deleteProduct(productId) {
   return db('products')
     .where('id', productId)
     .del();
+}
+
+// Seller Statistics Functions
+export function countProductsBySellerId(sellerId) {
+  return db('products')
+    .where('seller_id', sellerId)
+    .count('id as count')
+    .first();
+}
+
+export function countActiveProductsBySellerId(sellerId) {
+  return db('products')
+    .where('seller_id', sellerId)
+    .where('end_at', '>', new Date())
+    .count('id as count')
+    .first();
+}
+
+export function countSoldProductsBySellerId(sellerId) {
+  return db('products')
+    .where('seller_id', sellerId)
+    .where('end_at', '<=', new Date())
+    .where('is_sold', true)
+    .count('id as count')
+    .first();
+}
+
+export function countPendingProductsBySellerId(sellerId) {
+  return db('products')
+    .where('seller_id', sellerId)
+    .where('end_at', '<=', new Date())
+    .whereNotNull('highest_bidder_id')
+    .whereNull('is_sold')
+    .count('id as count')
+    .first();
+}
+
+export function countExpiredProductsBySellerId(sellerId) {
+  return db('products')
+    .where('seller_id', sellerId)
+    .where(function() {
+      this.where(function() {
+        this.where('end_at', '<=', new Date())
+            .whereNull('highest_bidder_id');
+      })
+      .orWhere('is_sold', false);
+    })
+    .count('id as count')
+    .first();
+}
+
+export async function getSellerStats(sellerId) {
+  const [total, active, sold, pending, expired, pendingRevenue, completedRevenue] = await Promise.all([
+    countProductsBySellerId(sellerId),
+    countActiveProductsBySellerId(sellerId),
+    countSoldProductsBySellerId(sellerId),
+    countPendingProductsBySellerId(sellerId),
+    countExpiredProductsBySellerId(sellerId),
+    // Pending Revenue: Sản phẩm hết hạn, có người thắng nhưng chưa thanh toán
+    db('products')
+      .where('seller_id', sellerId)
+      .where('end_at', '<=', new Date())
+      .whereNotNull('highest_bidder_id')
+      .whereNull('is_sold')
+      .sum('current_price as revenue')
+      .first(),
+    // Completed Revenue: Sản phẩm đã bán thành công
+    db('products')
+      .where('seller_id', sellerId)
+      .where('is_sold', true)
+      .sum('current_price as revenue')
+      .first()
+  ]);
+
+  const pendingRev = parseFloat(pendingRevenue.revenue) || 0;
+  const completedRev = parseFloat(completedRevenue.revenue) || 0;
+
+  return {
+    total_products: parseInt(total.count) || 0,
+    active_products: parseInt(active.count) || 0,
+    sold_products: parseInt(sold.count) || 0,
+    pending_products: parseInt(pending.count) || 0,
+    expired_products: parseInt(expired.count) || 0,
+    pending_revenue: pendingRev,
+    completed_revenue: completedRev,
+    total_revenue: pendingRev + completedRev
+  };
+}
+
+export function findAllProductsBySellerId(sellerId) {
+  return db('products')
+    .leftJoin('categories', 'products.category_id', 'categories.id')
+    .where('seller_id', sellerId)
+    .select(
+      'products.*', 'categories.name as category_name',
+      db.raw(`
+        (
+          SELECT COUNT(*) 
+          FROM bidding_history 
+          WHERE bidding_history.product_id = products.id
+        ) AS bid_count
+      `),
+      db.raw(`
+        CASE
+          WHEN is_sold IS TRUE THEN 'Sold'
+          WHEN end_at > NOW() THEN 'Active'
+          WHEN end_at <= NOW() AND highest_bidder_id IS NOT NULL AND is_sold IS NULL THEN 'Pending'
+          When end_at <= NOW() AND highest_bidder_id IS NULL THEN 'No Bidders'
+          WHEN is_sold IS FALSE THEN 'Cancelled'
+        END AS status
+      `)
+    );
+}
+
+export function findActiveProductsBySellerId(sellerId) {
+  return db('products')
+    .leftJoin('categories', 'products.category_id', 'categories.id')
+    .where('seller_id', sellerId)
+    .where('end_at', '>', new Date())
+    .select(
+      'products.*', 'categories.name as category_name', 
+      db.raw(`
+        (
+          SELECT COUNT(*) 
+          FROM bidding_history 
+          WHERE bidding_history.product_id = products.id
+        ) AS bid_count
+      `)
+    );
+}
+
+export function findPendingProductsBySellerId(sellerId) {
+  return db('products')
+    .leftJoin('categories', 'products.category_id', 'categories.id')
+    .leftJoin('users', 'products.highest_bidder_id', 'users.id')
+    .where('seller_id', sellerId)
+    .where('end_at', '<=', new Date())
+    .whereNotNull('highest_bidder_id')
+    .whereNull('is_sold')
+    .select(
+      'products.*', 
+      'categories.name as category_name', 
+      'users.fullname as highest_bidder_name',
+      'users.email as highest_bidder_email',
+      db.raw(`
+        (
+          SELECT COUNT(*) 
+          FROM bidding_history
+          WHERE bidding_history.product_id = products.id
+        ) AS bid_count
+      `)
+    );
+}
+
+export function findSoldProductsBySellerId(sellerId) {
+  return db('products')
+    .leftJoin('categories', 'products.category_id', 'categories.id')
+    .leftJoin('users', 'products.highest_bidder_id', 'users.id')
+    .where('seller_id', sellerId)
+    .where('end_at', '<=', new Date())
+    .where('is_sold', true)
+    .select(
+      'products.*', 
+      'categories.name as category_name',
+      'users.fullname as highest_bidder_name',
+      'users.email as highest_bidder_email',
+      db.raw(`
+        (
+          SELECT COUNT(*) 
+          FROM bidding_history
+          WHERE bidding_history.product_id = products.id
+        ) AS bid_count
+      `)
+    );
+}
+
+export function findExpiredProductsBySellerId(sellerId) {
+  return db('products')
+    .leftJoin('categories', 'products.category_id', 'categories.id')
+    .where('seller_id', sellerId)
+    .where(function() {
+      this.where(function() {
+        this.where('end_at', '<=', new Date())
+            .whereNull('highest_bidder_id');
+      })
+      .orWhere('is_sold', false);
+    })
+    .select(
+      'products.*',
+      'categories.name as category_name',
+      db.raw(`
+        CASE
+          WHEN highest_bidder_id IS NULL THEN 'No Bidders'
+          ELSE 'Cancelled'
+        END AS status
+      `)
+    );
+}
+
+export async function getSoldProductsStats(sellerId) {
+  const result = await db('products')
+    .where('seller_id', sellerId)
+    .where('end_at', '<=', new Date())
+    .where('is_sold', true)
+    .select(
+      db.raw('COUNT(products.id) as total_sold'),
+      db.raw('COALESCE(SUM(products.current_price), 0) as total_revenue'),
+      db.raw(`
+        COALESCE(SUM((
+          SELECT COUNT(*)
+          FROM bidding_history
+          WHERE bidding_history.product_id = products.id
+        )), 0) as total_bids
+      `)
+    )
+    .first();
+
+  return {
+    total_sold: parseInt(result.total_sold) || 0,
+    total_revenue: parseFloat(result.total_revenue) || 0,
+    total_bids: parseInt(result.total_bids) || 0
+  };
+}
+
+export async function getPendingProductsStats(sellerId) {
+  const result = await db('products')
+    .where('seller_id', sellerId)
+    .where('end_at', '<=', new Date())
+    .whereNotNull('highest_bidder_id')
+    .whereNull('is_sold')
+    .select(
+      db.raw('COUNT(products.id) as total_pending'),
+      db.raw('COALESCE(SUM(products.current_price), 0) as pending_revenue'),
+      db.raw(`
+        COALESCE(SUM((
+          SELECT COUNT(*)
+          FROM bidding_history
+          WHERE bidding_history.product_id = products.id
+        )), 0) as total_bids
+      `)
+    )
+    .first();
+
+  return {
+    total_pending: parseInt(result.total_pending) || 0,
+    pending_revenue: parseFloat(result.pending_revenue) || 0,
+    total_bids: parseInt(result.total_bids) || 0
+  };
+}
+
+export async function cancelProduct(productId, sellerId) {
+  // Get product to verify seller
+  const product = await db('products')
+    .where('id', productId)
+    .first();
+  
+  if (!product) {
+    throw new Error('Product not found');
+  }
+  
+  if (product.seller_id !== sellerId) {
+    throw new Error('Unauthorized');
+  }
+  
+  // Update product - mark as cancelled
+  await updateProduct(productId, {
+    is_sold: false,
+    closed_at: new Date()
+  });
+  
+  // Return product data for route to use
+  return product;
 }

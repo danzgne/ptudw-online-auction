@@ -70,15 +70,37 @@ app.engine('handlebars', engine({
       const d = new Date(date);
       if (isNaN(d.getTime())) return '';
 
-      const year = d.getUTCFullYear();
-      const month = String(d.getUTCMonth() + 1).padStart(2, '0');
-      const day = String(d.getUTCDate()).padStart(2, '0');
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
 
-      const hour = String(d.getUTCHours()).padStart(2, '0');
-      const minute = String(d.getUTCMinutes()).padStart(2, '0');
-      const second = String(d.getUTCSeconds()).padStart(2, '0');
+      const hour = String(d.getHours()).padStart(2, '0');
+      const minute = String(d.getMinutes()).padStart(2, '0');
+      const second = String(d.getSeconds()).padStart(2, '0');
 
       return `${hour}:${minute}:${second} ${day}/${month}/${year}`;
+    },
+    format_only_date(date) {
+      if (!date) return '';
+      const d = new Date(date);
+      if (isNaN(d.getTime())) return '';
+
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+
+      return `${day}/${month}/${year}`;
+    },
+    format_only_time(time) {
+      if (!time) return '';
+      const d = new Date(time);
+      if (isNaN(d.getTime())) return '';
+
+      const hour = String(d.getHours()).padStart(2, '0');
+      const minute = String(d.getMinutes()).padStart(2, '0');
+      const second = String(d.getSeconds()).padStart(2, '0');
+
+      return `${hour}:${minute}:${second}`;
     },
     format_date_input: function (date) {
         if (!date) return '';
@@ -115,13 +137,13 @@ app.engine('handlebars', engine({
       // > 3 ngày: hiển thị ngày kết thúc
       if (days > 3) {
         if (isNaN(end.getTime())) return '';
-        const year = end.getUTCFullYear();
-        const month = String(end.getUTCMonth() + 1).padStart(2, '0');
-        const day = String(end.getUTCDate()).padStart(2, '0');
+        const year = end.getFullYear();
+        const month = String(end.getMonth() + 1).padStart(2, '0');
+        const day = String(end.getDate()).padStart(2, '0');
 
-        const hour = String(end.getUTCHours()).padStart(2, '0');
-        const minute = String(end.getUTCMinutes()).padStart(2, '0');
-        const second = String(end.getUTCSeconds()).padStart(2, '0');
+        const hour = String(end.getHours()).padStart(2, '0');
+        const minute = String(end.getMinutes()).padStart(2, '0');
+        const second = String(end.getSeconds()).padStart(2, '0');
         return `${hour}:${minute}:${second} ${day}/${month}/${year}`
       }
       

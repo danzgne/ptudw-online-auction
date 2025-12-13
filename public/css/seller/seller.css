@@ -278,6 +278,17 @@
   overflow: hidden;
 }
 
+@media (max-width: 991.98px) {
+  .table-responsive {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .table {
+    min-width: 800px;
+  }
+}
+
 .table-hover tbody tr {
   transition: all 0.2s ease;
 }
@@ -351,6 +362,17 @@
     width: 100px;
     height: 100px;
   }
+  
+  /* Actions buttons responsive - tablet */
+  .table td:last-child {
+    white-space: nowrap !important;
+    min-width: 150px;
+  }
+  
+  .table td:last-child .btn-sm {
+    margin-right: 0.25rem;
+    margin-bottom: 0.25rem;
+  }
 }
 
 @media (max-width: 767.98px) {
@@ -370,6 +392,30 @@
   .btn-lg {
     font-size: 1rem;
     padding: 0.5rem 1rem;
+  }
+  
+  /* Reduce padding on mobile for better fit */
+  .table td, .table th {
+    padding: 0.5rem !important;
+    font-size: 0.875rem;
+  }
+  
+  .table td:first-child {
+    padding-left: 0.75rem !important;
+  }
+  
+  .table td:last-child {
+    padding-right: 0.75rem !important;
+    min-width: 140px;
+  }
+  
+  /* Stack buttons vertically on very small screens */
+  @media (max-width: 576px) {
+    .table td:last-child .btn {
+      display: block;
+      width: 100%;
+      margin: 0.25rem 0 !important;
+    }
   }
 }
 

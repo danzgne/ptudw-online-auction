@@ -43,3 +43,33 @@ export function getReviewsByUserId(user_id) {
 export function createReview(reviewData) {
     return db('reviews').insert(reviewData).returning('*');
 }
+/**
+ * Lấy review của reviewer cho reviewee trên product cụ thể
+ * @param {number} reviewer_id - ID người đánh giá
+ * @param {number} reviewee_id - ID người được đánh giá
+ * @param {number} product_id - ID sản phẩm
+ * @returns {Promise<Object>} Review object hoặc null
+ */
+export function getProductReview(reviewer_id, reviewee_id, product_id) {
+    return db('reviews')
+        .where('reviewer_id', reviewer_id)
+        .where('reviewee_id', reviewee_id)
+        .where('product_id', product_id)
+        .first();
+}
+
+/**
+ * Cập nhật review
+ * @param {number} reviewer_id - ID người đánh giá
+ * @param {number} reviewee_id - ID người được đánh giá
+ * @param {number} product_id - ID sản phẩm
+ * @param {Object} updateData - Dữ liệu cần cập nhật {rating, comment}
+ * @returns {Promise} Kết quả update
+ */
+export function updateReview(reviewer_id, reviewee_id, product_id, updateData) {
+    return db('reviews')
+        .where('reviewer_id', reviewer_id)
+        .where('reviewee_id', reviewee_id)
+        .where('product_id', product_id)
+        .update(updateData);
+}

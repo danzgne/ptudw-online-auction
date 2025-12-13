@@ -1,0 +1,81 @@
+<div class="container-fluid mt-4 mb-5">
+  <div class="row">
+    
+    {{!-- LEFT SIDEBAR --}}
+    <div class="col-lg-3 mb-4">
+        {{> seller-sidebar activeSection='expired-products'}}
+    </div>
+
+    {{!-- RIGHT CONTENT --}}
+    <div class="col-lg-9">
+      <div class="card shadow-sm border-0 h-100">
+        
+        <!-- Header -->
+        <div class="card-header bg-white border-bottom py-3">
+          <h5 class="mb-0 fw-bold">
+              <i class="bi bi-x-circle me-2 text-secondary"></i> EXPIRED PRODUCTS
+          </h5>
+          <p class="text-muted small mb-0 mt-2">Products that expired without bids or were cancelled</p>
+        </div>
+        
+        <!-- Body -->
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light text-secondary text-uppercase small">
+                        <tr>
+                            <th scope="col" class="ps-4 py-3">Product Name</th>
+                            <th scope="col" class="py-3">Starting Price</th>
+                            <th scope="col" class="py-3">Reason</th>
+                            <th scope="col" class="py-3">Expired Date</th>
+                            <th scope="col" class="text-end pe-4 py-3">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#each products}}
+                        <tr>
+                            <td class="ps-4 py-3">
+                                <div class="d-flex align-items-center">
+                                    <img src="/static/{{this.thumbnail}}" alt="{{this.name}}" 
+                                        width="50" height="50" class="rounded me-3" style="object-fit: cover;">
+                                    <div>
+                                        <div class="fw-bold text-dark">{{this.name}}</div>
+                                        <div class="small text-muted">{{this.category_name}}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="text-muted">{{format_number this.starting_price}} VND</span>
+                            </td>
+                            <td>
+                                {{#if (eq this.status 'No Bidders')}}
+                                    <span class="badge bg-secondary">No Bidders</span>
+                                {{else}}
+                                    <span class="badge bg-danger">Cancelled</span>
+                                {{/if}}
+                            </td>
+                            <td>
+                                {{#if this.closed_at}}
+                                <div class="small text-muted">{{format_only_date this.closed_at}}</div>    
+                                <div class="text-muted" style="font-size: 0.75rem;">{{format_only_time this.closed_at}}</div>
+                                {{else}}
+                                <div class="small text-muted">{{format_only_date this.end_at}}</div>    
+                                <div class="text-muted" style="font-size: 0.75rem;">{{format_only_time this.end_at}}</div>
+                                {{/if}}
+                            </td>
+                            <td class="text-end pe-4">
+                                <a href="#" class="btn btn-sm btn-outline-info" 
+                                   data-bs-toggle="tooltip" title="View Details" target="_blank">
+                                    <i class="bi bi-eye"></i> View
+                                </a>
+                            </td>
+                        </tr>    
+                        {{/each}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -13,7 +13,7 @@
     
     {{!-- LEFT SIDEBAR --}}
     <div class="col-lg-3 mb-4">
-        {{> seller-sidebar activeSection='my-products'}}
+        {{> seller-sidebar activeSection='active-products'}}
     </div>
 
     {{!-- RIGHT CONTENT --}}
@@ -366,28 +366,21 @@ document.getElementById('endDate').addEventListener('change', function() {
   this.classList.remove('is-invalid');
   document.getElementById('endDateError').style.display = 'none';
   
-  // Convert datetime-local value to PostgreSQL timestamp format (keep local timezone)
+  // Convert datetime-local value to UTC ISO string
   if (this.value) {
-    // datetime-local format: YYYY-MM-DDTHH:mm
-    // Convert to PostgreSQL format: YYYY-MM-DD HH:mm:ss
-    const localDateTime = this.value.replace('T', ' ') + ':00';
-    document.getElementById('endDateFormatted').value = localDateTime;
+    // datetime-local format: YYYY-MM-DDTHH:mm (local time)
+    // Convert to UTC ISO string for database
+    const localDate = new Date(this.value);
+    const utcISOString = localDate.toISOString(); // UTC time
+    document.getElementById('endDateFormatted').value = utcISOString;
   }
 });
 
-// Set created_at to current timestamp when page loads
+// Set created_at to current timestamp when page loads (UTC)
 document.addEventListener('DOMContentLoaded', function() {
   const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, '0');
-  const day = String(now.getDate()).padStart(2, '0');
-  const hours = String(now.getHours()).padStart(2, '0');
-  const minutes = String(now.getMinutes()).padStart(2, '0');
-  const seconds = String(now.getSeconds()).padStart(2, '0');
-  
-  // Format: YYYY-MM-DD HH:mm:ss
-  const localDateTime = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
-  document.getElementById('createdAt').value = localDateTime;
+  // Send UTC ISO string to server
+  document.getElementById('createdAt').value = now.toISOString();
 });
 
 // Form Submission
@@ -517,9 +510,9 @@ document.getElementById('addProductForm').addEventListener('submit', async funct
     return;
   }
   
-  // Update the formatted end_date before submission (keep local timezone)
-  const localDateTime = endDateDisplay.replace('T', ' ') + ':00';
-  document.getElementById('endDateFormatted').value = localDateTime;
+  // Update the formatted end_date before submission (convert local to UTC)
+  const utcISOString = endDateTime.toISOString();
+  document.getElementById('endDateFormatted').value = utcISOString;
 
   // Validate thumbnail
   if (thumbnail === '') {

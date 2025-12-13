@@ -60,7 +60,8 @@ router.post('/add', async function (req, res) {
         description: product.description,
         highest_bidder_id: null,
         current_price: product.start_price.replace(/,/g, ''),
-        is_sold: false,
+        is_sold: null,
+        closed_at: null,
         allow_unrated_bidder: product.allow_new_bidders === '1' ? true : false
     }
     console.log('productData:', productData);
