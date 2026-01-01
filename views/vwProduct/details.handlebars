@@ -125,7 +125,7 @@
   const bidModal = new bootstrap.Modal(document.getElementById('bidModal'));
   const currentPrice = {{product.current_price}};
   const productId = {{product.id}};
-  const minIncrement = 50000; // VND
+  const minIncrement = {{product.step_price}}; // VND
   
   // Format number with commas
   function formatNumberWithCommas(num) {
@@ -348,9 +348,16 @@
     <div class="col-lg-7">
       <!-- Product Title & Category -->
       <div class="mb-4">
-        <span class="badge-premium mb-3">
-          <i class="bi bi-gem"></i> Featured Auction
-        </span>
+        <div class="mb-3 d-flex gap-2 align-items-center flex-wrap">
+          <span class="badge-premium">
+            <i class="bi bi-gem"></i> Featured Auction
+          </span>
+          {{#if product.allow_unrated_bidder}}
+          <span class="badge-premium" style="background: linear-gradient(135deg, rgba(114, 174, 200, 0.15) 0%, rgba(90, 154, 184, 0.1) 100%); border: 2px solid rgba(114, 174, 200, 0.3); color: #72AEC8;">
+            <i class="bi bi-person-check"></i> Allow Unrated Bidders
+          </span>
+          {{/if}}
+        </div>
         <h1 class="display-5 fw-bold gradient-text mb-3" style="text-shadow: 0 4px 20px rgba(114, 174, 200, 0.3);">{{product.name}}</h1>
         <div class="d-flex align-items-center gap-3 flex-wrap">
           <div class="d-flex align-items-center">
@@ -913,7 +920,7 @@
               </span>
             </div>
             <small class="text-muted">
-              <i class="bi bi-lightbulb"></i> Minimum increment: 50,000 VND
+              <i class="bi bi-lightbulb"></i> Minimum increment: {{format_number product.step_price}} VND
             </small>
           </div>
 

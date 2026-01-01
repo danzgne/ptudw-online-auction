@@ -84,6 +84,13 @@
               </div>
               {{/if}}
 
+              {{!-- Badge Allows Unrated Bidders --}}
+              {{#if this.allow_unrated_bidder}}
+              <span class="ribbon-badge">
+                Allow Unrated
+              </span>
+              {{/if}}
+
               {{#if ../isAuthenticated}}
                 
                     {{!-- WATCHLIST LOGIC --}}

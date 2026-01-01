@@ -274,8 +274,8 @@ router.post('/bid', isAuthenticated, async (req, res) => {
       return res.redirect(`/products/detail?id=${productId}`);
     }
 
-    // Check minimum bid increment (at least 50,000 VND)
-    const minIncrement = 50000;
+    // Check minimum bid increment
+    const minIncrement = parseFloat(product.step_price);
     if (bidAmount < currentPrice + minIncrement) {
       req.session.error_message = `Bid must be at least ${minIncrement.toLocaleString()} VND higher than current price`;
       return res.redirect(`/products/detail?id=${productId}`);

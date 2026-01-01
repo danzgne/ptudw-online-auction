@@ -97,6 +97,30 @@
   z-index: 1;
 }
 
+/* Badge for title - Unrated Bidders */
+.badge-title-unrated {
+  display: none;
+}
+
+/* Ribbon Badge Style for Unrated Bidders */
+.ribbon-badge {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #72AEC8 0%, #5a9ab8 100%);
+  color: white;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.75rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 5;
+  white-space: nowrap;
+  letter-spacing: 0.4px;
+}
+
 /* Style cho nút submit bên trong form */
 .btn-watchlist-submit {
   transition: all 0.2s ease;

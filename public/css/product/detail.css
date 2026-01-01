@@ -1013,3 +1013,17 @@ html {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(114, 174, 200, 0.4);
 }
+
+/* Badge for title - Unrated Bidders Detail Page */
+.badge-detail-unrated {
+  display: inline-block;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, #72AEC8 0%, #5a9ab8 100%);
+  color: white;
+  font-weight: 600;
+  font-size: 0.75rem;
+  border-radius: 5px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(114, 174, 200, 0.25);
+  vertical-align: middle;
+}
