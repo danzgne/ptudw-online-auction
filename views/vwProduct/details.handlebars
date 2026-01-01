@@ -537,6 +537,21 @@
               <em>No description provided for this product.</em>
             {{/if}}
           </p>
+          
+          {{!-- Description Updates --}}
+          {{#if descriptionUpdates}}
+            {{#each descriptionUpdates}}
+              <div class="mt-4 p-3 border-start border-3 border-warning bg-light rounded">
+                <div class="d-flex align-items-center mb-2">
+                  <i class="bi bi-pencil-square text-warning me-2"></i>
+                  <strong class="text-warning">{{format_date this.created_at}}</strong>
+                </div>
+                <div class="text-muted" style="line-height: 1.8;">
+                  {{{this.content}}}
+                </div>
+              </div>
+            {{/each}}
+          {{/if}}
         </div>
       </div>
 

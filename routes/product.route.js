@@ -6,6 +6,7 @@ import * as watchListModel from '../models/watchlist.model.js';
 import * as biddingHistoryModel from '../models/biddingHistory.model.js';
 import * as productCommentModel from '../models/productComment.model.js';
 import * as categoryModel from '../models/category.model.js';
+import * as productDescUpdateModel from '../models/productDescriptionUpdate.model.js';
 import { isAuthenticated } from '../middlewares/auth.mdw.js';
 import { sendMail } from '../utils/mailer.js';
 import db from '../utils/db.js';
@@ -114,6 +115,9 @@ router.get('/detail', async (req, res) => {
     return res.status(404).render('404', { message: 'Product not found' });
   }
 
+  // Load description updates
+  const descriptionUpdates = await productDescUpdateModel.findByProductId(productId);
+
   // Pagination cho comments
   const commentPage = parseInt(req.query.commentPage) || 1;
   const commentsPerPage = 2; // Mỗi trang 2 comments
@@ -142,6 +146,7 @@ router.get('/detail', async (req, res) => {
   console.log(product);
   res.render('vwProduct/details', { 
     product,
+    descriptionUpdates,
     comments,
     success_message,
     error_message,

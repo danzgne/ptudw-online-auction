@@ -1,6 +1,7 @@
 import express from 'express';
 import * as productModel from '../models/product.model.js';
 import * as reviewModel from '../models/review.model.js';
+import * as productDescUpdateModel from '../models/productDescriptionUpdate.model.js';
 import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
@@ -264,6 +265,37 @@ router.put('/products/:id/rate', async function (req, res) {
         res.json({ success: true, message: 'Rating updated successfully' });
     } catch (error) {
         console.error('Update rating error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// Append Description to Product
+router.post('/products/:id/append-description', async function (req, res) {
+    try {
+        const productId = req.params.id;
+        const sellerId = req.session.authUser.id;
+        const { description } = req.body;
+        
+        if (!description || description.trim() === '') {
+            return res.status(400).json({ success: false, message: 'Description is required' });
+        }
+        
+        // Verify that the product belongs to the seller
+        const product = await productModel.findByProductId2(productId, null);
+        if (!product) {
+            return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+        
+        if (product.seller_id !== sellerId) {
+            return res.status(403).json({ success: false, message: 'Unauthorized' });
+        }
+        
+        // Add description update
+        await productDescUpdateModel.addUpdate(productId, description.trim());
+        
+        res.json({ success: true, message: 'Description appended successfully' });
+    } catch (error) {
+        console.error('Append description error:', error);
         res.status(500).json({ success: false, message: 'Server error' });
     }
 });
