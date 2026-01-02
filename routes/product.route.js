@@ -72,27 +72,44 @@ router.get('/category', async (req, res) => {
 });
 
 router.get('/search', async (req, res) => {
+  const userId = req.session.authUser ? req.session.authUser.id : null;
   const q = req.query.q || '';
+  const logic = req.query.logic || 'and'; // 'and' or 'or'
+  
+  // If keyword is empty, return empty results
   if (q.length === 0) {
     return res.render('vwProduct/list', {
         q: q,
-        products: []
+        logic: logic,
+        products: [],
+        totalCount: 0,
+        from: 0,
+        to: 0,
+        currentPage: 1,
+        totalPages: 0
     });
   }
-  const keywords = q.replace(/ /g, ' | ');
 
   const limit = 3;
   const page = parseInt(req.query.page) || 1;
   const offset = (page - 1) * limit;
-  const list = await productModel.searchPageByKeywords(keywords, limit, offset);
+  
+  // Pass keywords directly without modification
+  // plainto_tsquery will handle tokenization automatically
+  const keywords = q.trim();
+  
+  // Search in both product name and category
+  const list = await productModel.searchPageByKeywords(keywords, limit, offset, userId, logic);
   const products = prepareProductList(list);
-  const total = await productModel.countByKeywords(keywords); 
+  const total = await productModel.countByKeywords(keywords, logic);
   const totalCount = total.count;
+  
   const nPages = Math.ceil(totalCount / limit);
   let from = (page - 1) * limit + 1;
   let to = page * limit;
   if (to > totalCount) to = totalCount;
   if (totalCount === 0) { from = 0; to = 0; }
+  
   res.render('vwProduct/list', { 
     products: products,
     totalCount,
@@ -101,6 +118,7 @@ router.get('/search', async (req, res) => {
     currentPage: page,
     totalPages: nPages,
     q: q,
+    logic: logic,
   });
 });
 
