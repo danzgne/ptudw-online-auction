@@ -4,6 +4,10 @@ export function getAllSettings() {
     return db('system_settings').select('*');
 }
 
+export function getSettings() {
+    return db('system_settings').first();
+}
+
 export function getSetting(key) {
     return db('system_settings')
         .where({ key })

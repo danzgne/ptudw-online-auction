@@ -64,7 +64,7 @@ router.post('/add', async function (req, res) {
         closed_at: null,
         allow_unrated_bidder: product.allow_new_bidders === '1' ? true : false
     }
-    console.log('productData:', productData);
+    // console.log('productData:', productData);
     const returnedID = await productModel.addProduct(productData);
 
     const dirPath = path.join('public', 'images', 'products').replace(/\\/g, "/");
@@ -98,7 +98,7 @@ router.post('/add', async function (req, res) {
 router.get('/detail/:id', async (req, res) => {
     const id = req.params.id;
     const product = await productModel.findByProductIdForAdmin(id);
-    console.log(product);
+    // console.log(product);
     const success_message = req.session.success_message;
     const error_message = req.session.error_message;
     delete req.session.success_message;
@@ -109,9 +109,9 @@ router.get('/detail/:id', async (req, res) => {
 router.get('/edit/:id', async (req, res) => {
     const id = req.params.id;
     const product = await productModel.findByProductIdForAdmin(id);
-    console.log(product)
+    // console.log(product)
     const sellers = await userModel.findUsersByRole('seller');
-    console.log(product);
+    // console.log(product);
     res.render('vwAdmin/product/edit', { product, sellers } );
 });
 

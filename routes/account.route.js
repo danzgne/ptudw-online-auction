@@ -5,6 +5,7 @@ import * as userModel from '../models/user.model.js';
 import * as upgradeRequestModel from '../models/upgradeRequest.model.js';
 import * as watchlistModel from '../models/watchlist.model.js';
 import * as reviewModel from '../models/review.model.js';
+import * as autoBiddingModel from '../models/autoBidding.model.js';
 import { isAuthenticated } from '../middlewares/auth.mdw.js';
 import { sendMail } from '../utils/mailer.js';
 
@@ -555,6 +556,28 @@ router.get('/watchlist', isAuthenticated ,async (req, res) => {
     to,
     currentPage: page,
     totalPages: nPages,
+  });
+});
+
+// Bidding Products - Sản phẩm đang tham gia đấu giá
+router.get('/bidding', isAuthenticated, async (req, res) => {
+  const currentUserId = req.session.authUser.id;
+  const biddingProducts = await autoBiddingModel.getBiddingProductsByBidderId(currentUserId);
+  
+  res.render('vwAccount/bidding-products', {
+    activeSection: 'bidding',
+    products: biddingProducts
+  });
+});
+
+// Won Auctions - Sản phẩm đã thắng (pending, sold, cancelled)
+router.get('/auctions', isAuthenticated, async (req, res) => {
+  const currentUserId = req.session.authUser.id;
+  const wonAuctions = await autoBiddingModel.getWonAuctionsByBidderId(currentUserId);
+  
+  res.render('vwAccount/won-auctions', {
+    activeSection: 'auctions',
+    products: wonAuctions
   });
 });
 

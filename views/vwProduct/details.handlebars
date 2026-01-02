@@ -517,7 +517,34 @@
           {{/if}}
         </div>
         <h1 class="display-5 fw-bold gradient-text mb-3" style="text-shadow: 0 4px 20px rgba(114, 174, 200, 0.3);">
-          {{product.name}}</h1>
+          {{product.name}}
+        </h1>
+        
+        {{!-- Product Status Badge --}}
+        {{#if productStatus}}
+          {{#if (eq productStatus "ACTIVE")}}
+            <span class="badge bg-success mb-3" style="font-size: 0.9rem; padding: 0.5rem 1rem;">
+              <i class="bi bi-circle-fill" style="font-size: 0.6rem;"></i> Active Auction
+            </span>
+          {{else if (eq productStatus "PENDING")}}
+            <span class="badge bg-warning text-dark mb-3" style="font-size: 0.9rem; padding: 0.5rem 1rem;">
+              <i class="bi bi-clock-fill"></i> Pending Payment
+            </span>
+          {{else if (eq productStatus "SOLD")}}
+            <span class="badge bg-primary mb-3" style="font-size: 0.9rem; padding: 0.5rem 1rem;">
+              <i class="bi bi-check-circle-fill"></i> Sold
+            </span>
+          {{else if (eq productStatus "EXPIRED")}}
+            <span class="badge bg-secondary mb-3" style="font-size: 0.9rem; padding: 0.5rem 1rem;">
+              <i class="bi bi-x-circle-fill"></i> Expired - No Bidders
+            </span>
+          {{else if (eq productStatus "CANCELLED")}}
+            <span class="badge bg-danger mb-3" style="font-size: 0.9rem; padding: 0.5rem 1rem;">
+              <i class="bi bi-ban-fill"></i> Cancelled
+            </span>
+          {{/if}}
+        {{/if}}
+        
         <div class="d-flex align-items-center gap-3 flex-wrap">
           <div class="d-flex align-items-center">
             <span class="text-warning">
@@ -623,44 +650,74 @@
       <div class="action-buttons mb-4">
         <div class="d-grid gap-2 d-md-flex">
 
-          {{!-- Nút Place Bid (Giữ nguyên) --}}
-          <button class="btn btn-lg flex-fill fw-bold btn-place-bid">
-            <i class="bi bi-hammer"></i> Place Bid
-          </button>
-          {{#if isAuthenticated}}
-          {{#if product.is_favorite}}
-          <form action="/products/watchlist?_method=DELETE" method="POST" class="flex-fill">
-            <input type="hidden" name="productId" value="{{product.id}}">
-            <button type="submit" class="btn btn-lg w-100 fw-bold btn-watch text-danger" title="Remove from Watchlist">
-              <i class="bi bi-heart-fill"></i> Watching
-            </button>
-          </form>
-
-          {{else}}
-          {{!-- TRƯỜNG HỢP 2: CHƯA THÍCH -> Form POST --}}
-          <form action="/products/watchlist" method="POST" class="flex-fill">
-            <input type="hidden" name="productId" value="{{product.id}}">
-            <button type="submit" class="btn btn-lg w-100 fw-bold btn-watch" title="Add to Watchlist">
-              <i class="bi bi-heart"></i> Watch
-            </button>
-          </form>
-          {{/if}}
-
-          {{else}}
-          {{!--
-          TRƯỜNG HỢP 3: CHƯA ĐĂNG NHẬP
-          Giữ nguyên giao diện nút nhưng chuyển thành thẻ <a> để dẫn tới trang signin
-            --}}
-            <a href="/account/signin?retUrl=/products/detail/{{product.id}}"
-              class="btn btn-lg flex-fill fw-bold btn-watch d-flex align-items-center justify-content-center text-decoration-none">
-              <i class="bi bi-heart me-2"></i> Watch
-            </a>
+          {{!-- PENDING: Show Payment Button for Highest Bidder --}}
+          {{#if (eq productStatus "PENDING")}}
+            {{#if isAuthenticated}}
+              {{#if (eq authUser.id product.highest_bidder_id)}}
+                <a href="/account/my-products" class="btn btn-lg flex-fill fw-bold btn-success">
+                  <i class="bi bi-credit-card"></i> Proceed to Payment
+                </a>
+              {{else}}
+                <button class="btn btn-lg flex-fill fw-bold" disabled>
+                  <i class="bi bi-lock-fill"></i> Auction Ended - Pending Payment
+                </button>
+              {{/if}}
             {{/if}}
+          
+          {{!-- SOLD/EXPIRED/CANCELLED: Disable All Actions --}}
+          {{else if (or (eq productStatus "SOLD") (eq productStatus "EXPIRED") (eq productStatus "CANCELLED"))}}
+            <button class="btn btn-lg flex-fill fw-bold" disabled>
+              {{#if (eq productStatus "SOLD")}}
+                <i class="bi bi-check-circle-fill"></i> Product Sold
+              {{else if (eq productStatus "EXPIRED")}}
+                <i class="bi bi-x-circle-fill"></i> Auction Expired
+              {{else}}
+                <i class="bi bi-ban-fill"></i> Auction Cancelled
+              {{/if}}
+            </button>
+          
+          {{!-- ACTIVE: Normal Bidding --}}
+          {{else}}
+            {{!-- Nút Place Bid (Giữ nguyên) --}}
+            <button class="btn btn-lg flex-fill fw-bold btn-place-bid">
+              <i class="bi bi-hammer"></i> Place Bid
+            </button>
+            {{#if isAuthenticated}}
+            {{#if product.is_favorite}}
+            <form action="/products/watchlist?_method=DELETE" method="POST" class="flex-fill">
+              <input type="hidden" name="productId" value="{{product.id}}">
+              <button type="submit" class="btn btn-lg w-100 fw-bold btn-watch text-danger" title="Remove from Watchlist">
+                <i class="bi bi-heart-fill"></i> Watching
+              </button>
+            </form>
+
+            {{else}}
+            {{!-- TRƯỜNG HỢP 2: CHƯA THÍCH -> Form POST --}}
+            <form action="/products/watchlist" method="POST" class="flex-fill">
+              <input type="hidden" name="productId" value="{{product.id}}">
+              <button type="submit" class="btn btn-lg w-100 fw-bold btn-watch" title="Add to Watchlist">
+                <i class="bi bi-heart"></i> Watch
+              </button>
+            </form>
+            {{/if}}
+
+            {{else}}
+            {{!--
+            TRƯỜNG HỢP 3: CHƯA ĐĂNG NHẬP
+            Giữ nguyên giao diện nút nhưng chuyển thành thẻ <a> để dẫn tới trang signin
+              --}}
+              <a href="/account/signin?retUrl=/products/detail/{{product.id}}"
+                class="btn btn-lg flex-fill fw-bold btn-watch d-flex align-items-center justify-content-center text-decoration-none">
+                <i class="bi bi-heart me-2"></i> Watch
+              </a>
+              {{/if}}
+          {{/if}}
 
         </div>
       </div>
 
-      {{#if product.buy_now_price}}
+      {{!-- Buy Now Button - Only for ACTIVE --}}
+      {{#if (and product.buy_now_price (eq productStatus "ACTIVE"))}}
       <div class="d-grid mb-4">
         <button class="btn btn-lg fw-bold btn-buy-now">
           <i class="bi bi-check-circle"></i> Buy Now
@@ -787,7 +844,8 @@
 
         {{#if isAuthenticated}}
         {{#if (ne authUser.id product.seller_id)}}
-        <!-- Comment Form -->
+        <!-- Comment Form - Only for ACTIVE products -->
+        {{#if (eq productStatus "ACTIVE")}}
         <div class="comment-form mb-4">
           <form action="/products/comment" method="POST">
             <input type="hidden" name="productId" value="{{product.id}}">
@@ -803,13 +861,21 @@
           </form>
         </div>
         <hr class="my-4">
+        {{else}}
+        <div class="alert alert-secondary mb-4">
+          <i class="bi bi-lock-fill me-2"></i>
+          Comments are disabled for this auction.
+        </div>
+        {{/if}}
         {{/if}}
         {{else}}
+        {{#if (eq productStatus "ACTIVE")}}
         <div class="alert alert-info">
           <i class="bi bi-info-circle me-2"></i>
           <a href="/account/signin?retUrl=/products/detail?id={{product.id}}" class="alert-link">Signin</a> to ask
           questions about this product
         </div>
+        {{/if}}
         {{/if}}
 
         <!-- Comments List -->

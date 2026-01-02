@@ -110,6 +110,9 @@ export function searchPageByKeywords(keywords, limit, offset, userId, logic = 'o
       this.on('products.id', '=', 'watchlists.product_id')
         .andOnVal('watchlists.user_id', '=', userId || -1);
     })
+    // Chỉ hiển thị sản phẩm ACTIVE
+    .where('products.end_at', '>', new Date())
+    .whereNull('products.closed_at')
     .where((builder) => {
       if (logic === 'and') {
         // AND logic: all keywords must match
@@ -161,6 +164,9 @@ export function countByKeywords(keywords, logic = 'or') {
   
   return db('products')
     .leftJoin('categories', 'products.category_id', 'categories.id')
+    // Chỉ đếm sản phẩm ACTIVE
+    .where('products.end_at', '>', new Date())
+    .whereNull('products.closed_at')
     .where((builder) => {
       if (logic === 'and') {
         // AND logic: all keywords must match
@@ -201,6 +207,9 @@ export function findByCategoryId(categoryId, limit, offset, sort, currentUserId)
     // --------------------------
 
     .where('products.category_id', categoryId)
+    // Chỉ hiển thị sản phẩm ACTIVE (chưa kết thúc, chưa đóng)
+    .where('products.end_at', '>', new Date())
+    .whereNull('products.closed_at')
     .select(
       'products.*',
       
@@ -263,6 +272,9 @@ export function findByCategoryIds(categoryIds, limit, offset, sort, currentUserI
         .andOnVal('watchlists.user_id', '=', currentUserId || -1);
     })
     .whereIn('products.category_id', categoryIds)
+    // Chỉ hiển thị sản phẩm ACTIVE
+    .where('products.end_at', '>', new Date())
+    .whereNull('products.closed_at')
     .select(
       'products.*',
       db.raw(`
@@ -503,6 +515,7 @@ export function countActiveProductsBySellerId(sellerId) {
   return db('products')
     .where('seller_id', sellerId)
     .where('end_at', '>', new Date())
+    .whereNull('closed_at')
     .count('id as count')
     .first();
 }
@@ -519,7 +532,10 @@ export function countSoldProductsBySellerId(sellerId) {
 export function countPendingProductsBySellerId(sellerId) {
   return db('products')
     .where('seller_id', sellerId)
-    .where('end_at', '<=', new Date())
+    .where(function() {
+      this.where('end_at', '<=', new Date())
+        .orWhereNotNull('closed_at');
+    })
     .whereNotNull('highest_bidder_id')
     .whereNull('is_sold')
     .count('id as count')
@@ -547,10 +563,13 @@ export async function getSellerStats(sellerId) {
     countSoldProductsBySellerId(sellerId),
     countPendingProductsBySellerId(sellerId),
     countExpiredProductsBySellerId(sellerId),
-    // Pending Revenue: Sản phẩm hết hạn, có người thắng nhưng chưa thanh toán
+    // Pending Revenue: Sản phẩm hết hạn hoặc closed, có người thắng nhưng chưa thanh toán
     db('products')
       .where('seller_id', sellerId)
-      .where('end_at', '<=', new Date())
+      .where(function() {
+        this.where('end_at', '<=', new Date())
+          .orWhereNotNull('closed_at');
+      })
       .whereNotNull('highest_bidder_id')
       .whereNull('is_sold')
       .sum('current_price as revenue')
@@ -594,10 +613,10 @@ export function findAllProductsBySellerId(sellerId) {
       db.raw(`
         CASE
           WHEN is_sold IS TRUE THEN 'Sold'
-          WHEN end_at > NOW() THEN 'Active'
-          WHEN end_at <= NOW() AND highest_bidder_id IS NOT NULL AND is_sold IS NULL THEN 'Pending'
-          When end_at <= NOW() AND highest_bidder_id IS NULL THEN 'No Bidders'
           WHEN is_sold IS FALSE THEN 'Cancelled'
+          WHEN (end_at <= NOW() OR closed_at IS NOT NULL) AND highest_bidder_id IS NOT NULL AND is_sold IS NULL THEN 'Pending'
+          WHEN end_at <= NOW() AND highest_bidder_id IS NULL THEN 'No Bidders'
+          WHEN end_at > NOW() AND closed_at IS NULL THEN 'Active'
         END AS status
       `)
     );
@@ -608,6 +627,7 @@ export function findActiveProductsBySellerId(sellerId) {
     .leftJoin('categories', 'products.category_id', 'categories.id')
     .where('seller_id', sellerId)
     .where('end_at', '>', new Date())
+    .whereNull('closed_at')
     .select(
       'products.*', 'categories.name as category_name', 
       db.raw(`
@@ -625,7 +645,10 @@ export function findPendingProductsBySellerId(sellerId) {
     .leftJoin('categories', 'products.category_id', 'categories.id')
     .leftJoin('users', 'products.highest_bidder_id', 'users.id')
     .where('seller_id', sellerId)
-    .where('end_at', '<=', new Date())
+    .where(function() {
+      this.where('end_at', '<=', new Date())
+        .orWhereNotNull('closed_at');
+    })
     .whereNotNull('highest_bidder_id')
     .whereNull('is_sold')
     .select(
@@ -716,7 +739,10 @@ export async function getSoldProductsStats(sellerId) {
 export async function getPendingProductsStats(sellerId) {
   const result = await db('products')
     .where('seller_id', sellerId)
-    .where('end_at', '<=', new Date())
+    .where(function() {
+      this.where('end_at', '<=', new Date())
+        .orWhereNotNull('closed_at');
+    })
     .whereNotNull('highest_bidder_id')
     .whereNull('is_sold')
     .select(

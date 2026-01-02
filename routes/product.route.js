@@ -7,6 +7,8 @@ import * as biddingHistoryModel from '../models/biddingHistory.model.js';
 import * as productCommentModel from '../models/productComment.model.js';
 import * as categoryModel from '../models/category.model.js';
 import * as productDescUpdateModel from '../models/productDescriptionUpdate.model.js';
+import * as autoBiddingModel from '../models/autoBidding.model.js';
+import * as systemSettingModel from '../models/systemSetting.model.js';
 import { isAuthenticated } from '../middlewares/auth.mdw.js';
 import { sendMail } from '../utils/mailer.js';
 import db from '../utils/db.js';
@@ -58,7 +60,7 @@ router.get('/category', async (req, res) => {
   let to = page * limit;
   if (to > totalCount) to = totalCount;
   if (totalCount === 0) { from = 0; to = 0; }
-  console.log(`Total pages: ${nPages}`);
+  // console.log(`Total pages: ${nPages}`);
   res.render('vwProduct/list', { 
     products: products,
     totalCount,
@@ -133,6 +135,38 @@ router.get('/detail', async (req, res) => {
     return res.status(404).render('404', { message: 'Product not found' });
   }
 
+  // Determine product status
+  const now = new Date();
+  const endDate = new Date(product.end_at);
+  let productStatus = 'ACTIVE';
+  
+  if (product.is_sold === true) {
+    productStatus = 'SOLD';
+  } else if (product.is_sold === false) {
+    productStatus = 'CANCELLED';
+  } else if ((endDate <= now || product.closed_at) && product.highest_bidder_id) {
+    productStatus = 'PENDING';
+  } else if (endDate <= now && !product.highest_bidder_id) {
+    productStatus = 'EXPIRED';
+  } else if (endDate > now && !product.closed_at) {
+    productStatus = 'ACTIVE';
+  }
+
+  // Authorization check: Non-ACTIVE products can only be viewed by seller or highest bidder
+  if (productStatus !== 'ACTIVE') {
+    if (!userId) {
+      // User not logged in, cannot view non-active products
+      return res.status(403).render('403', { message: 'You do not have permission to view this product' });
+    }
+    
+    const isSeller = product.seller_id === userId;
+    const isHighestBidder = product.highest_bidder_id === userId;
+    
+    if (!isSeller && !isHighestBidder) {
+      return res.status(403).render('403', { message: 'You do not have permission to view this product' });
+    }
+  }
+
   // Load description updates
   const descriptionUpdates = await productDescUpdateModel.findByProductId(productId);
 
@@ -161,9 +195,11 @@ router.get('/detail', async (req, res) => {
 
   const ratingObject = await reviewModel.calculateRatingPoint(product.seller_id);
   
-  console.log(product);
+  // console.log(product);
   res.render('vwProduct/details', { 
     product,
+    productStatus, // Pass status to view
+    authUser: req.session.authUser, // Pass authUser for checking highest_bidder_id
     descriptionUpdates,
     comments,
     success_message,
@@ -233,98 +269,218 @@ router.delete('/watchlist', isAuthenticated, async (req, res) => {
   res.redirect(retUrl);
 });
 
-// ROUTE 3: ĐẶT GIÁ (POST) - Server-side rendering
+// ROUTE 3: ĐẶT GIÁ (POST) - Server-side rendering with automatic bidding
 router.post('/bid', isAuthenticated, async (req, res) => {
   const userId = req.session.authUser.id;
   const productId = parseInt(req.body.productId);
   const bidAmount = parseFloat(req.body.bidAmount.replace(/,/g, '')); // Remove commas from input
 
   try {
-    // Get current product information
-    const product = await productModel.findByProductId2(productId, null);
-    
-    if (!product) {
-      req.session.error_message = 'Product not found';
-      return res.redirect(`/products/detail?id=${productId}`);
-    }
-
-    // Check if seller cannot bid on their own product
-    if (product.seller_id === userId) {
-      req.session.error_message = 'You cannot bid on your own product';
-      return res.redirect(`/products/detail?id=${productId}`);
-    }
-
-    // Check rating point
-    const ratingPoint = await userModel.calculateRatingPoint(userId);
-    
-    // Kiểm tra rating point và quyền bid
-    if (ratingPoint.rating_point === 0) {
-      // Bidder chưa có rating, kiểm tra cột allow_unrated_bidder của sản phẩm
-      if (!product.allow_unrated_bidder) {
-        req.session.error_message = 'This seller does not allow bidders without rating to bid on this product.';
-        return res.redirect(`/products/detail?id=${productId}`);
+    // Use transaction with row-level locking to prevent race conditions
+    const result = await db.transaction(async (trx) => {
+      // 1. Lock the product row for update to prevent concurrent modifications
+      const product = await trx('products')
+        .where('id', productId)
+        .forUpdate() // This creates a row-level lock
+        .first();
+      
+      if (!product) {
+        throw new Error('Product not found');
       }
-      // Nếu allow_unrated_bidder = true, tiếp tục logic bid bình thường
-    } else if (ratingPoint.rating_point < 0.8) {
-      // Rating dưới 80%, không được phép bid
-      req.session.error_message = 'Your rating point is below 80%. You cannot place bids.';
-      return res.redirect(`/products/detail?id=${productId}`);
-    }
 
-    // Check if auction has ended
-    const now = new Date();
-    const endDate = new Date(product.end_at);
-    if (now > endDate) {
-      req.session.error_message = 'Auction has ended';
-      return res.redirect(`/products/detail?id=${productId}`);
-    }
+      // 2. Check if product is already sold
+      if (product.is_sold === true) {
+        throw new Error('This product has already been sold');
+      }
 
-    // Check if seller cannot bid on their own product
-    if (product.seller_id === userId) {
-      req.session.error_message = 'You cannot bid on your own product';
-      return res.redirect(`/products/detail?id=${productId}`);
-    }
+      // 3. Check if seller cannot bid on their own product
+      if (product.seller_id === userId) {
+        throw new Error('You cannot bid on your own product');
+      }
 
-    // Check if bid is higher than current price
-    const currentPrice = parseFloat(product.current_price || product.starting_price);
-    if (bidAmount <= currentPrice) {
-      req.session.error_message = `Bid must be higher than current price (${currentPrice.toLocaleString()} VND)`;
-      return res.redirect(`/products/detail?id=${productId}`);
-    }
+      // 4. Check rating point
+      const ratingPoint = await reviewModel.calculateRatingPoint(userId);
+      
+      if (ratingPoint.rating_point === 0) {
+        if (!product.allow_unrated_bidder) {
+          throw new Error('This seller does not allow bidders without rating to bid on this product.');
+        }
+      } else if (ratingPoint.rating_point < 0.8) {
+        throw new Error('Your rating point is below 80%. You cannot place bids.');
+      }
 
-    // Check minimum bid increment
-    const minIncrement = parseFloat(product.step_price);
-    if (bidAmount < currentPrice + minIncrement) {
-      req.session.error_message = `Bid must be at least ${minIncrement.toLocaleString()} VND higher than current price`;
-      return res.redirect(`/products/detail?id=${productId}`);
-    }
+      // 5. Check if auction has ended
+      const now = new Date();
+      const endDate = new Date(product.end_at);
+      if (now > endDate) {
+        throw new Error('Auction has ended');
+      }
 
-    // Use transaction to ensure data consistency
-    await db.transaction(async (trx) => {
-      // 1. Add bidding history
-      await trx('bidding_history').insert({
-        product_id: productId,
-        bidder_id: userId,
-        price: bidAmount,
-        current_price: currentPrice,
-        status: 1
-      });
+      // 6. Validate bid amount against current price
+      const currentPrice = parseFloat(product.current_price || product.starting_price);
+      
+      // bidAmount đã được validate ở frontend là phải > currentPrice
+      // Nhưng vẫn kiểm tra lại để đảm bảo
+      if (bidAmount <= currentPrice) {
+        throw new Error(`Bid must be higher than current price (${currentPrice.toLocaleString()} VND)`);
+      }
 
-      // 2. Update current price and highest bidder for product
+      // 7. Check minimum bid increment
+      const minIncrement = parseFloat(product.step_price);
+      if (bidAmount < currentPrice + minIncrement) {
+        throw new Error(`Bid must be at least ${minIncrement.toLocaleString()} VND higher than current price`);
+      }
+
+      // 8. Check and apply auto-extend if needed
+      let extendedEndTime = null;
+      if (product.auto_extend) {
+        // Get system settings for auto-extend configuration
+        const settings = await systemSettingModel.getSettings();
+        const triggerMinutes = settings?.auto_extend_trigger_minutes || 5;
+        const extendMinutes = settings?.auto_extend_duration_minutes || 10;
+        
+        // Calculate time remaining until auction ends
+        const endTime = new Date(product.end_at);
+        const minutesRemaining = (endTime - now) / (1000 * 60);
+        
+        // If within trigger window, extend the auction
+        if (minutesRemaining <= triggerMinutes) {
+          extendedEndTime = new Date(endTime.getTime() + extendMinutes * 60 * 1000);
+          
+          // Update end_at in the product object for subsequent checks
+          product.end_at = extendedEndTime;
+        }
+      }
+
+      // ========== AUTOMATIC BIDDING LOGIC ==========
+      
+      let newCurrentPrice;
+      let newHighestBidderId;
+      let newHighestMaxPrice;
+
+      // Case 1: Chưa có người đấu giá nào (first bid)
+      if (!product.highest_bidder_id || !product.highest_max_price) {
+        newCurrentPrice = currentPrice + minIncrement; // Set to minimum increment above starting price
+        newHighestBidderId = userId;
+        newHighestMaxPrice = bidAmount;
+      } 
+      // Case 2: Đã có người đấu giá trước đó
+      else {
+        const currentHighestMaxPrice = parseFloat(product.highest_max_price);
+        const currentHighestBidderId = product.highest_bidder_id;
+
+        // Case 2a: bidAmount < giá tối đa của người cũ
+        if (bidAmount < currentHighestMaxPrice) {
+          // Người cũ thắng, giá hiện tại = bidAmount của người mới
+          newCurrentPrice = bidAmount;
+          newHighestBidderId = currentHighestBidderId;
+          newHighestMaxPrice = currentHighestMaxPrice; // Giữ nguyên max price của người cũ
+        }
+        // Case 2b: bidAmount == giá tối đa của người cũ
+        else if (bidAmount === currentHighestMaxPrice) {
+          // Người cũ thắng theo nguyên tắc first-come-first-served
+          newCurrentPrice = bidAmount;
+          newHighestBidderId = currentHighestBidderId;
+          newHighestMaxPrice = currentHighestMaxPrice;
+        }
+        // Case 2c: bidAmount > giá tối đa của người cũ
+        else {
+          // Người mới thắng, giá hiện tại = giá max của người cũ + step_price
+          newCurrentPrice = currentHighestMaxPrice + minIncrement;
+          newHighestBidderId = userId;
+          newHighestMaxPrice = bidAmount;
+        }
+      }
+
+      // 7. Check if buy now price is reached
+      let productSold = false;
+      if (product.buy_now_price && newCurrentPrice >= parseFloat(product.buy_now_price)) {
+        // Nếu đạt giá mua ngay, set giá = buy_now_price và chuyển sang trạng thái PENDING
+        newCurrentPrice = parseFloat(product.buy_now_price);
+        productSold = true;
+      }
+
+      // 8. Update product with new price, highest bidder, and highest max price
+      const updateData = {
+        current_price: newCurrentPrice,
+        highest_bidder_id: newHighestBidderId,
+        highest_max_price: newHighestMaxPrice
+      };
+
+      // If buy now price is reached, close auction immediately - takes priority over auto-extend
+      if (productSold) {
+        updateData.end_at = new Date(); // Kết thúc auction ngay lập tức
+        updateData.closed_at = new Date();
+        // is_sold remains NULL → Product goes to PENDING status (waiting for payment)
+      }
+      // If auto-extend was triggered and product NOT sold, update end_at
+      else if (extendedEndTime) {
+        updateData.end_at = extendedEndTime;
+      }
+
       await trx('products')
         .where('id', productId)
-        .update({
-          current_price: bidAmount,
-          highest_bidder_id: userId
-        });
+        .update(updateData);
+
+      // 9. Add bidding history record
+      // Record ghi lại người đang nắm giá sau khi tính toán automatic bidding
+      await trx('bidding_history').insert({
+        product_id: productId,
+        bidder_id: newHighestBidderId,
+        current_price: newCurrentPrice
+      });
+
+      // 10. Update auto_bidding table for the new bidder
+      // Sử dụng raw query để upsert (insert or update)
+      await trx.raw(`
+        INSERT INTO auto_bidding (product_id, bidder_id, max_price)
+        VALUES (?, ?, ?)
+        ON CONFLICT (product_id, bidder_id)
+        DO UPDATE SET 
+          max_price = EXCLUDED.max_price,
+          created_at = NOW()
+      `, [productId, userId, bidAmount]);
+
+      return { 
+        newCurrentPrice, 
+        newHighestBidderId, 
+        userId, 
+        bidAmount,
+        productSold,
+        autoExtended: !!extendedEndTime,
+        newEndTime: extendedEndTime
+      };
     });
 
-    req.session.success_message = `Bid placed successfully! Your bid: ${bidAmount.toLocaleString()} VND`;
+    // Success message
+    let baseMessage = '';
+    if (result.productSold) {
+      // Sản phẩm đã đạt giá buy now và chuyển sang PENDING (chờ thanh toán)
+      if (result.newHighestBidderId === result.userId) {
+        // Người đặt giá này thắng và trigger buy now
+        baseMessage = `Congratulations! You won the product with Buy Now price: ${result.newCurrentPrice.toLocaleString()} VND. Please proceed to payment.`;
+      } else {
+        // Người đặt giá này KHÔNG thắng nhưng đã trigger buy now cho người khác
+        baseMessage = `Product has been sold to another bidder at Buy Now price: ${result.newCurrentPrice.toLocaleString()} VND. Your bid helped reach the Buy Now threshold.`;
+      }
+    } else if (result.newHighestBidderId === result.userId) {
+      baseMessage = `Bid placed successfully! Current price: ${result.newCurrentPrice.toLocaleString()} VND (Your max: ${result.bidAmount.toLocaleString()} VND)`;
+    } else {
+      baseMessage = `Bid placed! Another bidder is currently winning at ${result.newCurrentPrice.toLocaleString()} VND`;
+    }
+    
+    // Add auto-extend notification if applicable
+    if (result.autoExtended) {
+      const extendedTimeStr = new Date(result.newEndTime).toLocaleString('vi-VN');
+      baseMessage += ` | Auction extended to ${extendedTimeStr}`;
+    }
+    
+    req.session.success_message = baseMessage;
     res.redirect(`/products/detail?id=${productId}`);
 
   } catch (error) {
     console.error('Bid error:', error);
-    req.session.error_message = 'An error occurred while placing bid. Please try again.';
+    req.session.error_message = error.message || 'An error occurred while placing bid. Please try again.';
     res.redirect(`/products/detail?id=${productId}`);
   }
 });

@@ -4,17 +4,14 @@ import db from '../utils/db.js';
  * Thêm một lượt bid mới vào hệ thống
  * @param {number} productId - ID sản phẩm
  * @param {number} bidderId - ID người đặt giá
- * @param {number} bidPrice - Giá đặt
- * @param {number} currentPrice - Giá hiện tại của sản phẩm
+ * @param {number} currentPrice - Giá hiện tại của sản phẩm sau khi update
  * @returns {Promise} Kết quả insert
  */
-export async function createBid(productId, bidderId, bidPrice, currentPrice) {
+export async function createBid(productId, bidderId, currentPrice) {
   return db('bidding_history').insert({
     product_id: productId,
     bidder_id: bidderId,
-    price: bidPrice,
-    current_price: currentPrice,
-    status: 1
+    current_price: currentPrice
   }).returning('*');
 }
 
@@ -27,7 +24,6 @@ export async function getBiddingHistory(productId) {
   return db('bidding_history')
     .join('users', 'bidding_history.bidder_id', 'users.id')
     .where('bidding_history.product_id', productId)
-    .where('bidding_history.status', 1)
     .select(
       'bidding_history.*',
       db.raw(`
@@ -49,8 +45,7 @@ export async function getBiddingHistory(productId) {
 export async function getHighestBid(productId) {
   return db('bidding_history')
     .where('product_id', productId)
-    .where('status', 1)
-    .orderBy('price', 'desc')
+    .orderBy('current_price', 'desc')
     .first();
 }
 
@@ -64,7 +59,6 @@ export async function hasUserBidOnProduct(productId, bidderId) {
   const result = await db('bidding_history')
     .where('product_id', productId)
     .where('bidder_id', bidderId)
-    .where('status', 1)
     .first();
   return !!result;
 }
