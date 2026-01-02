@@ -165,10 +165,18 @@ router.get('/detail', async (req, res) => {
     if (!isSeller && !isHighestBidder) {
       return res.status(403).render('403', { message: 'You do not have permission to view this product' });
     }
+
+    // Redirect to complete-order page if PENDING and user is seller or highest bidder
+    if (productStatus === 'PENDING' && (isSeller || isHighestBidder)) {
+      return res.redirect(`/products/complete-order?id=${productId}`);
+    }
   }
 
   // Load description updates
   const descriptionUpdates = await productDescUpdateModel.findByProductId(productId);
+
+  // Load bidding history
+  const biddingHistory = await biddingHistoryModel.getBiddingHistory(productId);
 
   // Pagination cho comments
   const commentPage = parseInt(req.query.commentPage) || 1;
@@ -201,6 +209,7 @@ router.get('/detail', async (req, res) => {
     productStatus, // Pass status to view
     authUser: req.session.authUser, // Pass authUser for checking highest_bidder_id
     descriptionUpdates,
+    biddingHistory,
     comments,
     success_message,
     error_message,
@@ -357,9 +366,19 @@ router.post('/bid', isAuthenticated, async (req, res) => {
       let newCurrentPrice;
       let newHighestBidderId;
       let newHighestMaxPrice;
+      let shouldCreateHistory = true; // Flag to determine if we should create bidding history
 
+      // Case 0: Người đặt giá chính là người đang giữ giá cao nhất
+      if (product.highest_bidder_id === userId) {
+        // Chỉ update max_price trong auto_bidding, không thay đổi current_price
+        // Không tạo bidding_history mới vì giá không thay đổi
+        newCurrentPrice = parseFloat(product.current_price || product.starting_price);
+        newHighestBidderId = userId;
+        newHighestMaxPrice = bidAmount; // Update max price
+        shouldCreateHistory = false; // Không tạo history mới
+      }
       // Case 1: Chưa có người đấu giá nào (first bid)
-      if (!product.highest_bidder_id || !product.highest_max_price) {
+      else if (!product.highest_bidder_id || !product.highest_max_price) {
         newCurrentPrice = currentPrice + minIncrement; // Set to minimum increment above starting price
         newHighestBidderId = userId;
         newHighestMaxPrice = bidAmount;
@@ -422,15 +441,17 @@ router.post('/bid', isAuthenticated, async (req, res) => {
         .where('id', productId)
         .update(updateData);
 
-      // 9. Add bidding history record
+      // 9. Add bidding history record only if price changed
       // Record ghi lại người đang nắm giá sau khi tính toán automatic bidding
-      await trx('bidding_history').insert({
-        product_id: productId,
-        bidder_id: newHighestBidderId,
-        current_price: newCurrentPrice
-      });
+      if (shouldCreateHistory) {
+        await trx('bidding_history').insert({
+          product_id: productId,
+          bidder_id: newHighestBidderId,
+          current_price: newCurrentPrice
+        });
+      }
 
-      // 10. Update auto_bidding table for the new bidder
+      // 10. Update auto_bidding table for the bidder
       // Sử dụng raw query để upsert (insert or update)
       await trx.raw(`
         INSERT INTO auto_bidding (product_id, bidder_id, max_price)
@@ -609,6 +630,56 @@ router.get('/bid-history/:productId', async (req, res) => {
   }
   // console.log(product);
   res.render('vwProduct/details', { product });
+});
+
+// ROUTE: COMPLETE ORDER PAGE (For PENDING products)
+router.get('/complete-order', isAuthenticated, async (req, res) => {
+  const userId = req.session.authUser.id;
+  const productId = req.query.id;
+  
+  if (!productId) {
+    return res.redirect('/');
+  }
+  
+  const product = await productModel.findByProductId2(productId, userId);
+  
+  if (!product) {
+    return res.status(404).render('404', { message: 'Product not found' });
+  }
+  
+  // Determine product status
+  const now = new Date();
+  const endDate = new Date(product.end_at);
+  let productStatus = 'ACTIVE';
+  
+  if (product.is_sold === true) {
+    productStatus = 'SOLD';
+  } else if (product.is_sold === false) {
+    productStatus = 'CANCELLED';
+  } else if ((endDate <= now || product.closed_at) && product.highest_bidder_id) {
+    productStatus = 'PENDING';
+  } else if (endDate <= now && !product.highest_bidder_id) {
+    productStatus = 'EXPIRED';
+  }
+  
+  // Only PENDING products can access this page
+  if (productStatus !== 'PENDING') {
+    return res.redirect(`/products/detail?id=${productId}`);
+  }
+  
+  // Only seller or highest bidder can access
+  const isSeller = product.seller_id === userId;
+  const isHighestBidder = product.highest_bidder_id === userId;
+  
+  if (!isSeller && !isHighestBidder) {
+    return res.status(403).render('403', { message: 'You do not have permission to access this page' });
+  }
+  
+  res.render('vwProduct/complete-order', {
+    product,
+    isSeller,
+    isHighestBidder
+  });
 });
 
 export default router;

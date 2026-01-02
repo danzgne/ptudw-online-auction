@@ -170,8 +170,13 @@
                                 </div>
                             </td>
                             <td>
-                                <div class="small">{{format_only_date this.end_at}}</div>
-                                <div class="text-muted" style="font-size: 0.75rem;">{{format_only_time this.end_at}}</div>
+                                {{#if this.closed_at}}
+                                    <div class="small">{{format_only_date this.closed_at}}</div>
+                                    <div class="text-muted" style="font-size: 0.75rem;">{{format_only_time this.closed_at}}</div>
+                                {{else}}
+                                    <div class="small">{{format_only_date this.end_at}}</div>
+                                    <div class="text-muted" style="font-size: 0.75rem;">{{format_only_time this.end_at}}</div>
+                                {{/if}}
                             </td>
                             <td class="text-end pe-4">
                                 <a href="/products/detail/?id={{this.id}}" class="btn btn-sm btn-outline-info me-1" 

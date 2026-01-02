@@ -1,0 +1,145 @@
+{{#section "title"}}Complete Order{{/section}}
+
+<div class="container mt-5 mb-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      
+      {{!-- Header --}}
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-success text-white py-3">
+          <h4 class="mb-0">
+            <i class="bi bi-check-circle-fill"></i> Complete Order
+          </h4>
+        </div>
+        <div class="card-body p-4">
+          <div class="alert alert-success mb-0">
+            <i class="bi bi-trophy-fill"></i> 
+            <strong>Auction Ended!</strong> This product is ready for payment completion.
+          </div>
+        </div>
+      </div>
+
+      {{!-- Product Information --}}
+      <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-light py-3">
+          <h5 class="mb-0"><i class="bi bi-box-seam"></i> Product Information</h5>
+        </div>
+        <div class="card-body p-4">
+          <div class="row">
+            <div class="col-md-4">
+              <img src="/static/{{product.thumbnail}}" alt="{{product.name}}" 
+                   class="img-fluid rounded shadow-sm">
+            </div>
+            <div class="col-md-8">
+              <h3 class="mb-3">{{product.name}}</h3>
+              <div class="mb-2">
+                <span class="text-muted">Category:</span>
+                <span class="badge bg-secondary ms-2">{{product.category_name}}</span>
+              </div>
+              <div class="mb-2">
+                <span class="text-muted">Final Price:</span>
+                <h4 class="d-inline ms-2 text-success">{{format_number product.current_price}} VND</h4>
+              </div>
+              <div class="mb-2">
+                <span class="text-muted">Ended:</span>
+                <span class="ms-2">
+                  {{#if product.closed_at}}
+                    {{format_date product.closed_at}}
+                  {{else}}
+                    {{format_date product.end_at}}
+                  {{/if}}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {{!-- Parties Information --}}
+      <div class="row mb-4">
+        {{!-- Seller Info --}}
+        <div class="col-md-6">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-primary text-white py-3">
+              <h5 class="mb-0"><i class="bi bi-shop"></i> Seller</h5>
+            </div>
+            <div class="card-body p-4">
+              <div class="mb-2">
+                <strong>Name:</strong> {{product.seller_name}}
+              </div>
+              <div class="mb-2">
+                <strong>Email:</strong> {{product.seller_email}}
+              </div>
+              {{#if isSeller}}
+                <div class="alert alert-info mt-3 mb-0">
+                  <i class="bi bi-info-circle-fill"></i> You are the seller
+                </div>
+              {{/if}}
+            </div>
+          </div>
+        </div>
+
+        {{!-- Buyer Info --}}
+        <div class="col-md-6">
+          <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-success text-white py-3">
+              <h5 class="mb-0"><i class="bi bi-person-fill"></i> Buyer (Winner)</h5>
+            </div>
+            <div class="card-body p-4">
+              <div class="mb-2">
+                <strong>Name:</strong> {{product.highest_bidder_name}}
+              </div>
+              <div class="mb-2">
+                <strong>Email:</strong> {{product.highest_bidder_email}}
+              </div>
+              {{#if isHighestBidder}}
+                <div class="alert alert-success mt-3 mb-0">
+                  <i class="bi bi-trophy-fill"></i> You won this auction
+                </div>
+              {{/if}}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {{!-- Action Buttons --}}
+      <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+          <h5 class="mb-3"><i class="bi bi-gear-fill"></i> Actions</h5>
+          
+          {{#if isSeller}}
+            <div class="alert alert-primary">
+              <strong>As Seller:</strong> You can mark this order as completed once payment is received.
+            </div>
+            <div class="d-grid gap-2">
+              <button class="btn btn-lg btn-primary" disabled>
+                <i class="bi bi-check-circle"></i> Mark as Completed (Coming Soon)
+              </button>
+              <button class="btn btn-lg btn-danger" disabled>
+                <i class="bi bi-x-circle"></i> Cancel Order (Coming Soon)
+              </button>
+            </div>
+          {{/if}}
+
+          {{#if isHighestBidder}}
+            <div class="alert alert-success">
+              <strong>As Buyer:</strong> Please proceed with payment to complete this purchase.
+            </div>
+            <div class="d-grid gap-2">
+              <button class="btn btn-lg btn-success" disabled>
+                <i class="bi bi-credit-card"></i> Proceed to Payment (Coming Soon)
+              </button>
+            </div>
+          {{/if}}
+
+          <div class="d-grid gap-2 mt-3">
+            <a href="/products/detail?id={{product.id}}" class="btn btn-outline-secondary">
+              <i class="bi bi-arrow-left"></i> Back to Product Details
+            </a>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>

@@ -25,14 +25,12 @@ export async function getBiddingHistory(productId) {
     .join('users', 'bidding_history.bidder_id', 'users.id')
     .where('bidding_history.product_id', productId)
     .select(
-      'bidding_history.*',
-      db.raw(`
-        CASE 
-          WHEN users.fullname IS NOT NULL THEN 
-            OVERLAY(users.fullname PLACING '****' FROM 1 FOR (LENGTH(users.fullname)/2)::INTEGER)
-          ELSE NULL 
-        END AS bidder_name
-      `)
+      'bidding_history.id',
+      'bidding_history.product_id',
+      'bidding_history.bidder_id',
+      'bidding_history.current_price',
+      'bidding_history.created_at',
+      'users.fullname as bidder_name'
     )
     .orderBy('bidding_history.created_at', 'desc');
 }

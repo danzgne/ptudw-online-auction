@@ -128,12 +128,12 @@
                     <div class="rounded-circle bg-primary bg-opacity-10 p-2 me-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
                       <i class="bi bi-person-fill" style="color: #667eea; font-size: 1.2rem;"></i>
                     </div>
-                    <span class="fw-500">{{#if bidder_name}}{{bidder_name}}{{else}}Anonymous{{/if}}</span>
+                    <span class="fw-500">{{mask_name bidder_name}}</span>
                   </div>
                 </td>
                 <td>
                   <span class="fw-bold text-success" style="font-size: 1.1rem;">
-                    {{format_number price}} VND
+                    {{format_number current_price}} VND
                   </span>
                 </td>
               </tr>

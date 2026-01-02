@@ -60,6 +60,14 @@ app.engine('handlebars', engine({
     eq(a, b) { return a === b; },
     add(a, b) { return a + b; },
     format_number(price) { return new Intl.NumberFormat('en-US').format(price); },
+    mask_name(fullname) {
+      if (!fullname) return 'Anonymous';
+      const parts = fullname.trim().split(' ');
+      if (parts.length === 0) return 'Anonymous';
+      // Che phần họ và đệm bằng ****, chỉ hiển thị tên cuối
+      const lastName = parts[parts.length - 1];
+      return '**** ' + lastName;
+    },
     truncate(str, len) {
       if (!str) return '';
       if (str.length <= len) return str;
