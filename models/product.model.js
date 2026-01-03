@@ -205,6 +205,10 @@ export function findByCategoryId(categoryId, limit, offset, sort, currentUserId)
         // Nếu currentUserId là null/undefined (khách vãng lai), dùng -1 để không khớp với ai cả
     })
     // --------------------------
+    // đang active
+    // chọn buy now hoặc người đặt giá đặt giá cao hơn giá buy now -> closed_at bằng thời điểm buy, chuyển trạn thái sản phẩm qua pending
+    // pending tức là đang chờ thanh toán
+    // từ pending(is_sold = null) mà thanh toán thành công -> closed_at được cập nhật theo thời điểm thanh toán thành công, is_sold = true
 
     .where('products.category_id', categoryId)
     // Chỉ hiển thị sản phẩm ACTIVE (chưa kết thúc, chưa đóng)
@@ -317,6 +321,9 @@ export function findByCategoryIds(categoryIds, limit, offset, sort, currentUserI
 export function countByCategoryIds(categoryIds) {
   return db('products')
     .whereIn('category_id', categoryIds)
+    // Chỉ đếm sản phẩm ACTIVE
+    .where('end_at', '>', new Date())
+    .whereNull('closed_at')
     .count('id as count')
     .first();
 }

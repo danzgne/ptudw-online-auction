@@ -14,13 +14,15 @@ import { isAuthenticated } from '../middlewares/auth.mdw.js';
 import { sendMail } from '../utils/mailer.js';
 import db from '../utils/db.js';
 const router = express.Router();
-const N_MINUTES = 20
 
-const prepareProductList = (products) => {
+const prepareProductList = async (products) => {
   const now = new Date();
-  
   if (!products) return [];
-
+  
+  // Load settings from database every time to get latest value
+  const settings = await systemSettingModel.getSettings();
+  const N_MINUTES = settings.new_product_limit_minutes;
+  
   return products.map(product => {
     const created = new Date(product.created_at);
     const isNew = (now - created) < (N_MINUTES * 60 * 1000);
@@ -54,14 +56,13 @@ router.get('/category', async (req, res) => {
   
   const products = await productModel.findByCategoryIds(categoryIds, limit, offset, sort, userId);
   const total = await productModel.countByCategoryIds(categoryIds);
-  
+  console.log('Total products in category:', total.count);
   const totalCount = total.count;
   const nPages = Math.ceil(totalCount / limit);
   let from = (page - 1) * limit + 1;
   let to = page * limit;
   if (to > totalCount) to = totalCount;
   if (totalCount === 0) { from = 0; to = 0; }
-  // console.log(`Total pages: ${nPages}`);
   res.render('vwProduct/list', { 
     products: products,
     totalCount,
@@ -103,7 +104,7 @@ router.get('/search', async (req, res) => {
   
   // Search in both product name and category
   const list = await productModel.searchPageByKeywords(keywords, limit, offset, userId, logic);
-  const products = prepareProductList(list);
+  const products = await prepareProductList(list);
   const total = await productModel.countByKeywords(keywords, logic);
   const totalCount = total.count;
   
@@ -210,7 +211,6 @@ router.get('/detail', async (req, res) => {
 
   const ratingObject = await reviewModel.calculateRatingPoint(product.seller_id);
   
-  // console.log(product);
   res.render('vwProduct/details', { 
     product,
     productStatus, // Pass status to view
@@ -363,8 +363,8 @@ router.post('/bid', isAuthenticated, async (req, res) => {
       if (product.auto_extend) {
         // Get system settings for auto-extend configuration
         const settings = await systemSettingModel.getSettings();
-        const triggerMinutes = settings?.auto_extend_trigger_minutes || 5;
-        const extendMinutes = settings?.auto_extend_duration_minutes || 10;
+        const triggerMinutes = settings?.auto_extend_trigger_minutes;
+        const extendMinutes = settings?.auto_extend_duration_minutes;
         
         // Calculate time remaining until auction ends
         const endTime = new Date(product.end_at);
@@ -617,8 +617,6 @@ router.get('/bid-history/:productId', async (req, res) => {
   }
   const result = await productModel.findByProductId(productId);
   const relatedProducts = await productModel.findRelatedProducts(productId);
-  // console.log(relatedProducts);
-  // console.log(result);
   const product = {
     thumbnail: result[0].thumbnail,
     sub_images: result.reduce((acc, curr) => {
@@ -646,7 +644,6 @@ router.get('/bid-history/:productId', async (req, res) => {
     description: result[0].description,
     related_products: relatedProducts
   }
-  // console.log(product);
   res.render('vwProduct/details', { product });
 });
 
