@@ -379,8 +379,6 @@ export function findByProductId(productId) {
       'products.*',
       'product_images.img_link',
       'seller.fullname as seller_name',
-      'seller.rating_plus as seller_rating_plus',
-      'seller.rating_minus as seller_rating_minus',
       'seller.created_at as seller_created_at',
       'categories.name as category_name',
       db.raw(`

@@ -820,7 +820,8 @@ h3:hover::after {
 .description-section,
 .details-section,
 .comments-section,
-.bidding-history-section {
+.bidding-history-section,
+.rejected-bidders-section {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(248, 251, 253, 0.5) 100%);
   backdrop-filter: blur(20px);
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05), inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
@@ -833,6 +834,14 @@ h3:hover::after {
 html {
   scroll-behavior: smooth;
 }
+
+/* Sticky Sidebar for Bidding History */
+.sticky-sidebar {
+  position: sticky;
+  top: 20px;
+  align-self: flex-start;
+}
+
 .btn-watch-active {
     background-color: #ffe6e6 !important;
     color: #dc3545 !important;
