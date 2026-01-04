@@ -96,14 +96,14 @@ export function findPage(limit, offset) {
 }
 
 // 1. Hàm tìm kiếm phân trang (Simplified FTS - Search in product name and category)
-export function searchPageByKeywords(keywords, limit, offset, userId, logic = 'or') {
+export function searchPageByKeywords(keywords, limit, offset, userId, logic = 'or', sort = '') {
   // Remove accents from keywords for search
   const searchQuery = keywords.toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '') // Remove diacritics
     .replace(/đ/g, 'd').replace(/Đ/g, 'D'); // Vietnamese d
   
-  return db('products')
+  let query = db('products')
     .leftJoin('categories', 'products.category_id', 'categories.id')
     .leftJoin('users', 'products.highest_bidder_id', 'users.id')
     .leftJoin('watchlists', function() {
@@ -114,10 +114,10 @@ export function searchPageByKeywords(keywords, limit, offset, userId, logic = 'o
     .where('products.end_at', '>', new Date())
     .whereNull('products.closed_at')
     .where((builder) => {
+      const words = searchQuery.split(/\s+/).filter(w => w.length > 0);
       if (logic === 'and') {
         // AND logic: all keywords must match
         // Split words and each word must exist in product name OR category name
-        const words = searchQuery.split(/\s+/).filter(w => w.length > 0);
         words.forEach(word => {
           builder.where(function() {
             this.whereRaw(`LOWER(remove_accents(products.name)) LIKE ?`, [`%${word}%`])
@@ -125,10 +125,13 @@ export function searchPageByKeywords(keywords, limit, offset, userId, logic = 'o
           });
         });
       } else {
-        // OR logic: any keyword can match
-        builder
-          .whereRaw(`products.fts @@ plainto_tsquery('simple', ?)`, [searchQuery])
-          .orWhereRaw(`to_tsvector('simple', remove_accents(categories.name)) @@ plainto_tsquery('simple', ?)`, [searchQuery]);
+        // OR logic: any keyword can match in product name OR category name
+        words.forEach(word => {
+          builder.orWhere(function() {
+            this.whereRaw(`LOWER(remove_accents(products.name)) LIKE ?`, [`%${word}%`])
+              .orWhereRaw(`LOWER(remove_accents(categories.name)) LIKE ?`, [`%${word}%`]);
+          });
+        });
       }
     })
     .select(
@@ -149,9 +152,23 @@ export function searchPageByKeywords(keywords, limit, offset, userId, logic = 'o
         ) AS bid_count
       `),
       db.raw('watchlists.product_id IS NOT NULL AS is_favorite')
-    )
-    .limit(limit)
-    .offset(offset);
+    );
+
+  // Apply sorting
+  if (sort === 'price_asc') {
+    query = query.orderBy('products.current_price', 'asc');
+  } else if (sort === 'price_desc') {
+    query = query.orderBy('products.current_price', 'desc');
+  } else if (sort === 'newest') {
+    query = query.orderBy('products.created_at', 'desc');
+  } else if (sort === 'oldest') {
+    query = query.orderBy('products.created_at', 'asc');
+  } else {
+    // Default: sort by end_at ascending (ending soonest first)
+    query = query.orderBy('products.end_at', 'asc');
+  }
+
+  return query.limit(limit).offset(offset);
 }
 
 // 2. Hàm đếm tổng số lượng (Simplified)
@@ -168,9 +185,9 @@ export function countByKeywords(keywords, logic = 'or') {
     .where('products.end_at', '>', new Date())
     .whereNull('products.closed_at')
     .where((builder) => {
+      const words = searchQuery.split(/\s+/).filter(w => w.length > 0);
       if (logic === 'and') {
         // AND logic: all keywords must match
-        const words = searchQuery.split(/\s+/).filter(w => w.length > 0);
         words.forEach(word => {
           builder.where(function() {
             this.whereRaw(`LOWER(remove_accents(products.name)) LIKE ?`, [`%${word}%`])
@@ -178,10 +195,13 @@ export function countByKeywords(keywords, logic = 'or') {
           });
         });
       } else {
-        // OR logic: any keyword can match
-        builder
-          .whereRaw(`products.fts @@ plainto_tsquery('simple', ?)`, [searchQuery])
-          .orWhereRaw(`to_tsvector('simple', remove_accents(categories.name)) @@ plainto_tsquery('simple', ?)`, [searchQuery]);
+        // OR logic: any keyword can match in product name OR category name
+        words.forEach(word => {
+          builder.orWhere(function() {
+            this.whereRaw(`LOWER(remove_accents(products.name)) LIKE ?`, [`%${word}%`])
+              .orWhereRaw(`LOWER(remove_accents(categories.name)) LIKE ?`, [`%${word}%`]);
+          });
+        });
       }
     })
     .count('products.id as count')
@@ -347,12 +367,14 @@ const BASE_QUERY = db('products')
 
 export function findTopEnding() {
   // Sắp hết hạn: Sắp xếp thời gian kết thúc TĂNG DẦN (gần nhất lên đầu)
-  return BASE_QUERY.clone().orderBy('end_at', 'asc');
+  return BASE_QUERY.clone().where('products.end_at', '>', new Date())
+    .whereNull('products.closed_at').orderBy('end_at', 'asc');
 }
 
 export function findTopPrice() {
   // Giá cao nhất: Sắp xếp giá hiện tại GIẢM DẦN
-  return BASE_QUERY.clone().orderBy('current_price', 'desc');
+  return BASE_QUERY.clone().where('products.end_at', '>', new Date())
+    .whereNull('products.closed_at').orderBy('current_price', 'desc');
 }
 
 export function findTopBids() {
@@ -370,7 +392,8 @@ export function findTopBids() {
       `),
       db.raw(`(SELECT COUNT(*) FROM bidding_history WHERE product_id = products.id) AS bid_count`)
     )
-    .where('end_at', '>', new Date())
+    .where('products.end_at', '>', new Date())
+    .whereNull('products.closed_at')
     .orderBy('bid_count', 'desc') // Order by cột alias bid_count
     .limit(5);
 }

@@ -79,18 +79,20 @@ router.get('/search', async (req, res) => {
   const userId = req.session.authUser ? req.session.authUser.id : null;
   const q = req.query.q || '';
   const logic = req.query.logic || 'and'; // 'and' or 'or'
+  const sort = req.query.sort || '';
   
   // If keyword is empty, return empty results
   if (q.length === 0) {
     return res.render('vwProduct/list', {
         q: q,
         logic: logic,
+        sort: sort,
         products: [],
         totalCount: 0,
         from: 0,
         to: 0,
         currentPage: 1,
-        totalPages: 0
+        totalPages: 0,
     });
   }
 
@@ -103,7 +105,7 @@ router.get('/search', async (req, res) => {
   const keywords = q.trim();
   
   // Search in both product name and category
-  const list = await productModel.searchPageByKeywords(keywords, limit, offset, userId, logic);
+  const list = await productModel.searchPageByKeywords(keywords, limit, offset, userId, logic, sort);
   const products = await prepareProductList(list);
   const total = await productModel.countByKeywords(keywords, logic);
   const totalCount = total.count;
@@ -123,6 +125,7 @@ router.get('/search', async (req, res) => {
     totalPages: nPages,
     q: q,
     logic: logic,
+    sort: sort,
   });
 });
 
@@ -332,8 +335,8 @@ router.post('/bid', isAuthenticated, async (req, res) => {
         if (!product.allow_unrated_bidder) {
           throw new Error('This seller does not allow bidders without rating to bid on this product.');
         }
-      } else if (ratingPoint.rating_point < 0.8) {
-        throw new Error('Your rating point is below 80%. You cannot place bids.');
+      } else if (ratingPoint.rating_point <= 0.8) {
+        throw new Error('Your rating point is not greater than 80%. You cannot place bids.');
       }
 
       // 6. Check if auction has ended

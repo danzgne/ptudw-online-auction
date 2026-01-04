@@ -73,3 +73,46 @@ export function updateReview(reviewer_id, reviewee_id, product_id, updateData) {
         .where('product_id', product_id)
         .update(updateData);
 }
+
+/**
+ * Tìm review theo reviewer và product (không cần biết reviewee)
+ * @param {number} reviewer_id - ID người đánh giá
+ * @param {number} product_id - ID sản phẩm
+ * @returns {Promise<Object>} Review object hoặc null
+ */
+export function findByReviewerAndProduct(reviewer_id, product_id) {
+    return db('reviews')
+        .where('reviewer_id', reviewer_id)
+        .where('product_id', product_id)
+        .first();
+}
+
+/**
+ * Tạo review mới (cho bidder đánh giá seller)
+ * @param {Object} data - {reviewer_id, reviewed_user_id, product_id, rating, comment}
+ * @returns {Promise} Kết quả insert
+ */
+export function create(data) {
+    return db('reviews').insert({
+        reviewer_id: data.reviewer_id,
+        reviewee_id: data.reviewed_user_id,
+        product_id: data.product_id,
+        rating: data.rating,
+        comment: data.comment,
+        created_at: new Date()
+    });
+}
+
+/**
+ * Cập nhật review theo reviewer và product
+ * @param {number} reviewer_id - ID người đánh giá
+ * @param {number} product_id - ID sản phẩm
+ * @param {Object} updateData - Dữ liệu cần cập nhật {rating, comment}
+ * @returns {Promise} Kết quả update
+ */
+export function updateByReviewerAndProduct(reviewer_id, product_id, updateData) {
+    return db('reviews')
+        .where('reviewer_id', reviewer_id)
+        .where('product_id', product_id)
+        .update(updateData);
+}

@@ -119,12 +119,13 @@
             <label for="email" class="form-label text-uppercase small">Email</label>
             <input type="email" class="form-control {{#if errors.email}}is-invalid{{/if}}" 
                    id="email" name="email" placeholder="you@example.com" 
-                   value="{{old.email}}"> <!-- Giữ lại value -->
+                   value="{{old.email}}">
+            {{#if errors.email}}
+            <div class="invalid-feedback">{{errors.email}}</div>
+            {{else}}
             <div class="form-text">
               Email must be unique. We will send an OTP to verify your account.
             </div>
-            {{#if errors.email}}
-            <div class="invalid-feedback">{{errors.email}}</div>
             {{/if}}
           </div>
 
