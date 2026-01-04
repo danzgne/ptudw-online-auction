@@ -48,6 +48,58 @@
     </svg>
   </div>
 </section>
+
+<script>
+  // Real-time countdown timer for home page
+  function updateHomeCountdowns() {
+    const countdownElements = document.querySelectorAll('.home-countdown-timer');
+    
+    countdownElements.forEach(element => {
+      const endDate = new Date(element.getAttribute('data-end-date'));
+      const now = new Date();
+      const timeLeft = endDate - now;
+      
+      if (timeLeft <= 0) {
+        element.textContent = 'Ended';
+        element.classList.remove('text-danger');
+        element.classList.add('text-muted');
+        return;
+      }
+      
+      // Calculate time units
+      const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+      
+      // Format output - compact with colon notation
+      let timeString = '';
+      if (days > 0) {
+        timeString = `${days}d ${hours}h ${minutes}m`;
+      } else if (hours > 0) {
+        timeString = `${hours}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+      } else if (minutes > 0) {
+        timeString = `${minutes}:${String(seconds).padStart(2, '0')}`;
+      } else {
+        timeString = `${seconds}s`;
+      }
+      
+      element.textContent = timeString;
+      
+      // Change color based on urgency
+      if (days === 0 && hours < 1) {
+        element.classList.remove('text-danger');
+        element.classList.add('text-danger', 'fw-bold');
+      }
+    });
+  }
+  
+  // Update immediately and then every second
+  document.addEventListener('DOMContentLoaded', function() {
+    updateHomeCountdowns();
+    setInterval(updateHomeCountdowns, 1000);
+  });
+</script>
 <section id="mobile-products" class="product-store position-relative padding-large no-padding-top">
   <div class="container">
 
@@ -76,14 +128,16 @@
                     {{this.name}}
                   </h3>
                   
-                  <div class="d-flex justify-content-between align-items-center border-top pt-2 mt-auto">
-                    <span class="text-muted small text-uppercase">Ends in:</span>
-                    <div class="d-flex align-items-center text-danger">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-stopwatch me-1" viewBox="0 0 16 16">
-                        <path d="M8.5 5.6a.5.5 0 1 0-1 0v2.9h-3a.5.5 0 0 0 0 1H8a.5.5 0 0 0 .5-.5V5.6z"/>
-                        <path d="M6.5 1A.5.5 0 0 1 7 .5h2a.5.5 0 0 1 0 1v.57c1.36.196 2.594.78 3.584 1.64a.715.715 0 0 1 .012-.013l.354-.354-.354-.353a.5.5 0 0 1 .707-.708l1.414 1.415a.5.5 0 1 1-.707.707l-.353-.354-.354.354a.715.715 0 0 1-.012.012A6.973 6.973 0 0 1 11.379 3.56c.955.5 1.828 1.178 2.533 2.001.752.881 1.225 1.974 1.225 3.193 0 4.136-3.356 7.492-7.496 7.492-4.14 0-7.5-3.356-7.5-7.492 0-1.219.473-2.312 1.225-3.193.705-.823 1.578-1.501 2.533-2.002.12-.816.577-1.47 1.212-1.872V1.5a.5.5 0 0 1 .5-.5zM8 14A5.993 5.993 0 0 0 14 8c0-3.317-2.69-6-6.004-6C4.69 2 2 4.683 2 8c0 3.317 2.69 6 6 6z"/>
-                      </svg>
-                      <span class="fw-bold fs-6">{{time_remaining this.end_at}}</span>
+                  <div class="border-top pt-2 mt-auto">
+                    <div class="d-flex align-items-center gap-2 flex-nowrap">
+                      <span class="text-muted small text-uppercase" style="white-space: nowrap;">Ends in:</span>
+                      <div class="d-flex align-items-center text-danger">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-stopwatch me-1" viewBox="0 0 16 16">
+                          <path d="M8.5 5.6a.5.5 0 1 0-1 0v2.9h-3a.5.5 0 0 0 0 1H8a.5.5 0 0 0 .5-.5V5.6z"/>
+                          <path d="M6.5 1A.5.5 0 0 1 7 .5h2a.5.5 0 0 1 0 1v.57c1.36.196 2.594.78 3.584 1.64a.715.715 0 0 1 .012-.013l.354-.354-.354-.353a.5.5 0 0 1 .707-.708l1.414 1.415a.5.5 0 1 1-.707.707l-.353-.354-.354.354a.715.715 0 0 1-.012.012A6.973 6.973 0 0 1 11.379 3.56c.955.5 1.828 1.178 2.533 2.001.752.881 1.225 1.974 1.225 3.193 0 4.136-3.356 7.492-7.496 7.492-4.14 0-7.5-3.356-7.5-7.492 0-1.219.473-2.312 1.225-3.193.705-.823 1.578-1.501 2.533-2.002.12-.816.577-1.47 1.212-1.872V1.5a.5.5 0 0 1 .5-.5zM8 14A5.993 5.993 0 0 0 14 8c0-3.317-2.69-6-6.004-6C4.69 2 2 4.683 2 8c0 3.317 2.69 6 6 6z"/>
+                        </svg>
+                        <span class="fw-bold fs-6 home-countdown-timer" data-end-date="{{this.end_at}}"></span>
+                      </div>
                     </div>
                   </div>
                 </div>

@@ -320,9 +320,11 @@
 
 /* Countdown Timer */
 .countdown-timer {
-  font-size: 1.3rem;
-  font-family: 'Courier New', 'Monaco', monospace;
-  letter-spacing: 1px;
+  font-size: 1.2rem;
+  font-family: inherit;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0;
 }
 
 /* Section Headers */

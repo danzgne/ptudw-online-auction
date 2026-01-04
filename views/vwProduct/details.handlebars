@@ -564,6 +564,91 @@
     });
   });
 
+  // ==================== SMART COUNTDOWN FUNCTIONALITY ====================
+  function updateSmartCountdown() {
+    const countdownElement = document.querySelector('.countdown-timer');
+    if (!countdownElement) return;
+    
+    const endDate = new Date(countdownElement.getAttribute('data-end-date'));
+    const now = new Date();
+    const timeLeft = endDate - now;
+    
+    if (timeLeft <= 0) {
+      countdownElement.textContent = 'Auction Ended';
+      countdownElement.classList.remove('text-danger');
+      countdownElement.classList.add('text-muted');
+      return;
+    }
+    
+    const THREE_DAYS_IN_MS = 3 * 24 * 60 * 60 * 1000;
+    
+    // If more than 3 days, show end date/time only
+    if (timeLeft > THREE_DAYS_IN_MS) {
+      const dateOptions = { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric'
+      };
+      const timeOptions = {
+        hour: '2-digit', 
+        minute: '2-digit',
+        hour12: true
+      };
+      
+      const dateStr = endDate.toLocaleDateString('en-US', dateOptions);
+      const timeStr = endDate.toLocaleTimeString('en-US', timeOptions);
+      
+      // Display on two lines
+      countdownElement.innerHTML = `${dateStr}<br>${timeStr}`;
+      countdownElement.classList.remove('text-danger');
+      countdownElement.classList.add('text-primary');
+      
+      // Update label
+      const labelElement = countdownElement.closest('.info-box').querySelector('small.text-muted');
+      if (labelElement) {
+        labelElement.textContent = 'Ends at';
+      }
+    } else {
+      // 3 days or less: show real-time countdown
+      const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+      
+      let timeString = '';
+      if (days > 0) {
+        timeString = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+      } else if (hours > 0) {
+        timeString = `${hours}h ${minutes}m ${seconds}s`;
+      } else if (minutes > 0) {
+        timeString = `${minutes}m ${seconds}s`;
+      } else {
+        timeString = `${seconds}s`;
+      }
+      
+      countdownElement.textContent = timeString;
+      countdownElement.classList.remove('text-primary');
+      countdownElement.classList.add('text-danger');
+      
+      // Update label
+      const labelElement = countdownElement.closest('.info-box').querySelector('small.text-muted');
+      if (labelElement) {
+        labelElement.textContent = 'Time Left';
+      }
+      
+      // Extra urgency for last hour
+      if (days === 0 && hours < 1) {
+        countdownElement.classList.add('fw-bold');
+      }
+    }
+  }
+  
+  // Update immediately and then every second
+  document.addEventListener('DOMContentLoaded', function() {
+    updateSmartCountdown();
+    setInterval(updateSmartCountdown, 1000);
+  });
+
 </script>
 {{/section}}
 
@@ -770,11 +855,15 @@
                 {{#if (should_show_relative_time product.end_at)}}
                 Time Left
                 {{else}}
-                End at
+                Ends at
                 {{/if}}
               </small>
-              <h5 class="fw-bold text-danger countdown-timer" data-end-date="{{product.end_at}}">
-                {{format_time_remaining product.end_at}}
+              <h5 class="fw-bold countdown-timer" data-end-date="{{product.end_at}}" {{#unless (should_show_relative_time product.end_at)}}style="color: #72AEC8;"{{/unless}}>
+                {{#if (should_show_relative_time product.end_at)}}
+                  <span class="text-danger">{{format_time_remaining product.end_at}}</span>
+                {{else}}
+                  <!-- Placeholder for end date/time - will be filled by JS -->
+                {{/if}}
               </h5>
             </div>
           </div>
