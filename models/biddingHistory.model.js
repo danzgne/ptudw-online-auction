@@ -30,6 +30,7 @@ export async function getBiddingHistory(productId) {
       'bidding_history.bidder_id',
       'bidding_history.current_price',
       'bidding_history.created_at',
+      'bidding_history.is_buy_now',
       'users.fullname as bidder_name'
     )
     .orderBy('bidding_history.created_at', 'desc');

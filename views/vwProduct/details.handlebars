@@ -565,6 +565,8 @@
   });
 
   // ==================== SMART COUNTDOWN FUNCTIONALITY ====================
+  let countdownEnded = false; // Flag to prevent multiple reloads
+  
   function updateSmartCountdown() {
     const countdownElement = document.querySelector('.countdown-timer');
     if (!countdownElement) return;
@@ -577,6 +579,14 @@
       countdownElement.textContent = 'Auction Ended';
       countdownElement.classList.remove('text-danger');
       countdownElement.classList.add('text-muted');
+      
+      // Auto-reload page when countdown ends (only once)
+      if (!countdownEnded) {
+        countdownEnded = true;
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000); // Wait 1 second before reload
+      }
       return;
     }
     
@@ -645,8 +655,111 @@
   
   // Update immediately and then every second
   document.addEventListener('DOMContentLoaded', function() {
-    updateSmartCountdown();
-    setInterval(updateSmartCountdown, 1000);
+    {{#if (eq productStatus "ACTIVE")}}
+      // Only run countdown for ACTIVE products
+      updateSmartCountdown();
+      setInterval(updateSmartCountdown, 1000);
+    {{/if}}
+  });
+
+  // ==================== BUY NOW FUNCTIONALITY ====================
+  document.querySelector('.btn-buy-now')?.addEventListener('click', function() {
+    {{#if isAuthenticated}}
+      const productId = this.getAttribute('data-product-id');
+      const buyNowPrice = parseFloat(this.getAttribute('data-buy-now-price'));
+      const formattedPrice = buyNowPrice.toLocaleString('vi-VN');
+
+      Swal.fire({
+        title: '<strong>Confirm Buy Now Purchase</strong>',
+        icon: 'warning',
+        html: `
+          <div style="text-align: left; padding: 10px;">
+            <p class="mb-3"><strong>Are you sure you want to purchase this product now?</strong></p>
+            <div class="alert alert-info" style="font-size: 0.95rem;">
+              <i class="bi bi-info-circle-fill"></i> <strong>Important Information:</strong>
+              <ul style="margin-top: 10px; margin-bottom: 0;">
+                <li>Product will be purchased at <strong>${formattedPrice} VND</strong></li>
+                <li>The auction will <strong>end immediately</strong></li>
+                <li>Product status will change to <strong>pending payment</strong></li>
+                <li>You must complete the payment process</li>
+              </ul>
+            </div>
+            <div class="alert alert-warning" style="font-size: 0.9rem; margin-bottom: 0;">
+              <i class="bi bi-exclamation-triangle-fill"></i> <strong>Warning:</strong> 
+              If you do not complete payment, the seller may give you a <strong class="text-danger">negative rating</strong>, 
+              which could affect your ability to bid in future auctions.
+            </div>
+          </div>
+        `,
+        showCancelButton: true,
+        confirmButtonColor: '#72AEC8',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: '<i class="bi bi-check-circle me-2"></i>Yes, Buy Now',
+        cancelButtonText: '<i class="bi bi-x-circle me-2"></i>Cancel',
+        width: '600px',
+        customClass: {
+          confirmButton: 'btn btn-lg',
+          cancelButton: 'btn btn-lg'
+        }
+      }).then((result) => {
+        if (result.isConfirmed) {
+          // Show loading
+          Swal.fire({
+            title: 'Processing...',
+            html: 'Please wait while we process your purchase.',
+            allowOutsideClick: false,
+            didOpen: () => {
+              Swal.showLoading();
+            }
+          });
+
+          // Send buy now request
+          fetch('/products/buy-now', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ productId: productId })
+          })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                html: data.message,
+                confirmButtonColor: '#72AEC8',
+                confirmButtonText: 'Proceed to Payment'
+              }).then(() => {
+                if (data.redirectUrl) {
+                  window.location.href = data.redirectUrl;
+                } else {
+                  window.location.reload();
+                }
+              });
+            } else {
+              Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message || 'Failed to purchase product',
+                confirmButtonColor: '#72AEC8'
+              });
+            }
+          })
+          .catch(error => {
+            console.error('Error:', error);
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'An error occurred. Please try again.',
+              confirmButtonColor: '#72AEC8'
+            });
+          });
+        }
+      });
+    {{else}}
+      window.location.href = '/account/signin?retUrl=/products/detail?id={{product.id}}';
+    {{/if}}
   });
 
 </script>
@@ -883,11 +996,25 @@
               <div class="mb-3">
                 <i class="bi bi-person-check" style="font-size: 1.8rem; color: #198754;"></i>
               </div>
-              <small class="text-muted d-block mb-2">Highest Bidder</small>
-              {{#if product.bidder_name}}
-              <h5 class="fw-bold text-success" style="font-size: 0.9rem;">{{product.bidder_name}}</h5>
+              {{#if product.is_buy_now_purchase}}
+                <small class="text-muted d-block mb-2">Purchased By</small>
+                {{#if product.bidder_name}}
+                <h5 class="fw-bold text-success" style="font-size: 0.9rem;">
+                  {{product.bidder_name}}
+                  <span class="badge bg-info text-dark ms-1" style="font-size: 0.7rem;">
+                    <i class="bi bi-lightning-fill"></i> Buy Now
+                  </span>
+                </h5>
+                {{else}}
+                <h5 class="fw-bold text-muted">-</h5>
+                {{/if}}
               {{else}}
-              <h5 class="fw-bold text-muted">No bids yet</h5>
+                <small class="text-muted d-block mb-2">Highest Bidder</small>
+                {{#if product.bidder_name}}
+                <h5 class="fw-bold text-success" style="font-size: 0.9rem;">{{product.bidder_name}}</h5>
+                {{else}}
+                <h5 class="fw-bold text-muted">No bids yet</h5>
+                {{/if}}
               {{/if}}
             </div>
           </div>
@@ -965,9 +1092,17 @@
       {{!-- Buy Now Button - Only for ACTIVE --}}
       {{#if (and product.buy_now_price (eq productStatus "ACTIVE"))}}
       <div class="d-grid mb-4">
-        <button class="btn btn-lg fw-bold btn-buy-now">
+        <button class="btn btn-lg fw-bold btn-buy-now" 
+                data-product-id="{{product.id}}"
+                data-buy-now-price="{{product.buy_now_price}}"
+                {{#if (and isAuthenticated (eq authUser.id product.seller_id))}}disabled{{/if}}>
           <i class="bi bi-check-circle"></i> Buy Now
         </button>
+        {{#if (and isAuthenticated (eq authUser.id product.seller_id))}}
+        <small class="text-muted text-center mt-2">
+          <i class="bi bi-info-circle"></i> You cannot buy your own product
+        </small>
+        {{/if}}
       </div>
       {{/if}}
 
@@ -1322,6 +1457,11 @@
                       {{#if @first}}
                         <span class="badge bg-success" style="font-size: 0.7rem;">Latest</span>
                       {{/if}}
+                      {{#if this.is_buy_now}}
+                        <span class="badge bg-info text-dark" style="font-size: 0.7rem;">
+                          <i class="bi bi-lightning-fill"></i> Buy Now
+                        </span>
+                      {{/if}}
                     </div>
                     <div class="d-flex align-items-center gap-1">
                       {{!-- Show reject button only for seller and ACTIVE products --}}
@@ -1340,7 +1480,7 @@
                       {{/if}}
                     </div>
                   </div>
-                  <div class="fw-bold text-success mb-1">{{format_number this.current_price}} VND</div>
+                  <div class="fw-bold {{#if this.is_buy_now}}text-info{{else}}text-success{{/if}} mb-1">{{format_number this.current_price}} VND</div>
                   <div class="text-muted" style="font-size: 0.75rem;">
                     <i class="bi bi-clock me-1"></i>{{format_date this.created_at}}
                   </div>
