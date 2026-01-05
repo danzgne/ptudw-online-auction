@@ -57,11 +57,14 @@ router.get('/products/sold', async function (req, res) {
     const productsWithReview = await Promise.all(products.map(async (product) => {
         const review = await reviewModel.getProductReview(sellerId, product.highest_bidder_id, product.id);
         
+        // Only show review if rating is not 0 (actual rating, not skip)
+        const hasActualReview = review && review.rating !== 0;
+        
         return {
             ...product,
-            hasReview: !!review,
-            reviewRating: review ? (review.rating === 1 ? 'positive' : 'negative') : null,
-            reviewComment: review ? review.comment : ''
+            hasReview: hasActualReview,
+            reviewRating: hasActualReview ? (review.rating === 1 ? 'positive' : 'negative') : null,
+            reviewComment: hasActualReview ? review.comment : ''
         };
     }));
     
@@ -72,7 +75,22 @@ router.get('/products/sold', async function (req, res) {
 router.get('/products/expired', async function (req, res) {
     const sellerId = req.session.authUser.id;
     const products = await productModel.findExpiredProductsBySellerId(sellerId);
-    console.log('expired products:', products);
+    
+    // Add review info for cancelled products with bidders
+    for (let product of products) {
+        if (product.status === 'Cancelled' && product.highest_bidder_id) {
+            const review = await reviewModel.getProductReview(sellerId, product.highest_bidder_id, product.id);
+            // Only show review if rating is not 0 (actual rating, not skip)
+            const hasActualReview = review && review.rating !== 0;
+            
+            product.hasReview = hasActualReview;
+            if (hasActualReview) {
+                product.reviewRating = review.rating === 1 ? 'positive' : 'negative';
+                product.reviewComment = review.comment;
+            }
+        }
+    }
+    
     res.render('vwSeller/expired', { products });
 });
 
@@ -225,15 +243,26 @@ router.post('/products/:id/rate', async function (req, res) {
         // Map rating: positive -> 1, negative -> -1
         const ratingValue = rating === 'positive' ? 1 : -1;
         
-        // Create review
-        const reviewData = {
-            reviewer_id: sellerId,
-            reviewee_id: highest_bidder_id,
-            product_id: productId,
-            rating: ratingValue,
-            comment: comment || ''
-        };
-        await reviewModel.createReview(reviewData);
+        // Check if already rated
+        const existingReview = await reviewModel.findByReviewerAndProduct(sellerId, productId);
+        
+        if (existingReview) {
+            // Update existing review
+            await reviewModel.updateByReviewerAndProduct(sellerId, productId, {
+                rating: ratingValue,
+                comment: comment || null
+            });
+        } else {
+            // Create new review
+            const reviewData = {
+                reviewer_id: sellerId,
+                reviewee_id: highest_bidder_id,
+                product_id: productId,
+                rating: ratingValue,
+                comment: comment || ''
+            };
+            await reviewModel.createReview(reviewData);
+        }
         
         res.json({ success: true, message: 'Rating submitted successfully' });
     } catch (error) {

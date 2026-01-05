@@ -27,9 +27,9 @@
             <div class="rating-score mb-3">
               {{#if rating_point}}
                 {{#if (eq rating_point 1)}}
-                  100%
+                  100.00%
                 {{else}}
-                  {{multiply rating_point 100}}%
+                  {{round (multiply rating_point 100) 2}}%
                 {{/if}}
               {{else}}
                 N/A

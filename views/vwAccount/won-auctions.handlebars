@@ -193,33 +193,63 @@
                     </td>
                     <td>
                       <div class="d-flex gap-2">
-                        <a href="/products/detail?id={{this.id}}" class="btn btn-sm btn-outline-primary">
-                          <i class="bi bi-eye"></i> View
-                        </a>
                         {{#if (eq this.status "Pending")}}
-                          <button class="btn btn-sm btn-success">
-                            <i class="bi bi-credit-card"></i> Pay
-                          </button>
-                        {{else}}
+                          <a href="/products/detail?id={{this.id}}" class="btn btn-sm btn-outline-primary" title="View">
+                            <i class="bi bi-eye"></i>
+                          </a>
+                          <a href="/products/complete-order?id={{this.id}}" class="btn btn-sm btn-success" title="Pay">
+                            <i class="bi bi-credit-card"></i>
+                          </a>
+                        {{else if (eq this.status "Sold")}}
+                          <a href="/products/detail?id={{this.id}}" class="btn btn-sm btn-outline-primary" title="View">
+                            <i class="bi bi-eye"></i>
+                          </a>
                           {{#if this.has_rated_seller}}
-                            <button type="button" class="btn btn-sm btn-outline-warning btn-edit-rate-seller"
+                            <button type="button" class="btn btn-sm btn-outline-primary btn-edit-rate-seller"
                                     data-product-id="{{this.id}}" 
                                     data-seller-name="{{this.seller_name}}" 
                                     data-seller-id="{{this.seller_id}}"
                                     data-rating="{{this.seller_rating}}"
                                     data-comment="{{this.seller_rating_comment}}"
                                     title="Edit Rating">
-                              <i class="bi bi-star-fill"></i> Edit Rating
+                              <i class="bi bi-star-fill"></i>
                             </button>
                           {{else}}
-                            <button type="button" class="btn btn-sm btn-outline-warning btn-rate-seller"
+                            <button type="button" class="btn btn-sm btn-outline-primary btn-rate-seller"
                                     data-product-id="{{this.id}}" 
                                     data-seller-name="{{this.seller_name}}" 
                                     data-seller-id="{{this.seller_id}}"
                                     title="Rate Seller">
-                              <i class="bi bi-star"></i> Rate Seller
+                              <i class="bi bi-star"></i>
                             </button>
                           {{/if}}
+                        {{else if (eq this.status "Cancelled")}}
+                          <a href="/products/detail?id={{this.id}}" class="btn btn-sm btn-outline-primary" title="View">
+                            <i class="bi bi-eye"></i>
+                          </a>
+                          {{#if this.has_rated_seller}}
+                            <button type="button" class="btn btn-sm btn-outline-primary btn-edit-rate-seller"
+                                    data-product-id="{{this.id}}" 
+                                    data-seller-name="{{this.seller_name}}" 
+                                    data-seller-id="{{this.seller_id}}"
+                                    data-rating="{{this.seller_rating}}"
+                                    data-comment="{{this.seller_rating_comment}}"
+                                    title="Edit Rating">
+                              <i class="bi bi-star-fill"></i>
+                            </button>
+                          {{else}}
+                            <button type="button" class="btn btn-sm btn-outline-primary btn-rate-seller"
+                                    data-product-id="{{this.id}}" 
+                                    data-seller-name="{{this.seller_name}}" 
+                                    data-seller-id="{{this.seller_id}}"
+                                    title="Rate Seller">
+                              <i class="bi bi-star"></i>
+                            </button>
+                          {{/if}}
+                        {{else}}
+                          <a href="/products/detail?id={{this.id}}" class="btn btn-sm btn-outline-primary" title="View">
+                            <i class="bi bi-eye"></i>
+                          </a>
                         {{/if}}
                       </div>
                     </td>

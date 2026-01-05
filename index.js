@@ -230,6 +230,10 @@ app.engine('handlebars', engine({
     multiply(a, b) {
       return a * b;
     },
+    replace(str, search, replaceWith) {
+      if (!str) return '';
+      return str.replace(new RegExp(search, 'g'), replaceWith);
+    },
     range(start, end) {
       const result = [];
       for (let i = start; i < end; i++) {

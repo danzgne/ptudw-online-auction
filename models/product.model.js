@@ -462,6 +462,7 @@ export async function findByProductId2(productId, userId) {
       'products.*',
       'product_images.img_link', // Lấy link ảnh phụ để lát nữa gộp mảng
       'seller.fullname as seller_name',
+      'seller.email as seller_email',
       'seller.created_at as seller_created_at',
       'categories.name as category_name',
 
@@ -473,6 +474,10 @@ export async function findByProductId2(productId, userId) {
           ELSE NULL 
         END AS bidder_name
       `),
+      
+      // Thông tin người đấu giá cao nhất (highest bidder)
+      'users.fullname as highest_bidder_name',
+      'users.email as highest_bidder_email',
       
       // Logic đếm số lượt bid (Giữ nguyên)
       db.raw(`
@@ -805,6 +810,23 @@ export async function cancelProduct(productId, sellerId) {
   
   if (product.seller_id !== sellerId) {
     throw new Error('Unauthorized');
+  }
+  
+  // Cancel any active orders for this product
+  const activeOrders = await db('orders')
+    .where('product_id', productId)
+    .whereNotIn('status', ['completed', 'cancelled']);
+  
+  // Cancel all active orders
+  for (let order of activeOrders) {
+    await db('orders')
+      .where('id', order.id)
+      .update({
+        status: 'cancelled',
+        cancelled_by: sellerId,
+        cancellation_reason: 'Seller cancelled the product',
+        cancelled_at: new Date()
+      });
   }
   
   // Update product - mark as cancelled

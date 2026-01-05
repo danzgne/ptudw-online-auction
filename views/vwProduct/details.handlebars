@@ -900,20 +900,14 @@
 
           {{!-- PENDING: Show Payment Button for Highest Bidder and Seller --}}
           {{#if (eq productStatus "PENDING")}}
-            {{#if isAuthenticated}}
-              {{#if (eq authUser.id product.highest_bidder_id)}}
-                <a href="/account/auctions" class="btn btn-lg flex-fill fw-bold btn-success">
-                  <i class="bi bi-credit-card"></i> Proceed to Payment
-                </a>
-              {{else if (eq authUser.id product.seller_id)}}
-                <a href="/account/my-products" class="btn btn-lg flex-fill fw-bold btn-primary">
-                  <i class="bi bi-cash-stack"></i> Manage Payment
-                </a>
-              {{else}}
-                <button class="btn btn-lg flex-fill fw-bold" disabled>
-                  <i class="bi bi-lock-fill"></i> Auction Ended - Pending Payment
-                </button>
-              {{/if}}
+            {{#if showPaymentButton}}
+              <a href="/products/complete-order?id={{product.id}}" class="btn btn-lg flex-fill fw-bold btn-success">
+                <i class="bi bi-credit-card"></i> Go to Payment
+              </a>
+            {{else}}
+              <button class="btn btn-lg flex-fill fw-bold" disabled>
+                <i class="bi bi-lock-fill"></i> Auction Ended - Pending Payment
+              </button>
             {{/if}}
           
           {{!-- SOLD/EXPIRED/CANCELLED: Disable All Actions --}}

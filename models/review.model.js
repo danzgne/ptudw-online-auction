@@ -27,6 +27,7 @@ export function getReviewsByUserId(user_id) {
         .join('users as reviewer', 'reviews.reviewer_id', 'reviewer.id')
         .join('products', 'reviews.product_id', 'products.id')
         .where('reviews.reviewee_id', user_id)
+        .whereNot('reviews.rating', 0) // Exclude skipped reviews (rating=0)
         .select(
             'reviews.*',
             'reviewer.fullname as reviewer_name',

@@ -21,7 +21,7 @@ router.get('/ratings', isAuthenticated, async (req, res) => {
   // // Get rating point
   const ratingData = await reviewModel.calculateRatingPoint(currentUserId);
   const rating_point = ratingData ? ratingData.rating_point : 0;
-  // // Get all reviews
+  // // Get all reviews (model already excludes rating=0)
   const reviews = await reviewModel.getReviewsByUserId(currentUserId);
   
   // // Calculate statistics
@@ -578,7 +578,8 @@ router.get('/auctions', isAuthenticated, async (req, res) => {
   // Check if user has rated seller for each product
   for (let product of wonAuctions) {
     const review = await reviewModel.findByReviewerAndProduct(currentUserId, product.id);
-    if (review) {
+    // Only show rating if it's not 0 (actual rating, not skip)
+    if (review && review.rating !== 0) {
       product.has_rated_seller = true;
       product.seller_rating = review.rating === 1 ? 'positive' : 'negative';
       product.seller_rating_comment = review.comment;
@@ -606,17 +607,21 @@ router.post('/won-auctions/:productId/rate-seller', isAuthenticated, async (req,
     // Check if already rated
     const existingReview = await reviewModel.findByReviewerAndProduct(currentUserId, productId);
     if (existingReview) {
-      return res.json({ success: false, message: 'You have already rated this seller.' });
+      // Update existing review instead of creating new
+      await reviewModel.updateByReviewerAndProduct(currentUserId, productId, {
+        rating: ratingValue,
+        comment: comment || null
+      });
+    } else {
+      // Create new review
+      await reviewModel.create({
+        reviewer_id: currentUserId,
+        reviewed_user_id: seller_id,
+        product_id: productId,
+        rating: ratingValue,
+        comment: comment || null
+      });
     }
-    
-    // Create review
-    await reviewModel.create({
-      reviewer_id: currentUserId,
-      reviewed_user_id: seller_id,
-      product_id: productId,
-      rating: ratingValue,
-      comment: comment || null
-    });
     
     res.json({ success: true });
   } catch (error) {
