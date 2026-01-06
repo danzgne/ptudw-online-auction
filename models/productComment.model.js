@@ -80,3 +80,16 @@ export async function findCommentById(commentId) {
     .where('id', commentId)
     .first();
 }
+
+/**
+ * Lấy danh sách unique commenters của một sản phẩm (với email)
+ * @param {number} productId - ID sản phẩm
+ * @returns {Promise<Array>} Danh sách commenters với email
+ */
+export async function getUniqueCommenters(productId) {
+  return db('product_comments')
+    .join('users', 'product_comments.user_id', 'users.id')
+    .where('product_comments.product_id', productId)
+    .distinct('users.id', 'users.email', 'users.fullname')
+    .select('users.id', 'users.email', 'users.fullname');
+}

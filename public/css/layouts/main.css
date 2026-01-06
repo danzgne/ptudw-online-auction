@@ -13,6 +13,13 @@ Version:
   z-index: 1000 !important;
 }
 
+/* Logo styling */
+.navbar-brand .logo {
+  max-height: 45px;
+  width: auto;
+  object-fit: contain;
+}
+
 /*--------------------------------------------------------------
 This is main CSS file that contains custom style rules used in this template
 --------------------------------------------------------------*/

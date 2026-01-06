@@ -78,13 +78,7 @@ export function findPage(limit, offset) {
     .select(
       'products.*', 
     
-      db.raw(`
-        CASE 
-          WHEN users.fullname IS NOT NULL THEN 
-            OVERLAY(users.fullname PLACING '****' FROM 1 FOR (LENGTH(users.fullname)/2)::INTEGER)
-          ELSE NULL 
-        END AS bidder_name
-      `),
+      db.raw(`mask_name_alternating(users.fullname) AS bidder_name`),
       db.raw(`
         (
           SELECT COUNT(*) 
@@ -137,13 +131,7 @@ export function searchPageByKeywords(keywords, limit, offset, userId, logic = 'o
     .select(
       'products.*',
       'categories.name as category_name',
-      db.raw(`
-        CASE
-          WHEN users.fullname IS NOT NULL THEN
-            OVERLAY(users.fullname PLACING '****' FROM 1 FOR (LENGTH(users.fullname)/2)::INTEGER)
-          ELSE NULL
-        END AS bidder_name
-      `),
+      db.raw(`mask_name_alternating(users.fullname) AS bidder_name`),
       db.raw(`
         ( 
           SELECT COUNT(*)
@@ -238,13 +226,7 @@ export function findByCategoryId(categoryId, limit, offset, sort, currentUserId)
       'products.*',
       
       // Logic che tên người đấu giá (giữ nguyên)
-      db.raw(`
-        CASE 
-          WHEN users.fullname IS NOT NULL THEN 
-            OVERLAY(users.fullname PLACING '****' FROM 1 FOR (LENGTH(users.fullname)/2)::INTEGER)
-          ELSE NULL 
-        END AS bidder_name
-      `),
+      db.raw(`mask_name_alternating(users.fullname) AS bidder_name`),
 
       // Logic đếm số lượt đấu giá (giữ nguyên)
       db.raw(`
@@ -301,13 +283,7 @@ export function findByCategoryIds(categoryIds, limit, offset, sort, currentUserI
     .whereNull('products.closed_at')
     .select(
       'products.*',
-      db.raw(`
-        CASE 
-          WHEN users.fullname IS NOT NULL THEN 
-            OVERLAY(users.fullname PLACING '****' FROM 1 FOR (LENGTH(users.fullname)/2)::INTEGER)
-          ELSE NULL 
-        END AS bidder_name
-      `),
+      db.raw(`mask_name_alternating(users.fullname) AS bidder_name`),
       db.raw(`
         (
           SELECT COUNT(*) 
@@ -353,13 +329,7 @@ const BASE_QUERY = db('products')
   .leftJoin('users', 'products.highest_bidder_id', 'users.id')
   .select(
     'products.*',
-    db.raw(`
-      CASE 
-        WHEN users.fullname IS NOT NULL THEN 
-          OVERLAY(users.fullname PLACING '****' FROM 1 FOR (LENGTH(users.fullname)/2)::INTEGER)
-        ELSE NULL 
-      END AS bidder_name
-    `),
+    db.raw(`mask_name_alternating(users.fullname) AS bidder_name`),
     db.raw(`(SELECT COUNT(*) FROM bidding_history WHERE product_id = products.id) AS bid_count`)
   )
   .where('end_at', '>', new Date()) // Chỉ lấy sản phẩm chưa hết hạn
@@ -383,13 +353,7 @@ export function findTopBids() {
     .leftJoin('users', 'products.highest_bidder_id', 'users.id')
     .select(
       'products.*',
-      db.raw(`
-        CASE 
-          WHEN users.fullname IS NOT NULL THEN 
-            OVERLAY(users.fullname PLACING '****' FROM 1 FOR (LENGTH(users.fullname)/2)::INTEGER)
-          ELSE NULL 
-        END AS bidder_name
-      `),
+      db.raw(`mask_name_alternating(users.fullname) AS bidder_name`),
       db.raw(`(SELECT COUNT(*) FROM bidding_history WHERE product_id = products.id) AS bid_count`)
     )
     .where('products.end_at', '>', new Date())
@@ -411,13 +375,7 @@ export function findByProductId(productId) {
       'seller.fullname as seller_name',
       'seller.created_at as seller_created_at',
       'categories.name as category_name',
-      db.raw(`
-        CASE 
-          WHEN highest_bidder.fullname IS NOT NULL THEN 
-            OVERLAY(highest_bidder.fullname PLACING '****' FROM 1 FOR (LENGTH(highest_bidder.fullname)/2)::INTEGER)
-          ELSE NULL 
-        END AS bidder_name
-      `),
+      db.raw(`mask_name_alternating(highest_bidder.fullname) AS bidder_name`),
       db.raw(`
         (
           SELECT COUNT(*) 
@@ -467,13 +425,7 @@ export async function findByProductId2(productId, userId) {
       'categories.name as category_name',
 
       // Logic che tên người đấu giá (Giữ nguyên)
-      db.raw(`
-        CASE 
-          WHEN users.fullname IS NOT NULL THEN 
-            OVERLAY(users.fullname PLACING '****' FROM 1 FOR (LENGTH(users.fullname)/2)::INTEGER)
-          ELSE NULL 
-        END AS bidder_name
-      `),
+      db.raw(`mask_name_alternating(users.fullname) AS bidder_name`),
       
       // Thông tin người đấu giá cao nhất (highest bidder)
       'users.fullname as highest_bidder_name',
@@ -837,4 +789,41 @@ export async function cancelProduct(productId, sellerId) {
   
   // Return product data for route to use
   return product;
+}
+
+/**
+ * Lấy các auction vừa kết thúc mà chưa gửi thông báo
+ * @returns {Promise<Array>} Danh sách các sản phẩm kết thúc cần gửi thông báo
+ */
+export async function getNewlyEndedAuctions() {
+  return db('products')
+    .leftJoin('users as seller', 'products.seller_id', 'seller.id')
+    .leftJoin('users as winner', 'products.highest_bidder_id', 'winner.id')
+    .where('products.end_at', '<=', new Date())
+    .whereNull('products.end_notification_sent')
+    .whereNull('products.closed_at') // Chưa bị đóng sớm
+    .select(
+      'products.id',
+      'products.name',
+      'products.current_price',
+      'products.highest_bidder_id',
+      'products.seller_id',
+      'products.end_at',
+      'seller.fullname as seller_name',
+      'seller.email as seller_email',
+      'winner.fullname as winner_name',
+      'winner.email as winner_email'
+    );
+}
+
+/**
+ * Đánh dấu auction đã gửi thông báo kết thúc
+ * @param {number} productId - ID sản phẩm
+ */
+export async function markEndNotificationSent(productId) {
+  return db('products')
+    .where('id', productId)
+    .update({
+      end_notification_sent: new Date()
+    });
 }

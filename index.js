@@ -11,6 +11,9 @@ import { v4 as uuidv4 } from 'uuid';
 import fs from 'fs';
 import passport from './utils/passport.js';
 
+// Import Scheduled Jobs
+import { startAuctionEndNotifier } from './scripts/auctionEndNotifier.js';
+
 // Import Routes
 import homeRouter from './routes/home.route.js';
 import productRouter from './routes/product.route.js';
@@ -62,11 +65,22 @@ app.engine('handlebars', engine({
     format_number(price) { return new Intl.NumberFormat('en-US').format(price); },
     mask_name(fullname) {
       if (!fullname) return 'Anonymous';
-      const parts = fullname.trim().split(' ');
-      if (parts.length === 0) return 'Anonymous';
-      // Che phần họ và đệm bằng ****, chỉ hiển thị tên cuối
-      const lastName = parts[parts.length - 1];
-      return '**** ' + lastName;
+      // Lấy tên (không có khoảng trắng)
+      const name = fullname.trim().replace(/\s+/g, '');
+      if (name.length === 0) return 'Anonymous';
+      if (name.length === 1) return '*';
+      if (name.length === 2) return name[0] + '*';
+      
+      // Mã hóa xen kẽ: n*d*h*a
+      let masked = '';
+      for (let i = 0; i < name.length; i++) {
+        if (i % 2 === 0) {
+          masked += name[i]; // Giữ nguyên ký tự ở vị trí chẵn
+        } else {
+          masked += '*'; // Thay bằng * ở vị trí lẻ
+        }
+      }
+      return masked;
     },
     truncate(str, len) {
       if (!str) return '';
@@ -388,4 +402,7 @@ app.use('/account', accountRouter);
 
 app.listen(PORT, function () {
   console.log(`Server is running on http://localhost:${PORT}`);
+  
+  // Start scheduled jobs
+  startAuctionEndNotifier(1); // Check every 1 minute for ended auctions
 });

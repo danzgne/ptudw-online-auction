@@ -25,7 +25,7 @@
            aria-labelledby="bdNavbarOffcanvasLabel">
         <div class="offcanvas-header px-4 pb-0">
           <a class="navbar-brand d-flex align-items-center" href="/">
-            <img src="/static/images/main-logo.png" class="logo" alt="Ministore">
+            <img src="/static/images/main-logo.png" class="logo" alt="Online Auction">
           </a>
           <button type="button"
                   class="btn-close btn-close-black"
@@ -82,7 +82,7 @@
             {{#if isAdmin}}
               <a href="/admin/account/profile" class="btn-sign-in">
                 <span class="text-container">
-                  <span class="text">Admin Panel</span>
+                  <span class="text">Hi, {{authUser.fullname}}</span>
                 </span>
               </a>
             {{else}}
