@@ -1062,11 +1062,21 @@
   }
   
   // Send chat message
+  let isSendingMessage = false;
+  
   async function sendChatMessage() {
     const input = document.getElementById('chatInput');
     const message = input.value.trim();
     
-    if (!message) return;
+    if (!message || isSendingMessage) return;
+    
+    // Set flag and disable input
+    isSendingMessage = true;
+    input.disabled = true;
+    
+    // Store original value and show loading
+    const originalValue = input.value;
+    input.value = 'Sending...';
     
     try {
       const response = await fetch('/products/order/' + orderId + '/send-message', {
@@ -1094,6 +1104,8 @@
           }
         }
       } else {
+        // Restore original value on error
+        input.value = originalValue;
         Swal.fire({ 
           icon: 'error', 
           title: 'Error!', 
@@ -1106,6 +1118,8 @@
       }
     } catch (error) {
       console.error('Send message error:', error);
+      // Restore original value on error
+      input.value = originalValue;
       Swal.fire({ 
         icon: 'error', 
         title: 'Error!', 
@@ -1115,6 +1129,11 @@
         timer: 3000,
         showConfirmButton: false
       });
+    } finally {
+      // Re-enable input and reset flag
+      input.disabled = false;
+      isSendingMessage = false;
+      input.focus();
     }
   }
   
