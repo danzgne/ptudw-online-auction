@@ -1,6 +1,48 @@
 {{#section "css"}}
 <link rel="stylesheet" href="/static/css/product/detail.css">
 <style>
+  /* SweetAlert2 Custom Buttons */
+  .swal-btn-confirm,
+  .swal-btn-cancel {
+    min-width: 120px !important;
+    padding: 12px 32px !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    border-radius: 8px !important;
+    transition: all 0.3s ease !important;
+    border: none !important;
+  }
+  
+  .swal-btn-confirm {
+    background: linear-gradient(135deg, #72AEC8 0%, #5a9bb8 100%) !important;
+    color: white !important;
+  }
+  
+  .swal-btn-confirm:hover {
+    background: linear-gradient(135deg, #5a9bb8 0%, #4a8aa8 100%) !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(114, 174, 200, 0.4) !important;
+  }
+  
+  .swal-btn-confirm:active {
+    transform: translateY(0) !important;
+  }
+  
+  .swal-btn-cancel {
+    background: #6c757d !important;
+    color: white !important;
+  }
+  
+  .swal-btn-cancel:hover {
+    background: #5a6268 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+  }
+  
+  .swal-btn-cancel:active {
+    transform: translateY(0) !important;
+  }
+
   /* Bid Modal Enhancements */
   #decreaseBid:hover,
   #increaseBid:hover {
@@ -761,14 +803,14 @@
           </div>
         `,
         showCancelButton: true,
-        confirmButtonColor: '#72AEC8',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: '<i class="bi bi-check-circle me-2"></i>Yes, Buy Now',
-        cancelButtonText: '<i class="bi bi-x-circle me-2"></i>Cancel',
+        confirmButtonText: 'Yes',
+        cancelButtonText: 'Cancel',
         width: '600px',
+        buttonsStyling: false,
         customClass: {
-          confirmButton: 'btn btn-lg',
-          cancelButton: 'btn btn-lg'
+          confirmButton: 'swal-btn-confirm',
+          cancelButton: 'swal-btn-cancel',
+          actions: 'd-flex justify-content-center gap-3'
         }
       }).then((result) => {
         if (result.isConfirmed) {

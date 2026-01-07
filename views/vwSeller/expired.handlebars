@@ -41,6 +41,8 @@
                 </div>
             `,
             showCancelButton: true,
+            confirmButtonColor: '#72AEC8',
+            cancelButtonColor: '#6c757d',
             confirmButtonText: isEdit ? 'Update Rating' : 'Submit Rating',
             preConfirm: () => {
                 const rating = document.querySelector('input[name="rating"]:checked');
@@ -171,8 +173,8 @@
                                 {{/if}}
                             </td>
                             <td class="text-end pe-4">
-                                <a href="#" class="btn btn-sm btn-outline-info me-1" 
-                                   data-bs-toggle="tooltip" title="View Details" target="_blank">
+                                <a href="/products/detail?id={{this.id}}" class="btn btn-sm btn-outline-info me-1" 
+                                   data-bs-toggle="tooltip" title="View Details">
                                     <i class="bi bi-eye"></i>
                                 </a>
                                 

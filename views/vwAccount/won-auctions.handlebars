@@ -43,6 +43,8 @@
                 </div>
             `,
             showCancelButton: true,
+            confirmButtonColor: '#72AEC8',
+            cancelButtonColor: '#6c757d',
             confirmButtonText: isEdit ? 'Update Rating' : 'Submit Rating',
             preConfirm: () => {
                 const rating = document.querySelector('input[name="rating"]:checked');
