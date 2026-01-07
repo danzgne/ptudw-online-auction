@@ -99,6 +99,7 @@ export function searchPageByKeywords(keywords, limit, offset, userId, logic = 'o
   
   let query = db('products')
     .leftJoin('categories', 'products.category_id', 'categories.id')
+    .leftJoin('categories as parent_category', 'categories.parent_id', 'parent_category.id')
     .leftJoin('users', 'products.highest_bidder_id', 'users.id')
     .leftJoin('watchlists', function() {
       this.on('products.id', '=', 'watchlists.product_id')
@@ -111,19 +112,21 @@ export function searchPageByKeywords(keywords, limit, offset, userId, logic = 'o
       const words = searchQuery.split(/\s+/).filter(w => w.length > 0);
       if (logic === 'and') {
         // AND logic: all keywords must match
-        // Split words and each word must exist in product name OR category name
+        // Split words and each word must exist in product name OR category name OR parent category name
         words.forEach(word => {
           builder.where(function() {
             this.whereRaw(`LOWER(remove_accents(products.name)) LIKE ?`, [`%${word}%`])
-              .orWhereRaw(`LOWER(remove_accents(categories.name)) LIKE ?`, [`%${word}%`]);
+              .orWhereRaw(`LOWER(remove_accents(categories.name)) LIKE ?`, [`%${word}%`])
+              .orWhereRaw(`LOWER(remove_accents(parent_category.name)) LIKE ?`, [`%${word}%`]);
           });
         });
       } else {
-        // OR logic: any keyword can match in product name OR category name
+        // OR logic: any keyword can match in product name OR category name OR parent category name
         words.forEach(word => {
           builder.orWhere(function() {
             this.whereRaw(`LOWER(remove_accents(products.name)) LIKE ?`, [`%${word}%`])
-              .orWhereRaw(`LOWER(remove_accents(categories.name)) LIKE ?`, [`%${word}%`]);
+              .orWhereRaw(`LOWER(remove_accents(categories.name)) LIKE ?`, [`%${word}%`])
+              .orWhereRaw(`LOWER(remove_accents(parent_category.name)) LIKE ?`, [`%${word}%`]);
           });
         });
       }
@@ -169,6 +172,7 @@ export function countByKeywords(keywords, logic = 'or') {
   
   return db('products')
     .leftJoin('categories', 'products.category_id', 'categories.id')
+    .leftJoin('categories as parent_category', 'categories.parent_id', 'parent_category.id')
     // Chỉ đếm sản phẩm ACTIVE
     .where('products.end_at', '>', new Date())
     .whereNull('products.closed_at')
@@ -179,15 +183,17 @@ export function countByKeywords(keywords, logic = 'or') {
         words.forEach(word => {
           builder.where(function() {
             this.whereRaw(`LOWER(remove_accents(products.name)) LIKE ?`, [`%${word}%`])
-              .orWhereRaw(`LOWER(remove_accents(categories.name)) LIKE ?`, [`%${word}%`]);
+              .orWhereRaw(`LOWER(remove_accents(categories.name)) LIKE ?`, [`%${word}%`])
+              .orWhereRaw(`LOWER(remove_accents(parent_category.name)) LIKE ?`, [`%${word}%`]);
           });
         });
       } else {
-        // OR logic: any keyword can match in product name OR category name
+        // OR logic: any keyword can match in product name OR category name OR parent category name
         words.forEach(word => {
           builder.orWhere(function() {
             this.whereRaw(`LOWER(remove_accents(products.name)) LIKE ?`, [`%${word}%`])
-              .orWhereRaw(`LOWER(remove_accents(categories.name)) LIKE ?`, [`%${word}%`]);
+              .orWhereRaw(`LOWER(remove_accents(categories.name)) LIKE ?`, [`%${word}%`])
+              .orWhereRaw(`LOWER(remove_accents(parent_category.name)) LIKE ?`, [`%${word}%`]);
           });
         });
       }
