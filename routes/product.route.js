@@ -59,7 +59,8 @@ router.get('/category', async (req, res) => {
     categoryIds = [categoryId, ...childIds];
   }
   
-  const products = await productModel.findByCategoryIds(categoryIds, limit, offset, sort, userId);
+  const list = await productModel.findByCategoryIds(categoryIds, limit, offset, sort, userId);
+  const products = await prepareProductList(list);
   const total = await productModel.countByCategoryIds(categoryIds);
   console.log('Total products in category:', total.count);
   const totalCount = total.count;
@@ -144,7 +145,7 @@ router.get('/detail', async (req, res) => {
   if (!product) {
     return res.status(404).render('404', { message: 'Product not found' });
   }
-
+  console.log('Product details:', product);
   // Determine product status
   const now = new Date();
   const endDate = new Date(product.end_at);
