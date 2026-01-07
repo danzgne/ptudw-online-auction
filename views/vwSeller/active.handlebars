@@ -10,6 +10,12 @@
         pointer-events: auto;
     }
     
+    .btn-delete-update {
+        position: relative;
+        z-index: 10;
+        pointer-events: auto;
+    }
+    
     /* Prevent Quill editor from overlapping button */
     .accordion-body {
         position: relative;
@@ -92,9 +98,12 @@
                                      aria-labelledby="heading${update.id}" data-bs-parent="#updatesAccordion">
                                     <div class="accordion-body">
                                         <div id="editor-${update.id}" class="mb-3" style="height: 200px;"></div>
-                                        <div class="text-end">
+                                        <div class="d-flex justify-content-end gap-2">
                                             <button type="button" class="btn btn-primary btn-save-update" data-update-id="${update.id}">
                                                 <i class="bi bi-check-circle me-1"></i>Save Changes
+                                            </button>
+                                            <button type="button" class="btn btn-danger btn-delete-update" data-update-id="${update.id}">
+                                                <i class="bi bi-trash-fill me-1"></i>Delete
                                             </button>
                                         </div>
                                     </div>
@@ -192,7 +201,7 @@
                 Swal.fire({
                     icon: 'success',
                     title: 'Success!',
-                    text: response.message || 'Update saved successfully.',
+                    text: response.message || 'Updated successfully.',
                     timer: 1500,
                     showConfirmButton: false
                 });
@@ -210,6 +219,66 @@
                 // Re-enable button on error
                 $btn.prop('disabled', false);
                 $btn.html(originalHTML);
+            }
+        });
+    });
+    
+    // Handle delete update button (using event delegation)
+    $(document).on('click', '.btn-delete-update', function(e) {
+        e.preventDefault();
+        
+        const $btn = $(this);
+        const updateId = $btn.data('update-id');
+        
+        Swal.fire({
+            title: 'Delete Update?',
+            text: 'Are you sure you want to delete this description update? This action cannot be undone.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Yes, delete it!'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Show loading
+                Swal.fire({
+                    title: 'Deleting...',
+                    html: 'Removing description update...',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+                
+                // Send delete request
+                $.ajax({
+                    url: `/seller/products/description-updates/${updateId}`,
+                    method: 'DELETE',
+                    success: function(response) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Deleted!',
+                            text: response.message || 'Deleted successfully.',
+                            timer: 1500,
+                            showConfirmButton: false
+                        }).then(() => {
+                            // Reload the modal content
+                            const productId = $('[data-bs-toggle="collapse"]').closest('.accordion').data('product-id');
+                            // Find product ID from the modal - we need to trigger reload
+                            $('#editUpdatesModal').modal('hide');
+                            setTimeout(() => {
+                                location.reload(); // Reload page to refresh the list
+                            }, 500);
+                        });
+                    },
+                    error: function(xhr) {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: xhr.responseJSON?.message || 'Failed to delete update.'
+                        });
+                    }
+                });
             }
         });
     });

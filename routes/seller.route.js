@@ -442,4 +442,32 @@ router.put('/products/description-updates/:updateId', async function (req, res) 
     }
 });
 
+// Delete a Description Update
+router.delete('/products/description-updates/:updateId', async function (req, res) {
+    try {
+        const updateId = req.params.updateId;
+        const sellerId = req.session.authUser.id;
+        
+        // Get the update to verify ownership
+        const update = await productDescUpdateModel.findById(updateId);
+        if (!update) {
+            return res.status(404).json({ success: false, message: 'Update not found' });
+        }
+        
+        // Verify that the product belongs to the seller
+        const product = await productModel.findByProductId2(update.product_id, null);
+        if (!product || product.seller_id !== sellerId) {
+            return res.status(403).json({ success: false, message: 'Unauthorized' });
+        }
+        
+        // Delete the update
+        await productDescUpdateModel.deleteUpdate(updateId);
+        
+        res.json({ success: true, message: 'Update deleted successfully' });
+    } catch (error) {
+        console.error('Delete description error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
 export default router;

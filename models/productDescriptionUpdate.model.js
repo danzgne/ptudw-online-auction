@@ -26,6 +26,12 @@ export function updateContent(updateId, content) {
     .update({ content });
 }
 
+export function deleteUpdate(updateId) {
+  return db('product_description_updates')
+    .where('id', updateId)
+    .del();
+}
+
 export function deleteByProductId(productId) {
   return db('product_description_updates')
     .where('product_id', productId)
