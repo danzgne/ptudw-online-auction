@@ -3,16 +3,16 @@
     <div class="swiper-wrapper">
       <div class="swiper-slide">
         <div class="container">
-          <div class="row d-flex align-items-center">
+          <div class="row d-flex align-items-center" style="min-height: 600px;">
             <div class="col-md-6">
               <div class="banner-content">
-                <h1 class="display-2 text-uppercase text-dark pb-5">Your Products Are Great.</h1>
-                <a href="/products" class="btn btn-medium btn-dark text-uppercase btn-rounded-none">Shop Product</a>
+                <h1 class="display-2 text-uppercase text-dark pb-3">Bid Smart, Win Big!</h1>
+                <p class="lead text-dark pb-4">Join thousands of bidders competing for amazing products at unbeatable prices.</p>
               </div>
             </div>
             <div class="col-md-5">
-              <div class="image-holder">
-                <img src="/static/images/banner-image.png" alt="banner">
+              <div class="image-holder" style="opacity: 0.95; mix-blend-mode: multiply;">
+                <img src="/static/images/banner-image.png" alt="banner" class="img-fluid" style="max-height: 500px; object-fit: contain;">
               </div>
             </div>
           </div>
@@ -20,16 +20,33 @@
       </div>
       <div class="swiper-slide">
         <div class="container">
-          <div class="row d-flex flex-wrap align-items-center">
+          <div class="row d-flex flex-wrap align-items-center" style="min-height: 600px;">
             <div class="col-md-6">
               <div class="banner-content">
-                <h1 class="display-2 text-uppercase text-dark pb-5">Technology Hack You Won't Get</h1>
-                <a href="/products" class="btn btn-medium btn-dark text-uppercase btn-rounded-none">Shop Product</a>
+                <h1 class="display-2 text-uppercase text-dark pb-3">Sell Your Items Fast</h1>
+                <p class="lead text-dark pb-4">List your products and reach thousands of eager buyers through competitive bidding.</p>
               </div>
             </div>
             <div class="col-md-5">
-              <div class="image-holder">
-                <img src="/static/images/banner-image.png" alt="banner">
+              <div class="image-holder" style="opacity: 0.95; mix-blend-mode: multiply;">
+                <img src="/static/images/banner-image.png" alt="banner" class="img-fluid" style="max-height: 500px; object-fit: contain;">
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="swiper-slide">
+        <div class="container">
+          <div class="row d-flex flex-wrap align-items-center" style="min-height: 600px;">
+            <div class="col-md-6">
+              <div class="banner-content">
+                <h1 class="display-2 text-uppercase text-dark pb-3">Fair &amp;<br>Transparent</h1>
+                <p class="lead text-dark pb-4">Every auction is monitored for fairness. Bid with confidence in our secure platform.</p>
+              </div>
+            </div>
+            <div class="col-md-5">
+              <div class="image-holder" style="opacity: 0.95; mix-blend-mode: multiply;">
+                <img src="/static/images/banner-image.png" alt="banner" class="img-fluid" style="max-height: 500px; object-fit: contain;">
               </div>
             </div>
           </div>
@@ -98,6 +115,52 @@
   document.addEventListener('DOMContentLoaded', function() {
     updateHomeCountdowns();
     setInterval(updateHomeCountdowns, 1000);
+    
+    // Initialize main banner swiper
+    new Swiper('.main-swiper', {
+      slidesPerView: 1,
+      spaceBetween: 0,
+      loop: true,
+      autoplay: {
+        delay: 5000,
+        disableOnInteraction: false,
+      },
+      navigation: {
+        nextEl: '.swiper-arrow-next',
+        prevEl: '.swiper-arrow-prev',
+      },
+    });
+    
+    // Initialize all product swipers
+    document.querySelectorAll('.product-swiper').forEach(function(swiper) {
+      new Swiper(swiper, {
+        slidesPerView: 1,
+        spaceBetween: 20,
+        loop: false,
+        pagination: {
+          el: swiper.querySelector('.swiper-pagination'),
+          clickable: true,
+        },
+        breakpoints: {
+          576: {
+            slidesPerView: 2,
+            spaceBetween: 20,
+          },
+          768: {
+            slidesPerView: 3,
+            spaceBetween: 20,
+          },
+          992: {
+            slidesPerView: 4,
+            spaceBetween: 30,
+          },
+          1200: {
+            slidesPerView: 5,
+            spaceBetween: 30,
+          }
+        }
+      });
+    });
   });
 </script>
 <section id="mobile-products" class="product-store position-relative padding-large no-padding-top">
