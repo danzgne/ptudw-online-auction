@@ -63,7 +63,7 @@ router.get('/category', async (req, res) => {
   const products = await prepareProductList(list);
   const total = await productModel.countByCategoryIds(categoryIds);
   console.log('Total products in category:', total.count);
-  const totalCount = total.count;
+  const totalCount = parseInt(total.count) || 0;
   const nPages = Math.ceil(totalCount / limit);
   let from = (page - 1) * limit + 1;
   let to = page * limit;
@@ -77,6 +77,7 @@ router.get('/category', async (req, res) => {
     currentPage: page,
     totalPages: nPages,
     categoryId: categoryId,
+    categoryName: category ? category.name : null,
     sort: sort,
   });
 });
@@ -114,7 +115,7 @@ router.get('/search', async (req, res) => {
   const list = await productModel.searchPageByKeywords(keywords, limit, offset, userId, logic, sort);
   const products = await prepareProductList(list);
   const total = await productModel.countByKeywords(keywords, logic);
-  const totalCount = total.count;
+  const totalCount = parseInt(total.count) || 0;
   
   const nPages = Math.ceil(totalCount / limit);
   let from = (page - 1) * limit + 1;

@@ -143,14 +143,14 @@ export async function checkAndNotifyEndedAuctions() {
 
 /**
  * Khởi chạy job định kỳ
- * @param {number} intervalMinutes - Khoảng thời gian giữa các lần kiểm tra (phút)
+ * @param {number} intervalSeconds - Khoảng thời gian giữa các lần kiểm tra (giây)
  */
-export function startAuctionEndNotifier(intervalMinutes = 1) {
-  console.log(`🚀 Auction End Notifier started (checking every ${intervalMinutes} minute(s))`);
+export function startAuctionEndNotifier(intervalSeconds = 30) {
+  console.log(`🚀 Auction End Notifier started (checking every ${intervalSeconds} second(s))`);
   
   // Chạy ngay lần đầu
   checkAndNotifyEndedAuctions();
   
   // Sau đó chạy định kỳ
-  setInterval(checkAndNotifyEndedAuctions, intervalMinutes * 60 * 1000);
+  setInterval(checkAndNotifyEndedAuctions, intervalSeconds * 1000);
 }

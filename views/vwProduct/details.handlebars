@@ -330,6 +330,29 @@
     }
   });
 
+  // Handle confirmation checkbox for bid
+  const confirmBidCheckbox = document.getElementById('confirmBidCheckbox');
+  const submitBidBtn = document.getElementById('submitBidBtn');
+  
+  if (confirmBidCheckbox && submitBidBtn) {
+    confirmBidCheckbox.addEventListener('change', function() {
+      if (this.checked) {
+        submitBidBtn.disabled = false;
+        submitBidBtn.style.opacity = '1';
+      } else {
+        submitBidBtn.disabled = true;
+        submitBidBtn.style.opacity = '0.6';
+      }
+    });
+    
+    // Reset checkbox when modal is closed
+    document.getElementById('bidModal')?.addEventListener('hidden.bs.modal', function() {
+      confirmBidCheckbox.checked = false;
+      submitBidBtn.disabled = true;
+      submitBidBtn.style.opacity = '0.6';
+    });
+  }
+
   // Handle bid form submission - Server-side rendering
   document.getElementById('bidForm')?.addEventListener('submit', function (e) {
     const bidInput = document.getElementById('bidAmount');
@@ -1472,7 +1495,7 @@
                   <div class="d-flex justify-content-between align-items-start mb-2">
                     <div class="d-flex align-items-center gap-2">
                       <i class="bi bi-person-circle me-2 text-muted"></i>
-                      <strong class="small">{{mask_name this.bidder_name}}</strong>
+                      <strong class="small">{{this.bidder_name}}</strong>
                       {{#if @first}}
                         <span class="badge bg-success" style="font-size: 0.7rem;">Latest</span>
                       {{/if}}
@@ -1702,9 +1725,23 @@
             </div>
           </div>
 
+          <!-- Confirmation Checkbox -->
+          <div class="form-check mb-3 p-3 rounded"
+            style="background: linear-gradient(135deg, rgba(114, 174, 200, 0.15) 0%, rgba(114, 174, 200, 0.05) 100%); border-left: 4px solid #72AEC8 !important;">
+            <input class="form-check-input" type="checkbox" id="confirmBidCheckbox" required
+              style="width: 1.2em; height: 1.2em; margin-top: 0.15em; cursor: pointer; border-color: #72AEC8;">
+            <label class="form-check-label ms-2" for="confirmBidCheckbox" style="cursor: pointer;">
+              <i class="bi bi-shield-check me-1" style="color: #72AEC8;"></i>
+              <span class="fw-semibold" style="color: #5a9bb8;">I confirm to place this maximum bid</span>
+              <small class="d-block text-muted mt-1">
+                By checking this box, you agree to the auction terms
+              </small>
+            </label>
+          </div>
+
           <div class="d-grid gap-2 mt-4">
-            <button type="submit" class="btn btn-lg fw-bold shadow-sm" id="submitBidBtn"
-              style="background: linear-gradient(135deg, #72AEC8 0%, #5a9bb8 100%); color: white; border: none; transition: all 0.3s;">
+            <button type="submit" class="btn btn-lg fw-bold shadow-sm" id="submitBidBtn" disabled
+              style="background: linear-gradient(135deg, #72AEC8 0%, #5a9bb8 100%); color: white; border: none; transition: all 0.3s; opacity: 0.6;">
               <i class="bi bi-check-circle-fill me-2"></i>Confirm Bid
             </button>
             <button type="button" class="btn btn-lg btn-outline-secondary" data-bs-dismiss="modal"

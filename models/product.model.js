@@ -793,15 +793,15 @@ export async function cancelProduct(productId, sellerId) {
 
 /**
  * Lấy các auction vừa kết thúc mà chưa gửi thông báo
+ * Điều kiện: end_at < now() AND end_notification_sent IS NULL
  * @returns {Promise<Array>} Danh sách các sản phẩm kết thúc cần gửi thông báo
  */
 export async function getNewlyEndedAuctions() {
   return db('products')
     .leftJoin('users as seller', 'products.seller_id', 'seller.id')
     .leftJoin('users as winner', 'products.highest_bidder_id', 'winner.id')
-    .where('products.end_at', '<=', new Date())
+    .where('products.end_at', '<', new Date())
     .whereNull('products.end_notification_sent')
-    .whereNull('products.closed_at') // Chưa bị đóng sớm
     .select(
       'products.id',
       'products.name',
@@ -809,6 +809,7 @@ export async function getNewlyEndedAuctions() {
       'products.highest_bidder_id',
       'products.seller_id',
       'products.end_at',
+      'products.is_sold',
       'seller.fullname as seller_name',
       'seller.email as seller_email',
       'winner.fullname as winner_name',
