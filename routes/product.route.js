@@ -1827,8 +1827,13 @@ router.get('/bidder/:bidderId/ratings', async (req, res) => {
     const positiveReviews = reviews.filter(r => r.rating === 1).length;
     const negativeReviews = reviews.filter(r => r.rating === -1).length;
     
+    // Mask bidder name
+    const maskedName = bidder.fullname ? bidder.fullname.split('').map((char, index) => 
+      index % 2 === 0 ? char : '*'
+    ).join('') : '';
+    
     res.render('vwProduct/bidder-ratings', {
-      bidderName: bidder.fullname,
+      bidderName: maskedName,
       rating_point,
       totalReviews,
       positiveReviews,
