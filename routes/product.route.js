@@ -186,33 +186,46 @@ router.get('/detail', async (req, res) => {
     }
   }
 
-  // Load description updates
-  const descriptionUpdates = await productDescUpdateModel.findByProductId(productId);
+  // Pagination for comments
+  const commentPage = parseInt(req.query.commentPage) || 1;
+  const commentsPerPage = 2; // 2 comments per page
+  const offset = (commentPage - 1) * commentsPerPage;
 
-  // Load bidding history
-  const biddingHistory = await biddingHistoryModel.getBiddingHistory(productId);
+  // Load description updates, bidding history, and comments in parallel
+  const [descriptionUpdates, biddingHistory, comments, totalComments] = await Promise.all([
+    productDescUpdateModel.findByProductId(productId),
+    biddingHistoryModel.getBiddingHistory(productId),
+    productCommentModel.getCommentsByProductId(productId, commentsPerPage, offset),
+    productCommentModel.countCommentsByProductId(productId)
+  ]);
 
   // Load rejected bidders (only for seller)
   let rejectedBidders = [];
   if (req.session.authUser && product.seller_id === req.session.authUser.id) {
     rejectedBidders = await rejectedBidderModel.getRejectedBidders(productId);
   }
-
-  // Pagination cho comments
-  const commentPage = parseInt(req.query.commentPage) || 1;
-  const commentsPerPage = 2; // Mỗi trang 2 comments
-  const offset = (commentPage - 1) * commentsPerPage;
-
-  // Load comments với pagination
-  const comments = await productCommentModel.getCommentsByProductId(productId, commentsPerPage, offset);
   
-  // Load replies cho từng comment
-  for (let comment of comments) {
-    comment.replies = await productCommentModel.getRepliesByCommentId(comment.id);
+  // Load replies for all comments in one batch to avoid N+1 query problem
+  if (comments.length > 0) {
+    const commentIds = comments.map(c => c.id);
+    const allReplies = await productCommentModel.getRepliesByCommentIds(commentIds);
+    
+    // Group replies by parent comment id
+    const repliesMap = new Map();
+    for (const reply of allReplies) {
+      if (!repliesMap.has(reply.parent_id)) {
+        repliesMap.set(reply.parent_id, []);
+      }
+      repliesMap.get(reply.parent_id).push(reply);
+    }
+    
+    // Attach replies to their parent comments
+    for (const comment of comments) {
+      comment.replies = repliesMap.get(comment.id) || [];
+    }
   }
   
-  // Tính tổng số trang
-  const totalComments = await productCommentModel.countCommentsByProductId(productId);
+  // Calculate total pages
   const totalPages = Math.ceil(totalComments / commentsPerPage);
   
   // Get flash messages from session
@@ -544,21 +557,28 @@ router.post('/bid', isAuthenticated, async (req, res) => {
     });
 
     // ========== SEND EMAIL NOTIFICATIONS (outside transaction) ==========
+    // IMPORTANT: Run email sending asynchronously to avoid blocking the response
+    // This significantly improves perceived performance for the user
     const productUrl = `${req.protocol}://${req.get('host')}/products/detail?id=${productId}`;
     
-    try {
-      // Get user info for emails
-      const [seller, currentBidder, previousBidder] = await Promise.all([
-        userModel.findById(result.sellerId),
-        userModel.findById(result.userId),
-        result.previousHighestBidderId && result.previousHighestBidderId !== result.userId 
-          ? userModel.findById(result.previousHighestBidderId) 
-          : null
-      ]);
+    // Fire and forget - don't await email sending
+    (async () => {
+      try {
+        // Get user info for emails
+        const [seller, currentBidder, previousBidder] = await Promise.all([
+          userModel.findById(result.sellerId),
+          userModel.findById(result.userId),
+          result.previousHighestBidderId && result.previousHighestBidderId !== result.userId 
+            ? userModel.findById(result.previousHighestBidderId) 
+            : null
+        ]);
 
-      // 1. Email to SELLER - New bid notification
-      if (seller && seller.email) {
-        await sendMail({
+        // Send all emails in parallel instead of sequentially
+        const emailPromises = [];
+
+        // 1. Email to SELLER - New bid notification
+        if (seller && seller.email) {
+          emailPromises.push(sendMail({
           to: seller.email,
           subject: `💰 New bid on your product: ${result.productName}`,
           html: `
@@ -596,13 +616,13 @@ router.post('/bid', isAuthenticated, async (req, res) => {
               <p style="color: #888; font-size: 12px; text-align: center; margin-top: 20px;">This is an automated message from Online Auction.</p>
             </div>
           `
-        });
-      }
+          }));
+        }
 
-      // 2. Email to CURRENT BIDDER - Bid confirmation
-      if (currentBidder && currentBidder.email) {
-        const isWinning = result.newHighestBidderId === result.userId;
-        await sendMail({
+        // 2. Email to CURRENT BIDDER - Bid confirmation
+        if (currentBidder && currentBidder.email) {
+          const isWinning = result.newHighestBidderId === result.userId;
+          emailPromises.push(sendMail({
           to: currentBidder.email,
           subject: isWinning 
             ? `✅ You're winning: ${result.productName}` 
@@ -645,15 +665,15 @@ router.post('/bid', isAuthenticated, async (req, res) => {
               <p style="color: #888; font-size: 12px; text-align: center; margin-top: 20px;">This is an automated message from Online Auction.</p>
             </div>
           `
-        });
-      }
+          }));
+        }
 
-      // 3. Email to PREVIOUS HIGHEST BIDDER - Price update notification
-      // Send whenever price changes and there was a previous bidder (not the current bidder)
-      if (previousBidder && previousBidder.email && result.priceChanged) {
-        const wasOutbid = result.newHighestBidderId !== result.previousHighestBidderId;
-        
-        await sendMail({
+        // 3. Email to PREVIOUS HIGHEST BIDDER - Price update notification
+        // Send whenever price changes and there was a previous bidder (not the current bidder)
+        if (previousBidder && previousBidder.email && result.priceChanged) {
+          const wasOutbid = result.newHighestBidderId !== result.previousHighestBidderId;
+          
+          emailPromises.push(sendMail({
           to: previousBidder.email,
           subject: wasOutbid 
             ? `⚠️ You've been outbid: ${result.productName}`
@@ -700,14 +720,19 @@ router.post('/bid', isAuthenticated, async (req, res) => {
               <p style="color: #888; font-size: 12px; text-align: center; margin-top: 20px;">This is an automated message from Online Auction.</p>
             </div>
           `
-        });
-      }
+          }));
+        }
 
-      console.log(`Bid notification emails sent for product #${productId}`);
-    } catch (emailError) {
-      console.error('Failed to send bid notification emails:', emailError);
-      // Don't fail the request if email fails
-    }
+        // Send all emails in parallel
+        if (emailPromises.length > 0) {
+          await Promise.all(emailPromises);
+          console.log(`${emailPromises.length} bid notification email(s) sent for product #${productId}`);
+        }
+      } catch (emailError) {
+        console.error('Failed to send bid notification emails:', emailError);
+        // Don't fail - emails are sent asynchronously
+      }
+    })(); // Execute async function immediately but don't wait for it
 
     // Success message
     let baseMessage = '';

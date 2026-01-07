@@ -371,6 +371,31 @@
     // Form will submit normally to server
   });
 
+  // ==================== COMMENT FORM SUBMISSION PROTECTION ====================
+  const commentForm = document.querySelector('.comment-form form');
+  if (commentForm) {
+    commentForm.addEventListener('submit', function(e) {
+      const submitBtn = this.querySelector('button[type="submit"]');
+      
+      // Prevent double submission
+      if (submitBtn.disabled) {
+        e.preventDefault();
+        return false;
+      }
+      
+      // Disable button and show loading state
+      submitBtn.disabled = true;
+      const originalHTML = submitBtn.innerHTML;
+      submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Posting...';
+      
+      // Re-enable after a delay (in case of server error and no redirect)
+      setTimeout(() => {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = originalHTML;
+      }, 3000);
+    });
+  }
+
   // ==================== COMMENT REPLY FUNCTIONALITY ====================
   document.querySelectorAll('.reply-btn').forEach(btn => {
     btn.addEventListener('click', function () {
@@ -420,9 +445,30 @@
     const form = editor.closest('form');
     if (form) {
       form.addEventListener('submit', function (e) {
+        const submitBtn = form.querySelector('button[type="submit"]');
+        
+        // Prevent double submission
+        if (submitBtn && submitBtn.disabled) {
+          e.preventDefault();
+          return false;
+        }
+        
         const hiddenInput = form.querySelector('.reply-content-hidden');
         if (hiddenInput) {
           hiddenInput.value = editor.textContent;
+        }
+        
+        // Disable button and show loading state
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          const originalHTML = submitBtn.innerHTML;
+          submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Sending...';
+          
+          // Re-enable after delay
+          setTimeout(() => {
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = originalHTML;
+          }, 3000);
         }
       });
     }

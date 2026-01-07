@@ -383,4 +383,63 @@ router.post('/products/:id/append-description', async function (req, res) {
     }
 });
 
+// Get Description Updates for a Product
+router.get('/products/:id/description-updates', async function (req, res) {
+    try {
+        const productId = req.params.id;
+        const sellerId = req.session.authUser.id;
+        
+        // Verify that the product belongs to the seller
+        const product = await productModel.findByProductId2(productId, null);
+        if (!product) {
+            return res.status(404).json({ success: false, message: 'Product not found' });
+        }
+        
+        if (product.seller_id !== sellerId) {
+            return res.status(403).json({ success: false, message: 'Unauthorized' });
+        }
+        
+        // Get all description updates for this product
+        const updates = await productDescUpdateModel.findByProductId(productId);
+        
+        res.json({ success: true, updates });
+    } catch (error) {
+        console.error('Get description updates error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
+// Update a Description Update
+router.put('/products/description-updates/:updateId', async function (req, res) {
+    try {
+        const updateId = req.params.updateId;
+        const sellerId = req.session.authUser.id;
+        const { content } = req.body;
+        
+        if (!content || content.trim() === '') {
+            return res.status(400).json({ success: false, message: 'Content is required' });
+        }
+        
+        // Get the update to verify ownership
+        const update = await productDescUpdateModel.findById(updateId);
+        if (!update) {
+            return res.status(404).json({ success: false, message: 'Update not found' });
+        }
+        
+        // Verify that the product belongs to the seller
+        const product = await productModel.findByProductId2(update.product_id, null);
+        if (!product || product.seller_id !== sellerId) {
+            return res.status(403).json({ success: false, message: 'Unauthorized' });
+        }
+        
+        // Update the content
+        await productDescUpdateModel.updateContent(updateId, content.trim());
+        
+        res.json({ success: true, message: 'Update saved successfully' });
+    } catch (error) {
+        console.error('Update description error:', error);
+        res.status(500).json({ success: false, message: 'Server error' });
+    }
+});
+
 export default router;

@@ -63,6 +63,27 @@ export async function getRepliesByCommentId(commentId) {
 }
 
 /**
+ * Lấy replies của nhiều comments cùng lúc (batch query để tránh N+1 problem)
+ * @param {Array<number>} commentIds - Mảng các comment IDs
+ * @returns {Promise<Array>} Danh sách replies
+ */
+export async function getRepliesByCommentIds(commentIds) {
+  if (!commentIds || commentIds.length === 0) {
+    return [];
+  }
+  
+  return db('product_comments')
+    .join('users', 'product_comments.user_id', 'users.id')
+    .whereIn('product_comments.parent_id', commentIds)
+    .select(
+      'product_comments.*',
+      'users.fullname as user_name',
+      'users.role as user_role'
+    )
+    .orderBy('product_comments.created_at', 'asc');
+}
+
+/**
  * Xóa comment
  */
 export async function deleteComment(commentId, userId) {

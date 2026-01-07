@@ -11,7 +11,19 @@ export function addUpdate(productId, content) {
 export function findByProductId(productId) {
   return db('product_description_updates')
     .where('product_id', productId)
-    .orderBy('created_at', 'desc');
+    .orderBy('created_at', 'asc');
+}
+
+export function findById(updateId) {
+  return db('product_description_updates')
+    .where('id', updateId)
+    .first();
+}
+
+export function updateContent(updateId, content) {
+  return db('product_description_updates')
+    .where('id', updateId)
+    .update({ content });
 }
 
 export function deleteByProductId(productId) {
