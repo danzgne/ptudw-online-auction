@@ -1435,10 +1435,6 @@
                   <td class="fw-500">{{product.category_name}}</td>
                 </tr>
                 <tr class="border-bottom">
-                  <td class="fw-bold text-muted">Condition</td>
-                  <td><span class="badge bg-info" style="background-color: #72AEC8 !important;">Like New</span></td>
-                </tr>
-                <tr class="border-bottom">
                   <td class="fw-bold text-muted">Auction Start</td>
                   <td class="fw-500">{{format_date product.created_at}}</td>
                 </tr>
@@ -1448,7 +1444,7 @@
                 </tr>
                 <tr>
                   <td class="fw-bold text-muted">Starting Price</td>
-                  <td class="fw-bold" style="color: #72AEC8;">$ {{format_number product.starting_price}}</td>
+                  <td class="fw-bold" style="color: #72AEC8;">{{format_number product.starting_price}} VND</td>
                 </tr>
               </tbody>
             </table>
