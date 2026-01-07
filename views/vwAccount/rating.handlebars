@@ -29,7 +29,7 @@
                 {{#if (eq rating_point 1)}}
                   100.00%
                 {{else}}
-                  {{round (multiply rating_point 100) 2}}%
+                  {{#if (gt rating_point 0)}}{{round (multiply rating_point 100) 2}}{{else}}0.00{{/if}}%
                 {{/if}}
               {{else}}
                 N/A

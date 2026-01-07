@@ -1219,14 +1219,14 @@
               <hr class="my-2">
               <small class="text-muted">
                 Rating: 
-                {{#if bidder_rating_point}}
+                {{#if (or (eq bidder_rating_point 0) bidder_rating_point)}}
                   {{#if (eq bidder_rating_point 1)}}
                     <span class="fw-bold" style="color: #667eea;">
                       <i class="bi bi-award-fill text-warning"></i> 100.00%
                     </span>
                   {{else}}
                     <span class="fw-bold" style="color: #667eea;">
-                      <i class="bi bi-award-fill text-warning"></i> {{round (multiply bidder_rating_point 100) 2}}%
+                      <i class="bi bi-award-fill text-warning"></i> {{#if (gt bidder_rating_point 0)}}{{round (multiply bidder_rating_point 100) 2}}{{else}}0.00{{/if}}%
                     </span>
                   {{/if}}
                 {{else}}
@@ -1353,7 +1353,7 @@
           {{else}}
             <a href="/products/seller/{{product.seller_id}}/ratings" class="text-decoration-none">
               <small class="text-muted d-block mb-2" style="cursor: pointer; transition: color 0.2s;" onmouseover="this.style.color='#72AEC8'" onmouseout="this.style.color=''" title="View seller ratings">
-                <i class="bi bi-award-fill text-warning"></i> {{round (multiply seller_rating_point 100) 2}}% <i class="bi bi-chevron-right ms-1"></i>
+                <i class="bi bi-award-fill text-warning"></i> {{#if (gt seller_rating_point 0)}}{{round (multiply seller_rating_point 100) 2}}{{else}}0.00{{/if}}% <i class="bi bi-chevron-right ms-1"></i>
               </small>
             </a>
           {{/if}}
