@@ -63,3 +63,6 @@ Thumbs.db
 public/uploads/*.jpg
 public/uploads/*.jpeg
 public/uploads/*.png
+
+#config environment file
+.env

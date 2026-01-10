@@ -30,7 +30,6 @@ transporter.verify(function (error, success) {
 
 // Export sendMail function
 export async function sendMail({ to, subject, html }) {
-  console.log('➡️ Sending mail to:', to);
   return transporter.sendMail({
     from: `"Online Auction" <${process.env.MAIL_USER}>`,
     to,

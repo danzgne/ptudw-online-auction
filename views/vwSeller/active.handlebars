@@ -154,29 +154,24 @@
     // Handle save update button (using event delegation)
     $(document).on('click', '.btn-save-update', function(e) {
         e.preventDefault(); // Prevent any default behavior
-        console.log('Save button clicked!'); // Debug log
         
         const $btn = $(this);
         
         // Prevent double submission
         if ($btn.prop('disabled')) {
-            console.log('Button is disabled, ignoring click');
             return;
         }
         
         const updateId = $btn.data('update-id');
-        console.log('Update ID:', updateId);
         
         const editor = quillEditors[updateId];
         
         if (!editor) {
-            console.error('Editor not found for ID:', updateId);
             Swal.fire({ icon: 'error', title: 'Error!', text: 'Editor not found.' });
             return;
         }
         
         const content = editor.root.innerHTML.trim();
-        console.log('Content length:', content.length);
         
         if (!content || content === '<p><br></p>') {
             Swal.fire({ icon: 'warning', title: 'Empty Content', text: 'Please enter some content.' });
@@ -188,8 +183,6 @@
         const originalHTML = $btn.html();
         $btn.html('<span class="spinner-border spinner-border-sm me-1"></span>Saving...');
         
-        console.log('Sending AJAX request...');
-        
         // Send update request
         $.ajax({
             url: `/seller/products/description-updates/${updateId}`,
@@ -197,7 +190,6 @@
             contentType: 'application/json',
             data: JSON.stringify({ content: content }),
             success: function(response) {
-                console.log('Save successful:', response);
                 Swal.fire({
                     icon: 'success',
                     title: 'Success!',

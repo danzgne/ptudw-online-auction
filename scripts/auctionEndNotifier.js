@@ -17,8 +17,6 @@ export async function checkAndNotifyEndedAuctions() {
       return;
     }
 
-    console.log(`📧 Found ${endedAuctions.length} ended auctions to notify`);
-
     for (const auction of endedAuctions) {
       try {
         const productUrl = `${process.env.BASE_URL || 'http://localhost:3005'}/products/detail?id=${auction.id}`;

@@ -249,7 +249,6 @@
     if (response.body.file) {
       thumbnail = response.body.file.filename;
       document.getElementById('txt_thumbnail').value = thumbnail;
-      console.log('Thumbnail uploaded:', thumbnail);
     }
   });
 
@@ -284,7 +283,6 @@
         subImgs.push(f.filename);
       });
       document.getElementById('txt_imgs_list').value = JSON.stringify(subImgs);
-      console.log('Sub images uploaded:', subImgs.length);
     }
   });
 
@@ -420,7 +418,6 @@ document.getElementById('addProductForm').addEventListener('submit', async funct
     });
     return;
   }
-  console.log('Start Price:', startPrice);
   if (startPrice === '' || isNaN(parseInt(startPrice.replace(/,/g, ''))) || parseInt(startPrice.replace(/,/g, '')) < 1000) {
     const inputElement = document.getElementById('startPrice');
     const errorElement = document.getElementById('startPriceError');
@@ -568,7 +565,6 @@ document.getElementById('addProductForm').addEventListener('submit', async funct
 
   // Submit form
   const formData = new FormData(e.target);
-  console.log('Form Data:', Object.fromEntries(formData));
   e.target.submit();
 });
 </script>
